@@ -1,0 +1,17 @@
+.gradle/
+.idea/
+.kotlin/
+local.properties
+**/build/
+**/.cxx/
+*.apk
+*.aab
+*.jks
+*.keystore
+*.bin
+*.cue
+*.chd
+*.iso
+*.pbp
+*.srm
+*.state

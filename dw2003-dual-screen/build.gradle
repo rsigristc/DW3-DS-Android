@@ -1,0 +1,22 @@
+buildscript {
+    ext.kotlin_version = '2.0.21'
+
+    repositories {
+        def proxy = System.getenv('DW3_MAVEN_PROXY')
+        if (proxy) {
+            maven { url proxy }
+        } else {
+            google()
+            mavenCentral()
+        }
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.7.3'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
+}

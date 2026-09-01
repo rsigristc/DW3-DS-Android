@@ -1,0 +1,9 @@
+package com.digitaladventure.dw2003.ui
+
+data class DashboardActions(
+    val onAppSettings: () -> Unit = {},
+    val onToggleControls: () -> Unit = {},
+    val onFastTravel: (Int) -> Unit = {},
+    val onPartyMove: (fromIndex: Int, toIndex: Int) -> Unit = { _, _ -> },
+    val onCheatToggle: (id: String, enabled: Boolean) -> Unit = { _, _ -> }
+)

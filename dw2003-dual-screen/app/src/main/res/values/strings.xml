@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DW2003 Dual Screen</string>
+    <string name="select_rom">Seleccionar BIN</string>
+    <string name="demo_mode">Explorar interfaz</string>
+    <string name="setup_title">DIGIMON WORLD 2003</string>
+    <string name="setup_subtitle">DUAL SCREEN // POC 0.7</string>
+    <string name="setup_legal">Selecciona tu copia personal de Digimon World 2003 (Europa). La aplicación no incluye ROM, BIOS ni recursos del juego.</string>
+    <string name="import_bios">Importar BIOS europeo</string>
+    <string name="import_save">Importar Memory Card</string>
+    <string name="export_save">Exportar Memory Card</string>
+</resources>

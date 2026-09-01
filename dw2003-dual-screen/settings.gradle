@@ -1,0 +1,23 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        def proxy = System.getenv('DW3_MAVEN_PROXY')
+        if (proxy) {
+            maven { url proxy }
+        } else {
+            google()
+            mavenCentral()
+        }
+    }
+}
+
+rootProject.name = "DW2003DualScreen"
+include ':app', ':libretrodroid'
