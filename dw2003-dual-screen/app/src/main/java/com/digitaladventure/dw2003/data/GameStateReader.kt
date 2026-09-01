@@ -56,7 +56,8 @@ class GameStateReader {
             },
             party = party,
             bits = u32(main, BITS - MAIN_BASE),
-            fishingAvailable = AreaCatalog.supportsFishing(areaId),
+            fishingAvailable = AreaCatalog.supportsFishing(location.publicMapId) ||
+                AreaCatalog.supportsFishing(areaId),
             isFishing = false,
             gameStarted = gameStarted,
             canReorderParty = LocationResolver.canReorderParty(areaId, mapId, mode, gameStarted),

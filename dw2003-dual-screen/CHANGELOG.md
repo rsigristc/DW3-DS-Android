@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.6-poc
+
+- El título sigue el escenario del overlay del juego (Posada, Salón, Puente Asuka). `AREA` suele quedarse en el hub `0x0200`; `MAP_ID` es la sala o el puente. Ya no se fuerza Ciudad Asuka.
+- El menú START se detecta por la firma `STSTATUS`, no por `0x1000` en el ID de área (esa palabra no cambia al abrir START).
+- Abrir pestaña Mapa sondea un R1, localiza el índice de pestaña y camina hasta MAPA desde la pestaña actual, no asume Ítems ni Estado.
+- Elegir un destino escribe el ID, confirma con × en MAPA y cierra con △.
+
 ## 0.7.5-poc
 
 - El título y el radar siguen el ID de área en vivo (`0x80048D68`). `0x8004B3F8` a menudo se queda en el hub o en el mapa anterior, así que ya no se usa como nombre público salvo en interiores de ciudad.

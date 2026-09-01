@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 1 de septiembre de 2026 (0.7.5-poc).
+Fecha de compilación: 1 de septiembre de 2026 (0.7.6-poc).
 
 ## Entorno
 
@@ -37,9 +37,9 @@ Resultado: `BUILD SUCCESSFUL`.
 - `MapRegionCatalogTest`: verifica servidor/sector para Asuka, Amaterasu y menús externos al mundo.
 - `DigievolutionCatalogTest`: verifica nombre, nivel mínimo y MP de técnicas desbloqueadas.
 - `TransparencyMaskTest`: verifica que solo el blanco conectado al borde se vuelva transparente.
-- `LocationResolverTest`: verifica el título Ciudad Asuka para el Laboratorio, la posada durante el guardado y el bloqueo de viaje/reorden.
+- `LocationResolverTest`: verifica Posada/Laboratorio frente al hub, Puente Asuka cuando AREA sigue en `0x0200`, y el bloqueo de viaje/reorden.
 - `FastTravelCatalogTest`: verifica que solo el mapa actual y los visitados se desbloquean, y que servidores desconocidos siguen cerrados.
-- `FastTravelNavigatorTest`: verifica START + R1×2 para abrir MAPA desde Ítems y △ para salir, sin ×.
+- `FastTravelNavigatorTest`: verifica la detección de START por `STSTATUS`, el índice de pestaña tras un R1 y × + △ para confirmar.
 - `CheatCatalogTest`: verifica códigos PAL de calidad de vida.
 - `GameMemoryControllerTest`: verifica el empaquetado little-endian de la formación.
 

@@ -29,6 +29,7 @@ import androidx.window.layout.WindowInfoTracker
 import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatCatalog
 import com.digitaladventure.dw2003.data.GameStateRepository
+import com.digitaladventure.dw2003.model.GameMode
 import com.digitaladventure.dw2003.emulation.BiosManager
 import com.digitaladventure.dw2003.emulation.FastTravelNavigator
 import com.digitaladventure.dw2003.emulation.GameMemoryController
@@ -663,9 +664,10 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                     return@runTravelSequence
                 }
             delay(280)
-            waitUntil(2200) {
+            playPadSteps(FastTravelNavigator.confirmMapDestination())
+            waitUntil(2500) {
                 val now = memoryController?.readAreaMap()?.first ?: return@waitUntil false
-                now != origin && now != FastTravelNavigator.MENU_OVERLAY
+                now != origin && !menuIsOpen()
             }
             if (menuIsOpen()) {
                 playPadSteps(FastTravelNavigator.closeMenu())
@@ -673,7 +675,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             }
             Toast.makeText(
                 this@MainActivity,
-                "Destino ${AreaCatalog.name(areaId)} enviado. Flawe carga al salir del mapa, en el spawn del icono — no se pulsa × para no elegir un nodo inaccesible.",
+                "Destino ${AreaCatalog.name(areaId)} confirmado en la pestaña Mapa. Flawe carga al salir, en el spawn del icono.",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -727,14 +729,30 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             delay(500)
         }
         delay(FastTravelNavigator.MENU_SETTLE_MS)
-        playPadSteps(FastTravelNavigator.moveToMapTab())
+        val controller = memoryController
+        val before = controller?.readTabScan()
+        playPadSteps(FastTravelNavigator.probeNextTab())
+        val after = controller?.readTabScan()
+        val cursor = if (before != null && after != null) {
+            FastTravelNavigator.findTabCursor(before, after)
+        } else {
+            null
+        }
+        if (cursor != null) {
+            playPadSteps(FastTravelNavigator.stepsTowardMap(cursor.index, cursor.r1Increases))
+        } else {
+            playPadSteps(FastTravelNavigator.fallbackAfterProbe())
+        }
+        delay(500)
     }
 
     private fun menuIsOpen(): Boolean {
+        val overlay = memoryController?.readOverlaySignature() ?: 0L
         val snapshot = repository.snapshot.value
-        if (FastTravelNavigator.isMenuOverlay(snapshot.areaId, snapshot.mapId)) return true
-        val ram = memoryController?.readAreaMap() ?: return false
-        return FastTravelNavigator.isMenuOverlay(ram.first, ram.second)
+        if (FastTravelNavigator.isStatusMenu(overlay, snapshot.areaId, snapshot.mapId)) return true
+        val ram = memoryController?.readAreaMap() ?: return snapshot.mode == GameMode.MANAGEMENT
+        return FastTravelNavigator.isStatusMenu(overlay, ram.first, ram.second) ||
+            snapshot.mode == GameMode.MANAGEMENT
     }
 
     private suspend fun waitUntil(timeoutMs: Long, condition: () -> Boolean): Boolean {

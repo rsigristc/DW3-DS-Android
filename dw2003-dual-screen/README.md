@@ -40,9 +40,9 @@ Implementado y compilado:
 - Radar regional con mapas Asuka/Amaterasu y selección por servidor y sector; el marcador central no pretende ser una coordenada exacta.
 - Lectura de la digievolución activa, su nivel de habilidad y hasta tres técnicas aprendidas con su coste de MP conocido.
 - Máscara de transparencia por borde para limpiar el fondo blanco del Tamer y de los compañeros sin eliminar detalles blancos interiores del pixel art.
-- Título de ubicación alineado con el nombre público del mapa/hub (Ciudad Asuka) y la sala concreta en el subtítulo.
+- Título de ubicación alineado con el overlay del juego (Posada, Salón, Puente Asuka), no con el hub `0x0200` si AREA se queda atrás.
 - ⚙ APP reabre la pantalla de configuración inicial y puede activar una pestaña Mods en el panel complementario.
-- Viaje rápido desde el radar, agrupado por servidor y sector, solo con destinos ya visitados; **Abrir pestaña Mapa** entra al mapa del START (START + dos R1), no al menú de estado ni al de artículos.
+- Viaje rápido desde el radar, agrupado por servidor y sector, solo con destinos ya visitados; **Abrir pestaña Mapa** detecta START por STSTATUS y camina hasta MAPA.
 - Reorden de la formación activa desde Batalla fuera de combate y de eventos.
 - Estado de espera sin compañeros ficticios antes de iniciar o cargar una partida.
 - Mandos físicos, cruceta y sticks analógicos dirigidos al puerto 1.
@@ -67,7 +67,7 @@ La POC permite continuar con otra imagen, pero desactiva cualquier garantía sob
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v0.7.5-poc-debug.apk` (release `v0.7.5-poc`) en un dispositivo Android ARM64.
+1. Instala `DW2003-Dual-Screen-v0.7.6-poc-debug.apk` (release `v0.7.6-poc`) en un dispositivo Android ARM64.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada o la imagen original europea.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.
@@ -81,7 +81,7 @@ La aplicación conserva permiso de lectura del archivo mediante Storage Access F
 ## Limitaciones conocidas
 
 - El radar selecciona una imagen regional real según servidor/sector y muestra el nombre del mapa local. La coordenada exacta del jugador dentro de esa imagen todavía no se extrae de RAM.
-- No hay un flag de RAM documentado para los destinos de Flawe's Mod; la lista escribe el ID de área/mapa, abre la pestaña Mapa (START + R1×2) y sale con △. No se pulsa × porque confirmaría el icono con foco, no el destino elegido. El spawn de Flawe del icono sigue requiriendo elegir ese icono a mano en la pestaña Mapa si el ID escrito no dispara la tabla de entradas.
+- No hay un flag de RAM documentado para los destinos de Flawe's Mod; la lista abre START (detectado por overlay STSTATUS), llega a MAPA según el índice de pestaña, escribe el ID y confirma con × + △.
 - El objetivo depende de los punteros del walkthrough de Flawe's Mod 2.0 y puede aparecer solo después de abrir el menú.
 - La detección automática de Batalla/Gestión usa firmas del mod combinado. La imagen original continúa funcionando, pero puede requerir firmas adicionales.
 - La POC abre una imagen BIN individual. El soporte formal para CUE multitrack y CHD queda para una fase posterior.

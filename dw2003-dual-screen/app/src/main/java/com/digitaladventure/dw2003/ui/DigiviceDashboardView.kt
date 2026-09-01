@@ -537,7 +537,7 @@ class DigiviceDashboardView(
         if (!snapshot.canFastTravel) {
             drawWrapped(
                 canvas,
-                "El traslado desde esta lista solo está disponible fuera de batalla, menús de evento y pantallas de guardado. Abrir pestaña Mapa usa START y dos veces R1 (Ítems → Ordenar → Mapa).",
+                "El traslado desde esta lista solo está disponible fuera de batalla, menús de evento y pantallas de guardado. Abrir pestaña Mapa usa START y lleva a MAPA desde la pestaña actual.",
                 bounds.left + dp(16f),
                 listTop + dp(4f),
                 bounds.width() - dp(32f),

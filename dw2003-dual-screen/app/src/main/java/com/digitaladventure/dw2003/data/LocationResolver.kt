@@ -18,27 +18,40 @@ object LocationResolver {
         0x0200, 0x0201, 0x022E, 0x023E, 0x025D,
         0x0780, 0x0810, 0x0825, 0x0845, 0x0855
     )
-    private val indoorRooms = setOf(
-        0x0203, 0x0204, 0x0206, 0x0207, 0x0208, 0x020A, 0x020C, 0x020D, 0x020E, 0x020F,
-        0x0210, 0x0213, 0x0214, 0x0217, 0x0218, 0x021C,
-        0x0223, 0x0224, 0x0238, 0x0239, 0x023F, 0x0240,
-        0x0790, 0x0795, 0x0800, 0x0830, 0x0835
-    )
 
     fun isOverlay(id: Int): Boolean = AreaCatalog.isOverlay(id)
 
-    fun resolve(areaId: Int, mapId: Int): LocationDisplay {
-        val areaName = AreaCatalog.name(areaId)
-        val mapName = AreaCatalog.knownName(mapId) ?: AreaCatalog.name(if (mapId != 0) mapId else areaId)
-        val areaOverlay = isOverlay(areaId)
-        val mapOverlay = isOverlay(mapId)
-        val indoor = isCityInterior(areaId, mapId)
-        val publicMapId = when {
-            indoor -> mapId
-            !areaOverlay && areaId != 0 -> areaId
-            !mapOverlay && mapId != 0 -> mapId
+    fun isCityHub(id: Int): Boolean = id in cityHubs
+
+    fun isStage(id: Int): Boolean = id != 0 && !isOverlay(id)
+
+    /**
+     * In-game banners (Posada, Salón, Puente Asuka) use the specific stage.
+     * `AREA` often stays on the city hub (`0x0200`) while `MAP_ID` is the room
+     * or bridge; interiors can also store the room in `AREA` and the hub in
+     * `MAP_ID`. Prefer the non-hub stage so the companion matches the overlay.
+     */
+    fun stageId(areaId: Int, mapId: Int): Int {
+        val areaStage = isStage(areaId)
+        val mapStage = isStage(mapId)
+        val areaHub = isCityHub(areaId)
+        val mapHub = isCityHub(mapId)
+        return when {
+            areaHub && mapStage && !mapHub -> mapId
+            mapHub && areaStage && !areaHub -> areaId
+            mapStage && isOverlay(areaId) -> mapId
+            areaStage && isOverlay(mapId) -> areaId
+            mapStage && areaStage -> mapId
+            mapStage -> mapId
+            areaStage -> areaId
             else -> areaId
         }
+    }
+
+    fun resolve(areaId: Int, mapId: Int): LocationDisplay {
+        val mapName = AreaCatalog.knownName(mapId) ?: AreaCatalog.name(if (mapId != 0) mapId else areaId)
+        val mapOverlay = isOverlay(mapId)
+        val publicMapId = stageId(areaId, mapId).takeIf { it != 0 } ?: listOf(mapId, areaId).firstOrNull { it != 0 } ?: 0
         val title = AreaCatalog.name(publicMapId.takeIf { it != 0 } ?: areaId)
         val region = MapRegionCatalog.resolve(publicMapId).let { mapRegion ->
             if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(areaId) else mapRegion
@@ -49,20 +62,12 @@ object LocationResolver {
             detail = "$radarLabel · 0x${AreaCatalog.hex(publicMapId)}",
             radarLabel = radarLabel,
             publicMapId = publicMapId,
-            roomName = areaName.takeIf {
-                indoor && !areaOverlay && areaId != 0 && !it.equals(title, ignoreCase = true)
-            },
+            roomName = null,
             mapLabel = if (mapOverlay) mapName else title,
             areaId = areaId,
             mapId = if (mapId != 0) mapId else areaId
         )
     }
-
-    fun isCityInterior(areaId: Int, mapId: Int): Boolean =
-        !isOverlay(areaId) &&
-            mapId in cityHubs &&
-            areaId != mapId &&
-            areaId in indoorRooms
 
     fun isBlockingEvent(areaId: Int, mapId: Int, mode: GameMode): Boolean {
         if (mode == GameMode.BATTLE) return true

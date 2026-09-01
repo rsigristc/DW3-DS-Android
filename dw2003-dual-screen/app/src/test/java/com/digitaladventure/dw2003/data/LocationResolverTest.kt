@@ -8,15 +8,21 @@ import org.junit.Test
 
 class LocationResolverTest {
     @Test
-    fun cityHubKeepsLoadScreenNameForIndoorRooms() {
+    fun indoorRoomUsesBannerNameNotCityHub() {
         val location = LocationResolver.resolve(0x0206, 0x0200)
 
-        assertEquals("Ciudad Asuka", location.title)
-        assertEquals("Sector Central · Ciudad Asuka", location.radarLabel)
-        assertEquals("Sector Central · Ciudad Asuka · 0x0200", location.detail)
-        assertEquals(0x0200, location.publicMapId)
-        assertFalse(location.detail.contains("Laboratorio", ignoreCase = true))
-        assertFalse(location.radarLabel.contains("Laboratorio", ignoreCase = true))
+        assertEquals("Laboratorio Digimon", location.title)
+        assertEquals("Sector Central · Laboratorio Digimon", location.radarLabel)
+        assertEquals(0x0206, location.publicMapId)
+        assertFalse(location.title.contains("Asuka", ignoreCase = true))
+    }
+
+    @Test
+    fun innBannerWhenAreaIsRoomAndMapIsHub() {
+        val location = LocationResolver.resolve(0x020A, 0x0200)
+
+        assertEquals("Posada Asuka 1P", location.title)
+        assertEquals(0x020A, location.publicMapId)
     }
 
     @Test
@@ -38,10 +44,20 @@ class LocationResolverTest {
     }
 
     @Test
-    fun distinctFieldMapsPreferTheCurrentArea() {
+    fun bridgeUsesMapIdWhenAreaStaysOnCityHub() {
+        val location = LocationResolver.resolve(0x0200, 0x0202)
+
+        assertEquals("Puente Asuka", location.title)
+        assertEquals("Sector Central · Puente Asuka", location.radarLabel)
+        assertEquals(0x0202, location.publicMapId)
+        assertFalse(location.title.contains("Ciudad", ignoreCase = true))
+    }
+
+    @Test
+    fun distinctFieldMapsPreferMapId() {
         val location = LocationResolver.resolve(0x021D, 0x0221)
 
-        assertEquals("Central Park", location.title)
+        assertEquals("Bosque Alambre Oeste", location.title)
         assertEquals(null, location.roomName)
     }
 
