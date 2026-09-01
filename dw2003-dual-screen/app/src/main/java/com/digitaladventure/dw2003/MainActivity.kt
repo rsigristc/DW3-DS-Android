@@ -693,7 +693,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             openMapTab()
             Toast.makeText(
                 this@MainActivity,
-                "Pestaña Mapa. En Flawe, □ cambia de servidor y × elige el icono; al salir del menú cargas en el spawn de ese icono."
+                "Pestaña Mapa. En Flawe, □ cambia de servidor y × elige el icono; al salir del menú cargas en el spawn de ese icono.",
                 Toast.LENGTH_LONG
             ).show()
         }
