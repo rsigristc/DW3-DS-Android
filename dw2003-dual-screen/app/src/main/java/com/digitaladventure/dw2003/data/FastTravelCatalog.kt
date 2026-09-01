@@ -14,15 +14,23 @@ data class FastTravelGroup(
 )
 
 object FastTravelCatalog {
-    private val destinations: List<FastTravelDestination> = AreaCatalog.knownFieldIds().map { id ->
-        val region = MapRegionCatalog.resolve(id)
-        FastTravelDestination(
-            areaId = id,
-            name = AreaCatalog.name(id),
-            server = region.server,
-            sector = region.sector
-        )
-    }
+    private val flaweIcons = setOf(
+        0x0200, 0x0201, 0x0202, 0x021D, 0x021F, 0x0220, 0x0228,
+        0x022C, 0x022E, 0x0232, 0x023E, 0x023F, 0x025D, 0x0780,
+        0x0790, 0x0810, 0x0825, 0x0845, 0x0855
+    )
+
+    private val destinations: List<FastTravelDestination> = AreaCatalog.knownFieldIds()
+        .filter { it in flaweIcons }
+        .map { id ->
+            val region = MapRegionCatalog.resolve(id)
+            FastTravelDestination(
+                areaId = id,
+                name = AreaCatalog.name(id),
+                server = region.server,
+                sector = region.sector
+            )
+        }
 
     fun groups(
         storyStage: Int,
@@ -49,6 +57,7 @@ object FastTravelCatalog {
         currentAreaId: Int
     ): Boolean {
         if (destination.server == ServerRegion.UNKNOWN) return false
+        if (destination.areaId !in flaweIcons) return false
         return destination.areaId == currentAreaId || destination.areaId in visited
     }
 }

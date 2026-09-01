@@ -28,6 +28,16 @@ class LocationResolverTest {
     }
 
     @Test
+    fun outdoorFieldKeepsCurrentAreaEvenIfHubMapIdLags() {
+        val location = LocationResolver.resolve(0x021D, 0x0200)
+
+        assertEquals("Central Park", location.title)
+        assertEquals("Sector Central · Central Park", location.radarLabel)
+        assertEquals(0x021D, location.publicMapId)
+        assertFalse(location.title.contains("Asuka", ignoreCase = true))
+    }
+
+    @Test
     fun distinctFieldMapsPreferTheCurrentArea() {
         val location = LocationResolver.resolve(0x021D, 0x0221)
 

@@ -15,6 +15,7 @@ import com.digitaladventure.dw2003.R
 import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatCatalog
 import com.digitaladventure.dw2003.data.FastTravelCatalog
+import com.digitaladventure.dw2003.data.LocationResolver
 import com.digitaladventure.dw2003.data.MapRegionCatalog
 import com.digitaladventure.dw2003.data.ServerRegion
 import com.digitaladventure.dw2003.data.SectorRegion
@@ -191,7 +192,8 @@ class DigiviceDashboardView(
     }
 
     private fun drawRadar(canvas: Canvas, bounds: RectF) {
-        val mapRegion = MapRegionCatalog.resolve(snapshot.mapId)
+        val location = LocationResolver.resolve(snapshot.areaId, snapshot.mapId)
+        val mapRegion = MapRegionCatalog.resolve(location.publicMapId)
         val region = if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(snapshot.areaId) else mapRegion
         drawPanel(canvas, bounds, "RADAR REGIONAL · ${snapshot.serverName.uppercase()}")
         val map = RectF(bounds.left + dp(13f), bounds.top + dp(31f), bounds.right - dp(13f), bounds.bottom - dp(25f))
@@ -535,7 +537,7 @@ class DigiviceDashboardView(
         if (!snapshot.canFastTravel) {
             drawWrapped(
                 canvas,
-                "El traslado desde esta lista solo está disponible fuera de batalla, menús de evento y pantallas de guardado. Abrir pestaña Mapa usa START y dos veces L1.",
+                "El traslado desde esta lista solo está disponible fuera de batalla, menús de evento y pantallas de guardado. Abrir pestaña Mapa usa START y dos veces R1 (Ítems → Ordenar → Mapa).",
                 bounds.left + dp(16f),
                 listTop + dp(4f),
                 bounds.width() - dp(32f),

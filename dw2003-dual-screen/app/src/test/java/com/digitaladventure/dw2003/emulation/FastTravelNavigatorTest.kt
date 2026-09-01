@@ -7,32 +7,21 @@ import org.junit.Test
 
 class FastTravelNavigatorTest {
     @Test
-    fun opensStatusMenuThenMovesLeftToMap() {
-        val buttons = FastTravelNavigator.openMap(menuAlreadyOpen = false).map { it.button }
+    fun startThenTwoR1ReachMapTabFromItems() {
+        assertEquals(listOf(RetroPadButton.START), FastTravelNavigator.pressStart().map { it.button })
         assertEquals(
-            listOf(RetroPadButton.START, RetroPadButton.L1, RetroPadButton.L1),
-            buttons
+            listOf(RetroPadButton.R1, RetroPadButton.R1),
+            FastTravelNavigator.moveToMapTab().map { it.button }
         )
     }
 
     @Test
-    fun closesExistingMenuBeforeOpeningMap() {
-        val buttons = FastTravelNavigator.openMap(menuAlreadyOpen = true).map { it.button }
+    fun closesMenuWithTriangleOnly() {
         assertEquals(
-            listOf(
-                RetroPadButton.TRIANGLE,
-                RetroPadButton.START,
-                RetroPadButton.L1,
-                RetroPadButton.L1
-            ),
-            buttons
+            listOf(RetroPadButton.TRIANGLE),
+            FastTravelNavigator.closeMenu().map { it.button }
         )
-    }
-
-    @Test
-    fun confirmsWithCrossAndExitsWithTriangle() {
-        val buttons = FastTravelNavigator.commitSelectionAndExit().map { it.button }
-        assertEquals(listOf(RetroPadButton.CROSS, RetroPadButton.TRIANGLE), buttons)
+        assertFalse(FastTravelNavigator.closeMenu().any { it.button == RetroPadButton.CROSS })
     }
 
     @Test

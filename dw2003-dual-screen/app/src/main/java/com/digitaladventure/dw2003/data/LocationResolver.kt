@@ -18,6 +18,12 @@ object LocationResolver {
         0x0200, 0x0201, 0x022E, 0x023E, 0x025D,
         0x0780, 0x0810, 0x0825, 0x0845, 0x0855
     )
+    private val indoorRooms = setOf(
+        0x0203, 0x0204, 0x0206, 0x0207, 0x0208, 0x020A, 0x020C, 0x020D, 0x020E, 0x020F,
+        0x0210, 0x0213, 0x0214, 0x0217, 0x0218, 0x021C,
+        0x0223, 0x0224, 0x0238, 0x0239, 0x023F, 0x0240,
+        0x0790, 0x0795, 0x0800, 0x0830, 0x0835
+    )
 
     fun isOverlay(id: Int): Boolean = AreaCatalog.isOverlay(id)
 
@@ -26,19 +32,15 @@ object LocationResolver {
         val mapName = AreaCatalog.knownName(mapId) ?: AreaCatalog.name(if (mapId != 0) mapId else areaId)
         val areaOverlay = isOverlay(areaId)
         val mapOverlay = isOverlay(mapId)
+        val indoor = isCityInterior(areaId, mapId)
         val publicMapId = when {
-            !mapOverlay && mapId != 0 -> mapId
+            indoor -> mapId
             !areaOverlay && areaId != 0 -> areaId
-            else -> mapId
+            !mapOverlay && mapId != 0 -> mapId
+            else -> areaId
         }
-        val title = when {
-            !mapOverlay && mapId in cityHubs -> AreaCatalog.name(mapId)
-            !areaOverlay && areaId != 0 -> areaName
-            !mapOverlay && mapId != 0 -> mapName
-            else -> areaName
-        }
-        val regionSource = if (!mapOverlay && mapId != 0) mapId else areaId
-        val region = MapRegionCatalog.resolve(regionSource).let { mapRegion ->
+        val title = AreaCatalog.name(publicMapId.takeIf { it != 0 } ?: areaId)
+        val region = MapRegionCatalog.resolve(publicMapId).let { mapRegion ->
             if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(areaId) else mapRegion
         }
         val radarLabel = "${region.sector.label} · $title"
@@ -48,13 +50,19 @@ object LocationResolver {
             radarLabel = radarLabel,
             publicMapId = publicMapId,
             roomName = areaName.takeIf {
-                !areaOverlay && areaId != 0 && !it.equals(title, ignoreCase = true)
+                indoor && !areaOverlay && areaId != 0 && !it.equals(title, ignoreCase = true)
             },
             mapLabel = if (mapOverlay) mapName else title,
             areaId = areaId,
             mapId = if (mapId != 0) mapId else areaId
         )
     }
+
+    fun isCityInterior(areaId: Int, mapId: Int): Boolean =
+        !isOverlay(areaId) &&
+            mapId in cityHubs &&
+            areaId != mapId &&
+            areaId in indoorRooms
 
     fun isBlockingEvent(areaId: Int, mapId: Int, mode: GameMode): Boolean {
         if (mode == GameMode.BATTLE) return true

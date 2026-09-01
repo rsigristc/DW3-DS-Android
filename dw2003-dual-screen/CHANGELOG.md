@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.5-poc
+
+- El título y el radar siguen el ID de área en vivo (`0x80048D68`). `0x8004B3F8` a menudo se queda en el hub o en el mapa anterior, así que ya no se usa como nombre público salvo en interiores de ciudad.
+- **Abrir pestaña Mapa** espera a que el overlay `0x1000` esté listo y envía dos R1 (Ítems → Ordenar → Mapa). Dos L1 desde Ítems acababan en Estado, el menú principal de START.
+- Elegir un destino ya no pulsa × (eso confirma el icono con foco y spawnea en tiles inaccesibles). Tras la carga se cierra el menú si sigue abierto, para no quedar en Artículos.
+- La lista de viaje rápido solo ofrece iconos de Flawe ya visitados (ciudades, parque, playa, estaciones), no salas interiores.
+
 ## 0.7.4-poc
 
 - **Abrir pestaña Mapa** envía START y dos veces L1 (STATUS → TÉCNICAS → MAPA), no solo el menú de estado.

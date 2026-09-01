@@ -24,6 +24,12 @@ class GameMemoryController(private val view: GLRetroView) {
         writeU16ToRam(GameStateReader.MAP_ID, areaId)
     }
 
+    fun readAreaMap(): Pair<Int, Int> {
+        val area = view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM, GameStateReader.AREA and RAM_MASK, 2)
+        val map = view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM, GameStateReader.MAP_ID and RAM_MASK, 2)
+        return GameStateReader.u16(area, 0) to GameStateReader.u16(map, 0)
+    }
+
     fun applyCheats(enabled: List<CheatSpec>) {
         view.resetCheat()
         enabled.forEachIndexed { index, cheat ->

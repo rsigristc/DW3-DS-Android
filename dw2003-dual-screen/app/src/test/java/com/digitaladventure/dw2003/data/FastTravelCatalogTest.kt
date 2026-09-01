@@ -6,12 +6,19 @@ import org.junit.Test
 
 class FastTravelCatalogTest {
     @Test
-    fun unlocksOnlyVisitedAndCurrentMaps() {
-        val asuka = FastTravelCatalog.groups(99, setOf(0x0206), 0x0206)
-        assertTrue(asuka.any { group -> group.destinations.any { it.areaId == 0x0206 } })
-        assertFalse(asuka.any { group -> group.destinations.any { it.areaId == 0x0200 } })
+    fun unlocksOnlyVisitedFlaweIcons() {
+        val asuka = FastTravelCatalog.groups(99, setOf(0x0200, 0x0206), 0x0206)
+        assertTrue(asuka.any { group -> group.destinations.any { it.areaId == 0x0200 } })
+        assertFalse(asuka.any { group -> group.destinations.any { it.areaId == 0x0206 } })
         assertFalse(asuka.any { group -> group.destinations.any { it.areaId == 0x021D } })
         assertFalse(asuka.any { group -> group.destinations.any { it.areaId == 0x0780 } })
+    }
+
+    @Test
+    fun unlocksVisitedParkIcon() {
+        val groups = FastTravelCatalog.groups(99, setOf(0x0200, 0x021D), 0x0200)
+        assertTrue(groups.any { group -> group.destinations.any { it.areaId == 0x021D } })
+        assertTrue(groups.any { group -> group.destinations.any { it.areaId == 0x0200 } })
     }
 
     @Test

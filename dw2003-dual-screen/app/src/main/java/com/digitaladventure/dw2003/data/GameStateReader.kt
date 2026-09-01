@@ -11,7 +11,8 @@ class GameStateReader {
         val areaId = u16(main, AREA - MAIN_BASE)
         val rawMapId = u16(main, MAP_ID - MAIN_BASE)
         val mapId = rawMapId.takeIf { it != 0 } ?: areaId
-        val mapRegion = MapRegionCatalog.resolve(mapId)
+        val location = LocationResolver.resolve(areaId, mapId)
+        val mapRegion = MapRegionCatalog.resolve(location.publicMapId)
         val region = if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(areaId) else mapRegion
         val mode = when (overlaySignature) {
             FIGHTST2_SIGNATURE -> GameMode.BATTLE
@@ -33,7 +34,6 @@ class GameStateReader {
         } else {
             emptyList()
         }
-        val location = LocationResolver.resolve(areaId, mapId)
         return GameSnapshot(
             mode = mode,
             areaId = areaId,
@@ -43,7 +43,7 @@ class GameStateReader {
             radarLabel = location.radarLabel,
             locationRoom = location.roomName,
             mapId = mapId,
-            mapName = AreaCatalog.knownName(mapId) ?: AreaCatalog.name(areaId),
+            mapName = location.mapLabel,
             serverName = region.server.label,
             sectorName = region.sector.label,
             tamerName = if (gameStarted) parseTamerName(main) else "—",

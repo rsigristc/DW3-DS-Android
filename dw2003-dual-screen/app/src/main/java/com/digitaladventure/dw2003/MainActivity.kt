@@ -656,15 +656,24 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
         runTravelSequence {
             openMapTab()
+            val origin = controller.readAreaMap().first
             runCatching { controller.requestFastTravel(areaId) }
                 .onFailure {
                     Toast.makeText(this@MainActivity, "No se pudo escribir el destino: ${it.message}", Toast.LENGTH_LONG).show()
                     return@runTravelSequence
                 }
-            playPadSteps(FastTravelNavigator.commitSelectionAndExit())
+            delay(280)
+            waitUntil(2200) {
+                val now = memoryController?.readAreaMap()?.first ?: return@waitUntil false
+                now != origin && now != FastTravelNavigator.MENU_OVERLAY
+            }
+            if (menuIsOpen()) {
+                playPadSteps(FastTravelNavigator.closeMenu())
+                waitUntil(900) { !menuIsOpen() }
+            }
             Toast.makeText(
                 this@MainActivity,
-                "Destino ${AreaCatalog.name(areaId)}: mapa abierto, destino marcado y menú cerrado para disparar la carga de Flawe.",
+                "Destino ${AreaCatalog.name(areaId)} enviado. Flawe carga al salir del mapa, en el spawn del icono — no se pulsa × para no elegir un nodo inaccesible.",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -684,7 +693,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             openMapTab()
             Toast.makeText(
                 this@MainActivity,
-                "Pestaña Mapa abierta. En Flawe, □ cambia de servidor y × elige el icono; al salir del menú carga el destino.",
+                "Pestaña Mapa. En Flawe, □ cambia de servidor y × elige el icono; al salir del menú cargas en el spawn de ese icono."
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -709,8 +718,32 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     private suspend fun openMapTab() {
+        if (menuIsOpen()) {
+            playPadSteps(FastTravelNavigator.dismissMenu())
+            waitUntil(900) { !menuIsOpen() }
+        }
+        playPadSteps(FastTravelNavigator.pressStart())
+        if (!waitUntil(1800) { menuIsOpen() }) {
+            delay(500)
+        }
+        delay(FastTravelNavigator.MENU_SETTLE_MS)
+        playPadSteps(FastTravelNavigator.moveToMapTab())
+    }
+
+    private fun menuIsOpen(): Boolean {
         val snapshot = repository.snapshot.value
-        playPadSteps(FastTravelNavigator.openMap(FastTravelNavigator.isMenuOverlay(snapshot.areaId, snapshot.mapId)))
+        if (FastTravelNavigator.isMenuOverlay(snapshot.areaId, snapshot.mapId)) return true
+        val ram = memoryController?.readAreaMap() ?: return false
+        return FastTravelNavigator.isMenuOverlay(ram.first, ram.second)
+    }
+
+    private suspend fun waitUntil(timeoutMs: Long, condition: () -> Boolean): Boolean {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (System.currentTimeMillis() < deadline) {
+            if (condition()) return true
+            delay(40)
+        }
+        return condition()
     }
 
     private suspend fun playPadSteps(steps: List<PadStep>) {
@@ -718,7 +751,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         steps.forEach { step ->
             val keyCode = retroPadKeyCode(step.button)
             view.sendKeyEvent(KeyEvent.ACTION_DOWN, keyCode, 0)
-            delay(70)
+            delay(step.holdMs)
             view.sendKeyEvent(KeyEvent.ACTION_UP, keyCode, 0)
             delay(step.afterMs)
         }
@@ -727,6 +760,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun retroPadKeyCode(button: RetroPadButton): Int = when (button) {
         RetroPadButton.START -> KeyEvent.KEYCODE_BUTTON_START
         RetroPadButton.L1 -> KeyEvent.KEYCODE_BUTTON_L1
+        RetroPadButton.R1 -> KeyEvent.KEYCODE_BUTTON_R1
         RetroPadButton.CROSS -> KeyEvent.KEYCODE_BUTTON_B
         RetroPadButton.TRIANGLE -> KeyEvent.KEYCODE_BUTTON_X
     }

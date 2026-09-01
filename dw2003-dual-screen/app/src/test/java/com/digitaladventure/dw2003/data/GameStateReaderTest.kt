@@ -41,7 +41,7 @@ class GameStateReaderTest {
         assertEquals("Central Park", snapshot.areaName)
         assertEquals("Central Park", snapshot.locationTitle)
         assertEquals("Sector Central · Central Park", snapshot.radarLabel)
-        assertEquals("Bosque Alambre Oeste", snapshot.mapName)
+        assertEquals("Central Park", snapshot.mapName)
         assertFalse(snapshot.canReorderParty)
         assertFalse(snapshot.canFastTravel)
         assertEquals("Junior", snapshot.tamerName)
