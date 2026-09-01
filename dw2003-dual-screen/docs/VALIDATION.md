@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 1 de septiembre de 2026.
+Fecha de compilación: 1 de septiembre de 2026 (0.7.3-poc).
 
 ## Entorno
 

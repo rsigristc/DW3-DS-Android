@@ -67,7 +67,7 @@ La POC permite continuar con otra imagen, pero desactiva cualquier garantía sob
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-POC-0.7-debug.apk` en un dispositivo Android ARM64.
+1. Instala `DW2003-Dual-Screen-v0.7.3-poc-debug.apk` (release `v0.7.3-poc`) en un dispositivo Android ARM64.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada o la imagen original europea.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.

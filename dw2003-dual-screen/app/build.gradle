@@ -11,8 +11,8 @@ android {
         applicationId 'com.digitaladventure.dw2003'
         minSdk 26
         targetSdk 35
-        versionCode 7
-        versionName '0.7.0-poc'
+        versionCode 10
+        versionName '0.7.3-poc'
 
         ndk {
             abiFilters 'arm64-v8a'

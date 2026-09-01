@@ -1,12 +1,17 @@
 # Changelog
 
+## 0.7.3-poc
+
+- Reaplica silencio y velocidad 2× al núcleo nativo al crear, reanudar o recargar la sesión, para que SONIDO OFF coincida con el audio real.
+- El mapa regional abre un menú de viaje rápido solo con localidades ya visitadas e incluye **Abrir mapa del juego** (START).
+- Publica el APK de depuración `DW2003-Dual-Screen-v0.7.3-poc-debug.apk` mediante el flujo etiquetado de GitHub.
+
 ## 0.7.0-poc
 
 - El título del panel usa el nombre público del mapa (p. ej. Ciudad Asuka) cuando el ID de sala es un interior del hub, para coincidir con la pantalla de carga. El subtítulo y el radar muestran el mismo par Sector + mapa; ya no se pinta el nombre interno de sala (Laboratorio Digimon) en la esquina superior izquierda.
 - Aplica la máscara de transparencia al sprite del Tamer, no solo a los compañeros.
 - ⚙ APP abre la ventana de configuración inicial, con aviso de BIOS y un interruptor que muestra u oculta la pestaña Mods.
-- El mapa regional abre un menú de viaje rápido por servidor y sector, solo con localidades ya visitadas. Incluye un botón para abrir el menú/mapa del juego (START).
-- Reaplica silencio y velocidad 2× al núcleo nativo al crear, reanudar o recargar la sesión, para que SONIDO OFF coincida con el audio real.
+- El mapa regional abre un menú de viaje rápido por servidor, sector y destinos ya visitados o liberados.
 - La pestaña Batalla permite reordenar la formación activa solo fuera de combate y de eventos.
 - Los mods opcionales aplican códigos PAL (bits, encuentros, dithering, HP/MP de batalla) mediante `retro_cheat_set`.
 - Evita serializar la Memory Card durante `0x0C01`, desactiva el hilo de GPU y avisa si se usa BIOS HLE.
