@@ -38,7 +38,7 @@ Resultado: `BUILD SUCCESSFUL`.
 - `DigievolutionCatalogTest`: verifica nombre, nivel mínimo y MP de técnicas desbloqueadas.
 - `TransparencyMaskTest`: verifica que solo el blanco conectado al borde se vuelva transparente.
 - `LocationResolverTest`: verifica el título Ciudad Asuka para el Laboratorio, la posada durante el guardado y el bloqueo de viaje/reorden.
-- `FastTravelCatalogTest`: verifica destinos visitados, el hub de Asuka y el bloqueo de Amaterasu.
+- `FastTravelCatalogTest`: verifica que solo el mapa actual y los visitados se desbloquean, y que servidores desconocidos siguen cerrados.
 - `CheatCatalogTest`: verifica códigos PAL de calidad de vida.
 - `GameMemoryControllerTest`: verifica el empaquetado little-endian de la formación.
 

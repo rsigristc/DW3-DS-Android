@@ -211,7 +211,7 @@ class DigiviceDashboardView(
         canvas.drawLine(map.centerX(), map.centerY() - dp(12f), map.centerX(), map.centerY() + dp(12f), paint)
         paint.style = Paint.Style.FILL
         drawText(canvas, snapshot.radarLabel.uppercase(), bounds.centerX(), bounds.bottom - dp(8f), dp(7.5f), MUTED, true, Paint.Align.CENTER)
-        if (snapshot.canFastTravel) {
+        if (snapshot.gameStarted) {
             drawText(canvas, "TOCA EL MAPA PARA VIAJE RÁPIDO", bounds.centerX(), bounds.top + dp(28f), dp(7f), CYAN, true, Paint.Align.CENTER)
             hitTargets += map to {
                 travelMenuOpen = true
@@ -512,7 +512,7 @@ class DigiviceDashboardView(
     }
 
     private fun drawFastTravelMenu(canvas: Canvas, bounds: RectF) {
-        drawPanel(canvas, bounds, "VIAJE RÁPIDO · DESTINOS LIBERADOS")
+        drawPanel(canvas, bounds, "VIAJE RÁPIDO · DESTINOS VISITADOS")
         val close = RectF(bounds.right - dp(78f), bounds.top + dp(6f), bounds.right - dp(10f), bounds.top + dp(28f))
         paint.color = PANEL_INNER
         canvas.drawRoundRect(close, dp(5f), dp(5f), paint)
@@ -521,36 +521,49 @@ class DigiviceDashboardView(
             travelMenuOpen = false
             invalidate()
         }
-        val groups = FastTravelCatalog.groups(snapshot.storyStage, visitedMaps + snapshot.areaId, snapshot.areaId)
-        if (groups.isEmpty()) {
-            drawWrapped(
-                canvas,
-                "Todavía no hay destinos liberados. Explora el campo o avanza la historia para abrir el viaje por región.",
-                bounds.left + dp(16f),
-                bounds.top + dp(48f),
-                bounds.width() - dp(32f),
-                dp(11f),
-                MUTED,
-                4
-            )
-            return
+        val openMap = RectF(bounds.left + dp(10f), bounds.top + dp(34f), bounds.right - dp(10f), bounds.top + dp(66f))
+        paint.color = CYAN_DARK
+        canvas.drawRoundRect(openMap, dp(5f), dp(5f), paint)
+        drawText(canvas, "ABRIR MAPA DEL JUEGO", openMap.centerX(), openMap.centerY() + dp(4f), dp(10f), WHITE, true, Paint.Align.CENTER)
+        hitTargets += openMap to {
+            travelMenuOpen = false
+            actions.onOpenGameMap()
+            invalidate()
         }
+        val groups = FastTravelCatalog.groups(snapshot.storyStage, visitedMaps + snapshot.areaId, snapshot.areaId)
+        val listTop = openMap.bottom + dp(6f)
         if (!snapshot.canFastTravel) {
             drawWrapped(
                 canvas,
-                "El viaje rápido solo está disponible fuera de batalla, menús de evento y pantallas de guardado.",
+                "El traslado desde esta lista solo está disponible fuera de batalla, menús de evento y pantallas de guardado. Puedes abrir el mapa del juego en cualquier momento.",
                 bounds.left + dp(16f),
-                bounds.top + dp(48f),
+                listTop + dp(4f),
                 bounds.width() - dp(32f),
-                dp(11f),
+                dp(10f),
                 AMBER,
                 3
             )
+        } else if (groups.isEmpty()) {
+            drawWrapped(
+                canvas,
+                "Todavía no hay destinos visitados. Explora el campo para añadir localidades, o abre el mapa del juego para el viaje de Flawe's Mod.",
+                bounds.left + dp(16f),
+                listTop + dp(4f),
+                bounds.width() - dp(32f),
+                dp(10f),
+                MUTED,
+                4
+            )
         }
-        var y = bounds.top + dp(42f) - travelScroll
+        val headerOffset = when {
+            !snapshot.canFastTravel -> dp(58f)
+            groups.isEmpty() -> dp(58f)
+            else -> 0f
+        }
+        var y = listTop + headerOffset - travelScroll
         val rowHeight = dp(28f)
         groups.forEach { group ->
-            if (y > bounds.top + dp(32f) && y < bounds.bottom - dp(8f)) {
+            if (y >= listTop && y < bounds.bottom - dp(8f)) {
                 drawText(
                     canvas,
                     "${group.server.label.uppercase()} · ${group.sector.label.uppercase()}",
@@ -564,7 +577,7 @@ class DigiviceDashboardView(
             y += dp(22f)
             group.destinations.forEach { destination ->
                 val row = RectF(bounds.left + dp(10f), y, bounds.right - dp(10f), y + rowHeight)
-                if (row.bottom > bounds.top + dp(34f) && row.top < bounds.bottom - dp(8f)) {
+                if (row.top >= listTop && row.top < bounds.bottom - dp(8f)) {
                     paint.color = if (destination.areaId == snapshot.areaId) CYAN_DARK else PANEL_INNER
                     canvas.drawRoundRect(row, dp(5f), dp(5f), paint)
                     drawText(canvas, destination.name.uppercase(), row.left + dp(10f), row.centerY() + dp(4f), dp(10f), WHITE, true)

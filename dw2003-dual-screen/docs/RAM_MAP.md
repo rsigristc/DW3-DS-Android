@@ -69,7 +69,9 @@ La POC 0.7 escribe solo cuando el usuario lo pide y la sesión no está en batal
 | Dirección | Uso |
 |---|---|
 | `0x80048DA4`…`0x80048DAC` | Orden de la formación activa (tres `u32`) |
-| `0x80048D68` y `0x8004B3F8` | Destino de viaje rápido (ID de área/mapa) |
+| `0x80048D68` y `0x8004B3F8` | Destino de viaje rápido (ID de área/mapa visitado) |
+
+Los destinos ofrecidos en el panel son mapas de campo que esta sesión ya visitó (`PREF_VISITED_MAPS`). No se ha localizado un indicador estable de desbloqueo del Fast Travel de Flawe's Mod; el botón «Abrir mapa del juego» envía START para usar el menú nativo.
 
 Los mods opcionales se aplican con `retro_cheat_set` del núcleo, no con parches permanentes. Datos fuera de rango, perfiles inválidos y punteros externos a RAM se descartan.
 

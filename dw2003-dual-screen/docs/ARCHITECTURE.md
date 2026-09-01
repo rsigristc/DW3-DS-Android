@@ -61,6 +61,10 @@ La versión 0.5 instala una tarjeta formateada de 128 KiB antes de iniciar el n�
 
 La versión 0.6 empareja cada serialización del núcleo con los 128 KiB de SRAM del mismo instante. Al cargar, restaura ambos y persiste la tarjeta antes de continuar; los estados antiguos sin pareja se rechazan. El lector añade nombre del Tamer, mapa lógico y registros de digievolución, mientras el radar selecciona una imagen por servidor/sector sin afirmar una coordenada exacta.
 
+Tras crear o reanudar el núcleo, `GLRetroView.applyRuntimeOptions()` vuelve a enviar silencio y velocidad al audio nativo. `create()` reinicia esos flags a valores por defecto, y asignar el mismo valor en Kotlin no dispara el `observable`; por eso el botón SONIDO OFF podía quedar desincronizado al cerrar y reabrir el juego.
+
+El menú de viaje del radar lista solo mapas de campo visitados. «Abrir mapa del juego» envía un pulso START al núcleo para usar el Fast Travel nativo de Flawe's Mod.
+
 ## BIOS aportado por el usuario
 
 `BiosManager` acepta únicamente una imagen europea de PlayStation de 512 KiB con firma y marcador regional compatibles con la detección de PCSX-ReARMed. Se instala en el directorio privado del sistema como `scph5502.bin`. Sin ese archivo, el núcleo conserva su alternativa HLE.

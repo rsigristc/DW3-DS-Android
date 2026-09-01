@@ -42,7 +42,7 @@ Implementado y compilado:
 - Máscara de transparencia por borde para limpiar el fondo blanco del Tamer y de los compañeros sin eliminar detalles blancos interiores del pixel art.
 - Título de ubicación alineado con el nombre público del mapa/hub (Ciudad Asuka) y la sala concreta en el subtítulo.
 - ⚙ APP reabre la pantalla de configuración inicial y puede activar una pestaña Mods en el panel complementario.
-- Viaje rápido desde el radar, agrupado por servidor y sector, solo con destinos visitados o hubs liberados.
+- Viaje rápido desde el radar, agrupado por servidor y sector, solo con destinos ya visitados; también puede abrir el mapa del juego.
 - Reorden de la formación activa desde Batalla fuera de combate y de eventos.
 - Estado de espera sin compañeros ficticios antes de iniciar o cargar una partida.
 - Mandos físicos, cruceta y sticks analógicos dirigidos al puerto 1.
@@ -81,6 +81,7 @@ La aplicación conserva permiso de lectura del archivo mediante Storage Access F
 ## Limitaciones conocidas
 
 - El radar selecciona una imagen regional real según servidor/sector y muestra el nombre del mapa local. La coordenada exacta del jugador dentro de esa imagen todavía no se extrae de RAM.
+- No hay un flag de RAM documentado para los destinos de Flawe's Mod; la lista del panel solo ofrece mapas visitados por esta app y un acceso START al menú del juego.
 - El objetivo depende de los punteros del walkthrough de Flawe's Mod 2.0 y puede aparecer solo después de abrir el menú.
 - La detección automática de Batalla/Gestión usa firmas del mod combinado. La imagen original continúa funcionando, pero puede requerir firmas adicionales.
 - La POC abre una imagen BIN individual. El soporte formal para CUE multitrack y CHD queda para una fase posterior.

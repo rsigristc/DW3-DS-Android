@@ -112,6 +112,12 @@ class GLRetroView(
         )
         LibretroDroid.setRumbleEnabled(data.rumbleEventsEnabled)
         LibretroDroid.setViewportAlignment(data.viewportAlignment.value)
+        applyRuntimeOptions()
+    }
+
+    fun applyRuntimeOptions() {
+        LibretroDroid.setAudioEnabled(audioEnabled)
+        LibretroDroid.setFrameSpeed(frameSpeed)
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
@@ -331,6 +337,7 @@ class GLRetroView(
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
         private fun resume() = catchExceptions {
             LibretroDroid.resume()
+            applyRuntimeOptions()
             onResume()
             isEmulationReady = true
         }
@@ -382,6 +389,7 @@ class GLRetroView(
         }
         LibretroDroid.onSurfaceCreated()
         isGameLoaded = true
+        applyRuntimeOptions()
 
         KtUtils.runOnUIThread {
             lifecycle?.addObserver(RenderLifecycleObserver())

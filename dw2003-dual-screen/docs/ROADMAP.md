@@ -45,7 +45,7 @@
 - Título de ubicación alineado con la pantalla de carga del hub.
 - Transparencia del sprite del Tamer.
 - Configuración inicial desde ⚙ APP, pestaña Mods opcional y códigos PAL.
-- Viaje rápido por región desde el radar, con destinos visitados.
+- Viaje rápido por región desde el radar, limitado a destinos visitados, con acceso al mapa del juego.
 - Reorden de formación desde Batalla fuera de combate/eventos.
 - Memory Card: no serializar durante el guardado del juego y aviso de BIOS HLE.
 

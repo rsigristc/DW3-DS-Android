@@ -6,11 +6,19 @@ import org.junit.Test
 
 class FastTravelCatalogTest {
     @Test
-    fun unlocksVisitedMapsAndEarlyAsukaHub() {
-        val asuka = FastTravelCatalog.groups(4, setOf(0x0206), 0x0206)
+    fun unlocksOnlyVisitedAndCurrentMaps() {
+        val asuka = FastTravelCatalog.groups(99, setOf(0x0206), 0x0206)
         assertTrue(asuka.any { group -> group.destinations.any { it.areaId == 0x0206 } })
-        assertTrue(asuka.any { group -> group.destinations.any { it.areaId == 0x0200 } })
+        assertFalse(asuka.any { group -> group.destinations.any { it.areaId == 0x0200 } })
+        assertFalse(asuka.any { group -> group.destinations.any { it.areaId == 0x021D } })
         assertFalse(asuka.any { group -> group.destinations.any { it.areaId == 0x0780 } })
+    }
+
+    @Test
+    fun includesCurrentHubEvenIfVisitWasNotPersisted() {
+        val groups = FastTravelCatalog.groups(1, emptySet(), 0x0200)
+        assertTrue(groups.any { group -> group.destinations.any { it.areaId == 0x0200 } })
+        assertFalse(groups.any { group -> group.destinations.any { it.areaId == 0x0206 } })
     }
 
     @Test
@@ -19,9 +27,9 @@ class FastTravelCatalogTest {
             areaId = 0x1000,
             name = "Menú",
             server = ServerRegion.UNKNOWN,
-            sector = SectorRegion.UNKNOWN,
-            minStory = 1
+            sector = SectorRegion.UNKNOWN
         )
         assertFalse(FastTravelCatalog.isUnlocked(destination, 99, emptySet(), 0x0200))
+        assertFalse(FastTravelCatalog.isUnlocked(destination, 99, setOf(0x1000), 0x1000))
     }
 }

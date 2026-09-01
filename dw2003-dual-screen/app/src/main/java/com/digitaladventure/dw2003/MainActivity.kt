@@ -167,6 +167,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         super.onStop()
     }
 
+    override fun onResume() {
+        super.onResume()
+        applyAudioAndSpeed()
+    }
+
     override fun onPause() {
         if (!skipNextAutoSave) persistMemoryCardIfSafe()
         skipNextAutoSave = false
@@ -360,8 +365,10 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 Toast.LENGTH_LONG
             ).show()
         }
-        lifecycle.addObserver(view)
+        view.frameSpeed = if (fastForward) 2 else 1
         view.audioEnabled = !muted
+        lifecycle.addObserver(view)
+        view.applyRuntimeOptions()
         val romKey = getPreferences(MODE_PRIVATE).getString(PREF_ROM_SHA1, null) ?: uri.toString()
         val states = QuickStateManager(this, romKey)
         quickStateManager = states
@@ -441,12 +448,14 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             QuickAction.TOGGLE_SPEED -> {
                 fastForward = !fastForward
                 view.frameSpeed = if (fastForward) 2 else 1
+                view.applyRuntimeOptions()
                 virtualController?.fastForward = fastForward
                 Toast.makeText(this, if (fastForward) "Velocidad 2×" else "Velocidad normal", Toast.LENGTH_SHORT).show()
             }
             QuickAction.TOGGLE_MUTE -> {
                 muted = !muted
                 view.audioEnabled = !muted
+                view.applyRuntimeOptions()
                 getPreferences(MODE_PRIVATE).edit().putBoolean(PREF_MUTED, muted).apply()
                 virtualController?.muted = muted
                 Toast.makeText(this, if (muted) "Sonido desactivado" else "Sonido activado", Toast.LENGTH_SHORT).show()
@@ -551,9 +560,19 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         onAppSettings = ::showAppSettings,
         onToggleControls = ::toggleVirtualControls,
         onFastTravel = ::requestFastTravel,
+        onOpenGameMap = ::openInGameMap,
         onPartyMove = ::movePartyMember,
         onCheatToggle = ::toggleCheat
     )
+
+    private fun applyAudioAndSpeed() {
+        val view = retroView ?: return
+        view.audioEnabled = !muted
+        view.frameSpeed = if (fastForward) 2 else 1
+        view.applyRuntimeOptions()
+        virtualController?.muted = muted
+        virtualController?.fastForward = fastForward
+    }
 
     private fun syncDashboardExtras() {
         localDashboard?.modsEnabled = modsEnabled
@@ -633,13 +652,30 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             .onSuccess {
                 Toast.makeText(
                     this,
-                    "Destino ${AreaCatalog.name(areaId)} enviado. Si usas Flawe's Mod, cierra el menú del mapa para completar el traslado.",
+                    "Destino ${AreaCatalog.name(areaId)} enviado. Si usas Flawe's Mod, el viaje del juego está en el mapa (□ cambia servidor, × elige destino).",
                     Toast.LENGTH_LONG
                 ).show()
             }
             .onFailure {
                 Toast.makeText(this, "No se pudo escribir el destino: ${it.message}", Toast.LENGTH_LONG).show()
             }
+    }
+
+    private fun openInGameMap() {
+        val view = retroView
+        if (view == null) {
+            Toast.makeText(this, "El mapa del juego requiere una partida en emulación", Toast.LENGTH_LONG).show()
+            return
+        }
+        view.sendKeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_START, 0)
+        view.postDelayed({
+            view.sendKeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_START, 0)
+        }, 70)
+        Toast.makeText(
+            this,
+            "Menú del juego abierto. En Flawe's Mod el viaje rápido está en el mapa: □ cambia de servidor y × elige un destino desbloqueado.",
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     private fun movePartyMember(fromIndex: Int, toIndex: Int) {
