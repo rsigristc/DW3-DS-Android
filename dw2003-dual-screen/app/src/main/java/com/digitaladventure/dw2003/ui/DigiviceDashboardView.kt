@@ -524,7 +524,7 @@ class DigiviceDashboardView(
         val openMap = RectF(bounds.left + dp(10f), bounds.top + dp(34f), bounds.right - dp(10f), bounds.top + dp(66f))
         paint.color = CYAN_DARK
         canvas.drawRoundRect(openMap, dp(5f), dp(5f), paint)
-        drawText(canvas, "ABRIR MAPA DEL JUEGO", openMap.centerX(), openMap.centerY() + dp(4f), dp(10f), WHITE, true, Paint.Align.CENTER)
+            drawText(canvas, "ABRIR PESTAÑA MAPA", openMap.centerX(), openMap.centerY() + dp(4f), dp(10f), WHITE, true, Paint.Align.CENTER)
         hitTargets += openMap to {
             travelMenuOpen = false
             actions.onOpenGameMap()
@@ -535,7 +535,7 @@ class DigiviceDashboardView(
         if (!snapshot.canFastTravel) {
             drawWrapped(
                 canvas,
-                "El traslado desde esta lista solo está disponible fuera de batalla, menús de evento y pantallas de guardado. Puedes abrir el mapa del juego en cualquier momento.",
+                "El traslado desde esta lista solo está disponible fuera de batalla, menús de evento y pantallas de guardado. Abrir pestaña Mapa usa START y dos veces L1.",
                 bounds.left + dp(16f),
                 listTop + dp(4f),
                 bounds.width() - dp(32f),

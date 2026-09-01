@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.4-poc
+
+- **Abrir pestaña Mapa** envía START y dos veces L1 (STATUS → TÉCNICAS → MAPA), no solo el menú de estado.
+- Elegir un destino abre esa pestaña, escribe el ID y pulsa × + △ para marcar y salir del menú, que es cuando Flawe dispara la pantalla de carga.
+
 ## 0.7.3-poc
 
 - Reaplica silencio y velocidad 2× al núcleo nativo al crear, reanudar o recargar la sesión, para que SONIDO OFF coincida con el audio real.

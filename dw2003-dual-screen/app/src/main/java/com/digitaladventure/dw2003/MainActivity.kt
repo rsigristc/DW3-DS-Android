@@ -30,8 +30,11 @@ import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatCatalog
 import com.digitaladventure.dw2003.data.GameStateRepository
 import com.digitaladventure.dw2003.emulation.BiosManager
+import com.digitaladventure.dw2003.emulation.FastTravelNavigator
 import com.digitaladventure.dw2003.emulation.GameMemoryController
 import com.digitaladventure.dw2003.emulation.MemoryPoller
+import com.digitaladventure.dw2003.emulation.PadStep
+import com.digitaladventure.dw2003.emulation.RetroPadButton
 import com.digitaladventure.dw2003.emulation.RomVerifier
 import com.digitaladventure.dw2003.emulation.SaveManager
 import com.digitaladventure.dw2003.emulation.QuickStateManager
@@ -50,6 +53,7 @@ import com.swordfish.libretrodroid.Variable
 import com.swordfish.libretrodroid.VirtualFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -80,6 +84,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private var enabledCheats = linkedSetOf<String>()
     private var visitedMaps = linkedSetOf<Int>()
     private var wasOnSaveScreen = false
+    private var travelJob: Job? = null
 
     private val openRom = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(::acceptRom)
@@ -181,6 +186,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     override fun onDestroy() {
         memoryPoller?.stop()
         emulatorEventsJob?.cancel()
+        travelJob?.cancel()
         settingsDialog?.dismiss()
         presentation?.dismiss()
         displayManager.unregisterDisplayListener(this)
@@ -644,38 +650,85 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             return
         }
         val controller = memoryController
-        if (controller == null) {
+        if (controller == null || retroView == null) {
             Toast.makeText(this, "El viaje rápido requiere una partida en emulación", Toast.LENGTH_LONG).show()
             return
         }
-        runCatching { controller.requestFastTravel(areaId) }
-            .onSuccess {
-                Toast.makeText(
-                    this,
-                    "Destino ${AreaCatalog.name(areaId)} enviado. Si usas Flawe's Mod, el viaje del juego está en el mapa (□ cambia servidor, × elige destino).",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-            .onFailure {
-                Toast.makeText(this, "No se pudo escribir el destino: ${it.message}", Toast.LENGTH_LONG).show()
-            }
+        runTravelSequence {
+            openMapTab()
+            runCatching { controller.requestFastTravel(areaId) }
+                .onFailure {
+                    Toast.makeText(this@MainActivity, "No se pudo escribir el destino: ${it.message}", Toast.LENGTH_LONG).show()
+                    return@runTravelSequence
+                }
+            playPadSteps(FastTravelNavigator.commitSelectionAndExit())
+            Toast.makeText(
+                this@MainActivity,
+                "Destino ${AreaCatalog.name(areaId)}: mapa abierto, destino marcado y menú cerrado para disparar la carga de Flawe.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private fun openInGameMap() {
-        val view = retroView
-        if (view == null) {
+        val snapshot = repository.snapshot.value
+        if (!snapshot.gameStarted) {
+            Toast.makeText(this, "Inicia una partida para abrir el mapa", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (retroView == null) {
             Toast.makeText(this, "El mapa del juego requiere una partida en emulación", Toast.LENGTH_LONG).show()
             return
         }
-        view.sendKeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_START, 0)
-        view.postDelayed({
-            view.sendKeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_START, 0)
-        }, 70)
-        Toast.makeText(
-            this,
-            "Menú del juego abierto. En Flawe's Mod el viaje rápido está en el mapa: □ cambia de servidor y × elige un destino desbloqueado.",
-            Toast.LENGTH_LONG
-        ).show()
+        runTravelSequence {
+            openMapTab()
+            Toast.makeText(
+                this@MainActivity,
+                "Pestaña Mapa abierta. En Flawe, □ cambia de servidor y × elige el icono; al salir del menú carga el destino.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun runTravelSequence(block: suspend () -> Unit) {
+        if (travelJob?.isActive == true) {
+            Toast.makeText(this, "Espera a que termine la secuencia del mapa", Toast.LENGTH_SHORT).show()
+            return
+        }
+        travelJob = lifecycleScope.launch {
+            val view = retroView ?: return@launch
+            view.frameSpeed = 1
+            view.applyRuntimeOptions()
+            try {
+                block()
+            } finally {
+                view.frameSpeed = if (fastForward) 2 else 1
+                view.applyRuntimeOptions()
+            }
+        }
+    }
+
+    private suspend fun openMapTab() {
+        val snapshot = repository.snapshot.value
+        playPadSteps(FastTravelNavigator.openMap(FastTravelNavigator.isMenuOverlay(snapshot.areaId, snapshot.mapId)))
+    }
+
+    private suspend fun playPadSteps(steps: List<PadStep>) {
+        val view = retroView ?: return
+        steps.forEach { step ->
+            val keyCode = retroPadKeyCode(step.button)
+            view.sendKeyEvent(KeyEvent.ACTION_DOWN, keyCode, 0)
+            delay(70)
+            view.sendKeyEvent(KeyEvent.ACTION_UP, keyCode, 0)
+            delay(step.afterMs)
+        }
+    }
+
+    private fun retroPadKeyCode(button: RetroPadButton): Int = when (button) {
+        RetroPadButton.START -> KeyEvent.KEYCODE_BUTTON_START
+        RetroPadButton.L1 -> KeyEvent.KEYCODE_BUTTON_L1
+        RetroPadButton.CROSS -> KeyEvent.KEYCODE_BUTTON_B
+        RetroPadButton.TRIANGLE -> KeyEvent.KEYCODE_BUTTON_X
     }
 
     private fun movePartyMember(fromIndex: Int, toIndex: Int) {

@@ -18,6 +18,8 @@ class GameMemoryController(private val view: GLRetroView) {
 
     fun requestFastTravel(areaId: Int) {
         require(areaId in 1..0xFFFF) { "Destino de viaje inválido" }
+        // These IDs are the live area/map words the companion already reads. Flawe
+        // still needs the Map tab open and the status menu closed to start a load.
         writeU16ToRam(GameStateReader.AREA, areaId)
         writeU16ToRam(GameStateReader.MAP_ID, areaId)
     }
