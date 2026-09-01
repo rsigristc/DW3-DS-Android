@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.8-poc
+
+- Central Park ↔ Entrada del Bosque Alambre usa `MAP_ID`, que ya contiene el destino mientras `AREA` conserva temporalmente el mapa anterior.
+- Se elimina el sondeo lento del menú: **Abrir pestaña Mapa** envía START → ↓↓ → × con pulsaciones cortas. No existe una entrada directa documentada al mapa de Flawe.
+- La cruceta virtual captura el dedo desde que comienza dentro de ella y mantiene la marcha aunque se deslice fuera del círculo, hasta soltarlo.
+- El icono actual del menú de viaje también se resuelve desde `MAP_ID`, evitando resaltar el mapa anterior durante una transición.
+
 ## 0.7.7-poc
 
 - Al volver a Ciudad Asuka, si `MAP_ID` se queda en un interior (Salón `0x0203`), el título usa `AREA` del hub.

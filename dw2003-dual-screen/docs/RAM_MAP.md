@@ -69,9 +69,8 @@ La POC 0.7 escribe solo cuando el usuario lo pide y la sesión no está en batal
 | Dirección | Uso |
 |---|---|
 | `0x80048DA4`…`0x80048DAC` | Orden de la formación activa (tres `u32`) |
-| `0x80048D68` y `0x8004B3F8` | Destino de viaje rápido (ID de área/mapa visitado) |
 
-Los destinos del panel son iconos del mapa de Flawe (no el puente ni interiores). El menú START se recorre con la cruceta; L1/R1 ciclan iconos solo dentro del mapa mundial. No se escriben `0x80048D68` / `0x8004B3F8` para viajar: Flawe usa el icono seleccionado al salir con △. El título público usa `AREA` al volver al hub si `MAP_ID` sigue en un interior.
+Los destinos del panel son iconos del mapa de Flawe (no el puente ni interiores). El menú START se recorre rápidamente con la cruceta; L1/R1 ciclan iconos solo dentro del mapa mundial. No se escriben `0x80048D68` / `0x8004B3F8` para viajar: Flawe usa el icono seleccionado al salir con △. En las transiciones observadas, `MAP_ID` ya contiene el destino mientras `AREA` aún conserva el mapa anterior; por eso títulos e icono actual usan `MAP_ID`.
 
 Los mods opcionales se aplican con `retro_cheat_set` del núcleo, no con parches permanentes. Datos fuera de rango, perfiles inválidos y punteros externos a RAM se descartan.
 

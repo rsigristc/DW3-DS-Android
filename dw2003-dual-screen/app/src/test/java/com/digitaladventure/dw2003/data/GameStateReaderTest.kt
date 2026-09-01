@@ -39,9 +39,9 @@ class GameStateReaderTest {
 
         assertEquals(GameMode.BATTLE, snapshot.mode)
         assertEquals("Central Park", snapshot.areaName)
-        assertEquals("Central Park", snapshot.locationTitle)
-        assertEquals("Sector Central · Central Park", snapshot.radarLabel)
-        assertEquals("Central Park", snapshot.mapName)
+        assertEquals("Bosque Alambre Oeste", snapshot.locationTitle)
+        assertEquals("Sector Central · Bosque Alambre Oeste", snapshot.radarLabel)
+        assertEquals("Bosque Alambre Oeste", snapshot.mapName)
         assertFalse(snapshot.canReorderParty)
         assertFalse(snapshot.canFastTravel)
         assertEquals("Junior", snapshot.tamerName)
@@ -61,15 +61,15 @@ class GameStateReaderTest {
     }
 
     @Test
-    fun indoorAsukaRoomUsesRoomBanner() {
+    fun indoorAsukaRoomUsesCurrentMapId() {
         val ram = ByteArray(GameStateReader.MAIN_LENGTH)
-        put16(ram, GameStateReader.AREA - GameStateReader.MAIN_BASE, 0x0206)
-        put16(ram, GameStateReader.MAP_ID - GameStateReader.MAIN_BASE, 0x0200)
+        put16(ram, GameStateReader.AREA - GameStateReader.MAIN_BASE, 0x0200)
+        put16(ram, GameStateReader.MAP_ID - GameStateReader.MAIN_BASE, 0x0206)
         put16(ram, GameStateReader.STORY_STAGE - GameStateReader.MAIN_BASE, 4)
 
         val snapshot = GameStateReader().parse(ram, 0L, null)
 
-        assertEquals("Laboratorio Digimon", snapshot.areaName)
+        assertEquals("Ciudad Asuka", snapshot.areaName)
         assertEquals("Laboratorio Digimon", snapshot.locationTitle)
         assertEquals("Sector Central · Laboratorio Digimon", snapshot.radarLabel)
         assertEquals("Sector Central · Laboratorio Digimon · 0x0206", snapshot.locationDetail)

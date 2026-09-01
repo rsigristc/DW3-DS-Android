@@ -13,4 +13,16 @@ class VirtualPadMathTest {
             VirtualPadMath.dpadDirections(-20f, -18f, 5f)
         )
     }
+
+    @Test
+    fun capturedDpadKeepsWalkingOutsideItsDrawnCircle() {
+        assertEquals(
+            null,
+            VirtualPadMath.dpadDirectionsForPointer(120f, 0f, 5f, 50f, captured = false)
+        )
+        assertEquals(
+            setOf(PadDirection.RIGHT),
+            VirtualPadMath.dpadDirectionsForPointer(120f, 0f, 5f, 50f, captured = true)
+        )
+    }
 }

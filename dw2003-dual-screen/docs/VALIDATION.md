@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 1 de septiembre de 2026 (0.7.7-poc).
+Fecha de compilación: 1 de septiembre de 2026 (0.7.8-poc).
 
 ## Entorno
 
@@ -27,7 +27,7 @@ Resultado: `BUILD SUCCESSFUL`.
 - `DwTextDecoderTest`: verifica caracteres latinos, espacios, salto de línea y dígitos del formato de texto europeo.
 - `AppFileRulesTest`: verifica tamaños, cabeceras de Memory Card y firma regional del BIOS europeo.
 - `PanePolicyTest`: verifica juego completo en una pantalla exterior estrecha, panel dual al desplegar y juego completo cuando existe display secundario.
-- `VirtualPadMathTest`: verifica zona muerta, direcciones cardinales y diagonales de la cruceta táctil.
+- `VirtualPadMathTest`: verifica zona muerta, diagonales y captura de la cruceta fuera de su círculo.
 - `QuickStateManagerTest`: verifica que cada clave de ROM produzca un nombre de estado privado, seguro y acotado.
 - `ExperienceTableTest`: verifica umbral acumulado, progreso dentro del nivel y tratamiento de nivel 99.
 - `TechniqueCatalogTest`: verifica las técnicas características Rookie y el rechazo de perfiles desconocidos.
@@ -37,9 +37,9 @@ Resultado: `BUILD SUCCESSFUL`.
 - `MapRegionCatalogTest`: verifica servidor/sector para Asuka, Amaterasu y menús externos al mundo.
 - `DigievolutionCatalogTest`: verifica nombre, nivel mínimo y MP de técnicas desbloqueadas.
 - `TransparencyMaskTest`: verifica que solo el blanco conectado al borde se vuelva transparente.
-- `LocationResolverTest`: verifica interiores, el puente, Ciudad Asuka al volver del salón, y el bloqueo de viaje/reorden.
+- `LocationResolverTest`: verifica interiores, puente y Central Park ↔ Entrada del Bosque usando el destino de `MAP_ID`.
 - `FastTravelCatalogTest`: verifica que el puente no es un icono, que laboratorio visita cuenta como Ciudad Asuka, y que Park se desbloquea al visitarlo.
-- `FastTravelNavigatorTest`: verifica START con cruceta, L1/R1 entre iconos de Flawe y × + △.
+- `FastTravelNavigatorTest`: verifica la secuencia rápida START → ↓↓ → ×, L1/R1 entre iconos y × + △.
 - `CheatCatalogTest`: verifica códigos PAL de calidad de vida.
 - `GameMemoryControllerTest`: verifica el empaquetado little-endian de la formación.
 

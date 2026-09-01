@@ -13,27 +13,12 @@ class FastTravelNavigatorTest {
     }
 
     @Test
-    fun fallbackFromItemsIsDownThenCross() {
+    fun opensMapFromItemsWithTwoFastDownStepsThenCross() {
         assertEquals(
-            listOf(RetroPadButton.DPAD_DOWN, RetroPadButton.CROSS),
-            FastTravelNavigator.fallbackFromItemsToMap().map { it.button }
+            listOf(RetroPadButton.DPAD_DOWN, RetroPadButton.DPAD_DOWN, RetroPadButton.CROSS),
+            FastTravelNavigator.selectMapFromItems().map { it.button }
         )
-    }
-
-    @Test
-    fun stepsFromSortReachMapWithOneDownThenCross() {
-        assertEquals(
-            listOf(RetroPadButton.DPAD_DOWN, RetroPadButton.CROSS),
-            FastTravelNavigator.stepsTowardMap(1, downIncreases = true).map { it.button }
-        )
-    }
-
-    @Test
-    fun stepsFromMapOnlyPressCross() {
-        assertEquals(
-            listOf(RetroPadButton.CROSS),
-            FastTravelNavigator.stepsTowardMap(2, downIncreases = true).map { it.button }
-        )
+        assertTrue(FastTravelNavigator.selectMapFromItems().sumOf { it.afterMs + it.holdMs } < 600)
     }
 
     @Test

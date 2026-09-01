@@ -29,6 +29,7 @@ class VirtualControllerView(
     private val keyTargets = mutableListOf<KeyTarget>()
     private val actionTargets = mutableListOf<ActionTarget>()
     private val pointerPositions = mutableMapOf<Int, PointF>()
+    private val dpadPointers = mutableSetOf<Int>()
     private val quickStarts = mutableMapOf<Int, QuickAction>()
     private var pressedKeys = emptySet<Int>()
     private var dpadCenter = PointF()
@@ -137,12 +138,19 @@ class VirtualControllerView(
         keyTargets += KeyTarget(rect, keyCode, label)
     }
 
-    private fun keysAt(point: PointF): Set<Int> {
+    private fun keysAt(pointerId: Int, point: PointF): Set<Int> {
         if (gamepadVisible) {
             val dx = point.x - dpadCenter.x
             val dy = point.y - dpadCenter.y
-            if (dx * dx + dy * dy <= dpadRadius * dpadRadius) {
-                return VirtualPadMath.dpadDirections(dx, dy, dpadRadius * .22f).mapTo(mutableSetOf()) {
+            val directions = VirtualPadMath.dpadDirectionsForPointer(
+                dx = dx,
+                dy = dy,
+                deadZone = dpadRadius * .22f,
+                radius = dpadRadius,
+                captured = pointerId in dpadPointers
+            )
+            if (directions != null) {
+                return directions.mapTo(mutableSetOf()) {
                     when (it) {
                         PadDirection.UP -> KeyEvent.KEYCODE_DPAD_UP
                         PadDirection.DOWN -> KeyEvent.KEYCODE_DPAD_DOWN
@@ -158,7 +166,7 @@ class VirtualControllerView(
     private fun actionAt(x: Float, y: Float): QuickAction? = actionTargets.lastOrNull { it.bounds.contains(x, y) }?.action
 
     private fun updatePressedKeys() {
-        val next = pointerPositions.values.flatMapTo(mutableSetOf(), ::keysAt)
+        val next = pointerPositions.entries.flatMapTo(mutableSetOf()) { (id, point) -> keysAt(id, point) }
         (pressedKeys - next).forEach { keySink(KeyEvent.ACTION_UP, it) }
         (next - pressedKeys).forEach { keySink(KeyEvent.ACTION_DOWN, it) }
         pressedKeys = next
@@ -172,7 +180,13 @@ class VirtualControllerView(
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 val action = actionAt(event.getX(index), event.getY(index))
                 if (action != null) quickStarts[id] = action
-                else pointerPositions[id] = PointF(event.getX(index), event.getY(index))
+                else {
+                    val point = PointF(event.getX(index), event.getY(index))
+                    pointerPositions[id] = point
+                    val dx = point.x - dpadCenter.x
+                    val dy = point.y - dpadCenter.y
+                    if (dx * dx + dy * dy <= dpadRadius * dpadRadius) dpadPointers += id
+                }
                 updatePressedKeys()
             }
             MotionEvent.ACTION_MOVE -> {
@@ -184,6 +198,7 @@ class VirtualControllerView(
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
                 pointerPositions.remove(id)
+                dpadPointers.remove(id)
                 updatePressedKeys()
                 val started = quickStarts.remove(id)
                 if (started != null && started == actionAt(event.getX(index), event.getY(index))) {
@@ -202,6 +217,7 @@ class VirtualControllerView(
         pressedKeys.forEach { keySink(KeyEvent.ACTION_UP, it) }
         pressedKeys = emptySet()
         pointerPositions.clear()
+        dpadPointers.clear()
         quickStarts.clear()
     }
 
@@ -228,6 +244,22 @@ class VirtualControllerView(
 enum class PadDirection { UP, DOWN, LEFT, RIGHT }
 
 object VirtualPadMath {
+    /**
+     * Returns null when this pointer does not belong to the D-pad. Once a
+     * pointer starts inside it, `captured` keeps directions active outside the
+     * drawn circle until that same finger is released.
+     */
+    fun dpadDirectionsForPointer(
+        dx: Float,
+        dy: Float,
+        deadZone: Float,
+        radius: Float,
+        captured: Boolean
+    ): Set<PadDirection>? {
+        if (!captured && dx * dx + dy * dy > radius * radius) return null
+        return dpadDirections(dx, dy, deadZone)
+    }
+
     fun dpadDirections(dx: Float, dy: Float, deadZone: Float): Set<PadDirection> {
         if (abs(dx) < deadZone && abs(dy) < deadZone) return emptySet()
         val result = mutableSetOf<PadDirection>()

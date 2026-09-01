@@ -63,7 +63,7 @@ La versión 0.6 empareja cada serialización del núcleo con los 128 KiB de SRAM
 
 Tras crear o reanudar el núcleo, `GLRetroView.applyRuntimeOptions()` vuelve a enviar silencio y velocidad al audio nativo. `create()` reinicia esos flags a valores por defecto, y asignar el mismo valor en Kotlin no dispara el `observable`; por eso el botón SONIDO OFF podía quedar desincronizado al cerrar y reabrir el juego.
 
-El menú de viaje del radar lista solo iconos del mapa de Flawe (Ciudad Asuka y Central Park al inicio). «Abrir pestaña Mapa» usa START, cruceta y ×. Un destino cicla L1/R1 hasta el icono y confirma con × + △.
+El menú de viaje del radar lista solo iconos del mapa de Flawe (Ciudad Asuka y Central Park al inicio). «Abrir pestaña Mapa» usa la secuencia corta START → ↓↓ → ×, sin el sondeo de RAM anterior. Un destino cicla L1/R1 hasta el icono y confirma con × + △. La cruceta captura el puntero que comienza dentro de su círculo y conserva la dirección fuera de sus límites hasta levantar ese dedo.
 
 ## BIOS aportado por el usuario
 

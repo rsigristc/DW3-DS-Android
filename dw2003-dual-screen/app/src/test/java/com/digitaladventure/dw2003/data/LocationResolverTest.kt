@@ -8,8 +8,8 @@ import org.junit.Test
 
 class LocationResolverTest {
     @Test
-    fun indoorRoomUsesBannerNameNotCityHub() {
-        val location = LocationResolver.resolve(0x0206, 0x0200)
+    fun indoorRoomUsesCurrentMapIdNotStaleCityArea() {
+        val location = LocationResolver.resolve(0x0200, 0x0206)
 
         assertEquals("Laboratorio Digimon", location.title)
         assertEquals("Sector Central · Laboratorio Digimon", location.radarLabel)
@@ -18,8 +18,8 @@ class LocationResolverTest {
     }
 
     @Test
-    fun innBannerWhenAreaIsRoomAndMapIsHub() {
-        val location = LocationResolver.resolve(0x020A, 0x0200)
+    fun innBannerUsesCurrentMapId() {
+        val location = LocationResolver.resolve(0x0200, 0x020A)
 
         assertEquals("Posada Asuka 1P", location.title)
         assertEquals(0x020A, location.publicMapId)
@@ -34,13 +34,12 @@ class LocationResolverTest {
     }
 
     @Test
-    fun outdoorFieldKeepsCurrentAreaEvenIfHubMapIdLags() {
-        val location = LocationResolver.resolve(0x021D, 0x0200)
+    fun enteringWireForestUsesDestinationMapId() {
+        val location = LocationResolver.resolve(0x021D, 0x021E)
 
-        assertEquals("Central Park", location.title)
-        assertEquals("Sector Central · Central Park", location.radarLabel)
-        assertEquals(0x021D, location.publicMapId)
-        assertFalse(location.title.contains("Asuka", ignoreCase = true))
+        assertEquals("Entrada del Bosque Alambre", location.title)
+        assertEquals("Sector Central · Entrada del Bosque Alambre", location.radarLabel)
+        assertEquals(0x021E, location.publicMapId)
     }
 
     @Test
@@ -54,8 +53,8 @@ class LocationResolverTest {
     }
 
     @Test
-    fun returningToCityIgnoresStaleIndoorMapId() {
-        val location = LocationResolver.resolve(0x0200, 0x0203)
+    fun returningToCityUsesDestinationMapId() {
+        val location = LocationResolver.resolve(0x0203, 0x0200)
 
         assertEquals("Ciudad Asuka", location.title)
         assertEquals(0x0200, location.publicMapId)
@@ -63,8 +62,8 @@ class LocationResolverTest {
     }
 
     @Test
-    fun distinctFieldMapsPreferAreaId() {
-        val location = LocationResolver.resolve(0x021D, 0x0221)
+    fun returningToParkUsesDestinationMapId() {
+        val location = LocationResolver.resolve(0x021E, 0x021D)
 
         assertEquals("Central Park", location.title)
         assertEquals(null, location.roomName)

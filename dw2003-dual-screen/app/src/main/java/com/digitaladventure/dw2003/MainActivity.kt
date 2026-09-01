@@ -728,24 +728,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
         playPadSteps(FastTravelNavigator.pressStart())
         if (!waitUntil(1800) { menuIsOpen() }) {
-            delay(500)
+            delay(180)
         }
         delay(FastTravelNavigator.MENU_SETTLE_MS)
-        val controller = memoryController
-        val before = controller?.readTabScan()
-        playPadSteps(FastTravelNavigator.probeNextEntry())
-        val after = controller?.readTabScan()
-        val cursor = if (before != null && after != null) {
-            FastTravelNavigator.findTabCursor(before, after)
-        } else {
-            null
-        }
-        if (cursor != null) {
-            playPadSteps(FastTravelNavigator.stepsTowardMap(cursor.index, cursor.downIncreases))
-        } else {
-            playPadSteps(FastTravelNavigator.fallbackFromItemsToMap())
-        }
-        delay(600)
+        playPadSteps(FastTravelNavigator.selectMapFromItems())
+        delay(300)
     }
 
     private fun menuIsOpen(): Boolean {
