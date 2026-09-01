@@ -18,32 +18,40 @@ object LocationResolver {
         0x0200, 0x0201, 0x022E, 0x023E, 0x025D,
         0x0780, 0x0810, 0x0825, 0x0845, 0x0855
     )
+    private val indoorRooms = setOf(
+        0x0203, 0x0204, 0x0206, 0x0207, 0x0208, 0x020A, 0x020C, 0x020D, 0x020E, 0x020F,
+        0x0210, 0x0213, 0x0214, 0x0217, 0x0218, 0x021C,
+        0x0223, 0x0224, 0x0238, 0x0239, 0x023F, 0x0240,
+        0x0790, 0x0795, 0x0800, 0x0830, 0x0835
+    )
+    /** Outdoor tiles that keep AREA on the city hub (e.g. Asuka Bridge). */
+    private val cityConnectors = setOf(0x0202)
 
     fun isOverlay(id: Int): Boolean = AreaCatalog.isOverlay(id)
 
     fun isCityHub(id: Int): Boolean = id in cityHubs
 
+    fun isIndoorRoom(id: Int): Boolean = id in indoorRooms
+
     fun isStage(id: Int): Boolean = id != 0 && !isOverlay(id)
 
     /**
-     * In-game banners (Posada, Salón, Puente Asuka) use the specific stage.
-     * `AREA` often stays on the city hub (`0x0200`) while `MAP_ID` is the room
-     * or bridge; interiors can also store the room in `AREA` and the hub in
-     * `MAP_ID`. Prefer the non-hub stage so the companion matches the overlay.
+     * AREA is the live walking map when it updates. MAP_ID often keeps the
+     * previous indoor room after returning to the city, so a hub AREA plus an
+     * indoor MAP_ID means the streets (Ciudad Asuka), not the stale salon.
+     * Connectors such as the bridge still use MAP_ID because AREA stays on the hub.
      */
     fun stageId(areaId: Int, mapId: Int): Int {
         val areaStage = isStage(areaId)
         val mapStage = isStage(mapId)
-        val areaHub = isCityHub(areaId)
-        val mapHub = isCityHub(mapId)
         return when {
-            areaHub && mapStage && !mapHub -> mapId
-            mapHub && areaStage && !areaHub -> areaId
-            mapStage && isOverlay(areaId) -> mapId
-            areaStage && isOverlay(mapId) -> areaId
-            mapStage && areaStage -> mapId
-            mapStage -> mapId
+            isOverlay(areaId) && mapStage -> mapId
+            isOverlay(mapId) && areaStage -> areaId
+            isIndoorRoom(areaId) -> areaId
+            isCityHub(areaId) && isIndoorRoom(mapId) -> areaId
+            isCityHub(areaId) && mapId in cityConnectors -> mapId
             areaStage -> areaId
+            mapStage -> mapId
             else -> areaId
         }
     }

@@ -28,6 +28,7 @@ import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatCatalog
+import com.digitaladventure.dw2003.data.FastTravelCatalog
 import com.digitaladventure.dw2003.data.GameStateRepository
 import com.digitaladventure.dw2003.model.GameMode
 import com.digitaladventure.dw2003.emulation.BiosManager
@@ -650,32 +651,33 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             Toast.makeText(this, "Viaje rápido bloqueado durante batalla o eventos", Toast.LENGTH_LONG).show()
             return
         }
-        val controller = memoryController
-        if (controller == null || retroView == null) {
+        if (memoryController == null || retroView == null) {
             Toast.makeText(this, "El viaje rápido requiere una partida en emulación", Toast.LENGTH_LONG).show()
             return
         }
         runTravelSequence {
             openMapTab()
-            val origin = controller.readAreaMap().first
-            runCatching { controller.requestFastTravel(areaId) }
-                .onFailure {
-                    Toast.makeText(this@MainActivity, "No se pudo escribir el destino: ${it.message}", Toast.LENGTH_LONG).show()
-                    return@runTravelSequence
-                }
-            delay(280)
+            delay(600)
+            val currentIcon = FastTravelCatalog.iconId(
+                repository.snapshot.value.areaId,
+                repository.snapshot.value.mapId
+            )
+            playPadSteps(
+                FastTravelNavigator.stepsToFlaweIcon(
+                    currentIcon,
+                    areaId,
+                    FastTravelCatalog.cycleOrder(areaId)
+                )
+            )
             playPadSteps(FastTravelNavigator.confirmMapDestination())
-            waitUntil(2500) {
-                val now = memoryController?.readAreaMap()?.first ?: return@waitUntil false
-                now != origin && !menuIsOpen()
-            }
+            waitUntil(2500) { !menuIsOpen() }
             if (menuIsOpen()) {
                 playPadSteps(FastTravelNavigator.closeMenu())
                 waitUntil(900) { !menuIsOpen() }
             }
             Toast.makeText(
                 this@MainActivity,
-                "Destino ${AreaCatalog.name(areaId)} confirmado en la pestaña Mapa. Flawe carga al salir, en el spawn del icono.",
+                "Destino ${AreaCatalog.name(areaId)} elegido en el mapa de Flawe. Al salir cargas en el spawn del icono.",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -695,7 +697,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             openMapTab()
             Toast.makeText(
                 this@MainActivity,
-                "Pestaña Mapa. En Flawe, □ cambia de servidor y × elige el icono; al salir del menú cargas en el spawn de ese icono.",
+                "Mapa de Flawe. L1/R1 cambian de icono y × confirma; al salir del menú cargas en el spawn de ese icono.",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -731,7 +733,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         delay(FastTravelNavigator.MENU_SETTLE_MS)
         val controller = memoryController
         val before = controller?.readTabScan()
-        playPadSteps(FastTravelNavigator.probeNextTab())
+        playPadSteps(FastTravelNavigator.probeNextEntry())
         val after = controller?.readTabScan()
         val cursor = if (before != null && after != null) {
             FastTravelNavigator.findTabCursor(before, after)
@@ -739,11 +741,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             null
         }
         if (cursor != null) {
-            playPadSteps(FastTravelNavigator.stepsTowardMap(cursor.index, cursor.r1Increases))
+            playPadSteps(FastTravelNavigator.stepsTowardMap(cursor.index, cursor.downIncreases))
         } else {
-            playPadSteps(FastTravelNavigator.fallbackAfterProbe())
+            playPadSteps(FastTravelNavigator.fallbackFromItemsToMap())
         }
-        delay(500)
+        delay(600)
     }
 
     private fun menuIsOpen(): Boolean {
@@ -781,6 +783,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         RetroPadButton.R1 -> KeyEvent.KEYCODE_BUTTON_R1
         RetroPadButton.CROSS -> KeyEvent.KEYCODE_BUTTON_B
         RetroPadButton.TRIANGLE -> KeyEvent.KEYCODE_BUTTON_X
+        RetroPadButton.DPAD_UP -> KeyEvent.KEYCODE_DPAD_UP
+        RetroPadButton.DPAD_DOWN -> KeyEvent.KEYCODE_DPAD_DOWN
     }
 
     private fun movePartyMember(fromIndex: Int, toIndex: Int) {

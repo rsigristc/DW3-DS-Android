@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.7-poc
+
+- Al volver a Ciudad Asuka, si `MAP_ID` se queda en un interior (Salón `0x0203`), el título usa `AREA` del hub.
+- **Abrir pestaña Mapa** recorre START con la cruceta (Ítems → Ordenar → Mapa) y pulsa ×. L1/R1 no mueven esa lista; solo ciclan iconos ya dentro del mapa de Flawe.
+- Elegir un destino abre ese mapa, mueve L1/R1 al icono y confirma con × + △. Ya no escribe IDs en RAM (eso cambiaba el mapa y dejaba el spawn mal).
+- La lista de viaje rápido solo muestra iconos del mapa de Flawe. El puente y las salas cuentan como Ciudad Asuka; al inicio: Ciudad Asuka y Central Park.
+
 ## 0.7.6-poc
 
 - El título sigue el escenario del overlay del juego (Posada, Salón, Puente Asuka). `AREA` suele quedarse en el hub `0x0200`; `MAP_ID` es la sala o el puente. Ya no se fuerza Ciudad Asuka.

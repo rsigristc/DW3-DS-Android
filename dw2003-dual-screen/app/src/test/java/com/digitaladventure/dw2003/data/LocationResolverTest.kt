@@ -54,10 +54,19 @@ class LocationResolverTest {
     }
 
     @Test
-    fun distinctFieldMapsPreferMapId() {
+    fun returningToCityIgnoresStaleIndoorMapId() {
+        val location = LocationResolver.resolve(0x0200, 0x0203)
+
+        assertEquals("Ciudad Asuka", location.title)
+        assertEquals(0x0200, location.publicMapId)
+        assertFalse(location.title.contains("Salón", ignoreCase = true))
+    }
+
+    @Test
+    fun distinctFieldMapsPreferAreaId() {
         val location = LocationResolver.resolve(0x021D, 0x0221)
 
-        assertEquals("Bosque Alambre Oeste", location.title)
+        assertEquals("Central Park", location.title)
         assertEquals(null, location.roomName)
     }
 

@@ -1,7 +1,6 @@
 package com.digitaladventure.dw2003.emulation
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -14,42 +13,43 @@ class FastTravelNavigatorTest {
     }
 
     @Test
-    fun findsAlignedTabIndexAfterR1() {
-        val before = ByteArray(8)
-        val after = ByteArray(8)
-        before[2] = 0
-        after[2] = 1
-        val cursor = FastTravelNavigator.findTabCursor(before, after)
-        assertEquals(2, cursor?.offset)
-        assertEquals(1, cursor?.index)
-        assertEquals(true, cursor?.r1Increases)
+    fun fallbackFromItemsIsDownThenCross() {
+        assertEquals(
+            listOf(RetroPadButton.DPAD_DOWN, RetroPadButton.CROSS),
+            FastTravelNavigator.fallbackFromItemsToMap().map { it.button }
+        )
     }
 
     @Test
-    fun ignoresAmbiguousTabCandidates() {
-        val before = ByteArray(8)
-        val after = ByteArray(8)
-        before[0] = 0
-        after[0] = 1
-        before[4] = 2
-        after[4] = 3
-        assertNull(FastTravelNavigator.findTabCursor(before, after))
+    fun stepsFromSortReachMapWithOneDownThenCross() {
+        assertEquals(
+            listOf(RetroPadButton.DPAD_DOWN, RetroPadButton.CROSS),
+            FastTravelNavigator.stepsTowardMap(1, downIncreases = true).map { it.button }
+        )
     }
 
     @Test
-    fun stepsFromSortReachMapWithOneR1() {
-        val steps = FastTravelNavigator.stepsTowardMap(1, r1Increases = true)
-        assertEquals(listOf(RetroPadButton.R1), steps.map { it.button })
+    fun stepsFromMapOnlyPressCross() {
+        assertEquals(
+            listOf(RetroPadButton.CROSS),
+            FastTravelNavigator.stepsTowardMap(2, downIncreases = true).map { it.button }
+        )
     }
 
     @Test
-    fun stepsFromMapDoNothing() {
-        assertTrue(FastTravelNavigator.stepsTowardMap(2, r1Increases = true).isEmpty())
+    fun cyclesAsukaToParkWithR1() {
+        assertEquals(
+            listOf(RetroPadButton.R1),
+            FastTravelNavigator.stepsToFlaweIcon(0x0200, 0x021D, listOf(0x0200, 0x021D)).map { it.button }
+        )
     }
 
     @Test
-    fun fallbackAfterProbeIsOneMoreR1() {
-        assertEquals(listOf(RetroPadButton.R1), FastTravelNavigator.fallbackAfterProbe().map { it.button })
+    fun cyclesParkToAsukaByWrappingR1() {
+        assertEquals(
+            listOf(RetroPadButton.R1),
+            FastTravelNavigator.stepsToFlaweIcon(0x021D, 0x0200, listOf(0x0200, 0x021D)).map { it.button }
+        )
     }
 
     @Test

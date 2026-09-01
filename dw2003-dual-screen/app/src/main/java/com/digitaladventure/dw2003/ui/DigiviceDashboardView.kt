@@ -532,12 +532,18 @@ class DigiviceDashboardView(
             actions.onOpenGameMap()
             invalidate()
         }
-        val groups = FastTravelCatalog.groups(snapshot.storyStage, visitedMaps + snapshot.areaId, snapshot.areaId)
+        val currentIcon = FastTravelCatalog.iconId(snapshot.areaId, snapshot.mapId)
+        val groups = FastTravelCatalog.groups(
+            snapshot.storyStage,
+            visitedMaps + snapshot.areaId + snapshot.mapId,
+            snapshot.areaId,
+            snapshot.mapId
+        )
         val listTop = openMap.bottom + dp(6f)
         if (!snapshot.canFastTravel) {
             drawWrapped(
                 canvas,
-                "El traslado desde esta lista solo está disponible fuera de batalla, menús de evento y pantallas de guardado. Abrir pestaña Mapa usa START y lleva a MAPA desde la pestaña actual.",
+                "El traslado desde esta lista solo está disponible fuera de batalla. Abrir pestaña Mapa usa START, cruceta y × para entrar al mapa de Flawe.",
                 bounds.left + dp(16f),
                 listTop + dp(4f),
                 bounds.width() - dp(32f),
@@ -580,11 +586,11 @@ class DigiviceDashboardView(
             group.destinations.forEach { destination ->
                 val row = RectF(bounds.left + dp(10f), y, bounds.right - dp(10f), y + rowHeight)
                 if (row.top >= listTop && row.top < bounds.bottom - dp(8f)) {
-                    paint.color = if (destination.areaId == snapshot.areaId) CYAN_DARK else PANEL_INNER
+                    paint.color = if (destination.areaId == currentIcon) CYAN_DARK else PANEL_INNER
                     canvas.drawRoundRect(row, dp(5f), dp(5f), paint)
                     drawText(canvas, destination.name.uppercase(), row.left + dp(10f), row.centerY() + dp(4f), dp(10f), WHITE, true)
                     drawText(canvas, "0x${AreaCatalog.hex(destination.areaId)}", row.right - dp(10f), row.centerY() + dp(4f), dp(8f), MUTED, true, Paint.Align.RIGHT)
-                    if (snapshot.canFastTravel && destination.areaId != snapshot.areaId) {
+                    if (snapshot.canFastTravel && destination.areaId != currentIcon) {
                         hitTargets += row to {
                             travelMenuOpen = false
                             actions.onFastTravel(destination.areaId)
