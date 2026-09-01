@@ -2,7 +2,7 @@
 
 ## 0.7.0-poc
 
-- El título del panel usa el nombre público del mapa (p. ej. Ciudad Asuka) cuando el ID de sala es un interior del hub, para coincidir con la pantalla de carga.
+- El título del panel usa el nombre público del mapa (p. ej. Ciudad Asuka) cuando el ID de sala es un interior del hub, para coincidir con la pantalla de carga. El subtítulo y el radar muestran el mismo par Sector + mapa; ya no se pinta el nombre interno de sala (Laboratorio Digimon) en la esquina superior izquierda.
 - Aplica la máscara de transparencia al sprite del Tamer, no solo a los compañeros.
 - ⚙ APP abre la ventana de configuración inicial, con aviso de BIOS y un interruptor que muestra u oculta la pestaña Mods.
 - El mapa regional abre un menú de viaje rápido por servidor, sector y destinos ya visitados o liberados.

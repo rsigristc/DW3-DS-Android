@@ -40,6 +40,7 @@ class GameStateReaderTest {
         assertEquals(GameMode.BATTLE, snapshot.mode)
         assertEquals("Central Park", snapshot.areaName)
         assertEquals("Central Park", snapshot.locationTitle)
+        assertEquals("Sector Central · Central Park", snapshot.radarLabel)
         assertEquals("Bosque Alambre Oeste", snapshot.mapName)
         assertFalse(snapshot.canReorderParty)
         assertFalse(snapshot.canFastTravel)
@@ -70,8 +71,10 @@ class GameStateReaderTest {
 
         assertEquals("Laboratorio Digimon", snapshot.areaName)
         assertEquals("Ciudad Asuka", snapshot.locationTitle)
-        assertEquals("Laboratorio Digimon", snapshot.locationRoom)
+        assertEquals("Sector Central · Ciudad Asuka", snapshot.radarLabel)
+        assertEquals("Sector Central · Ciudad Asuka · 0x0200", snapshot.locationDetail)
         assertEquals("Ciudad Asuka", snapshot.mapName)
+        assertFalse(snapshot.locationDetail.contains("Laboratorio"))
         assertTrue(snapshot.canFastTravel)
         assertTrue(snapshot.canReorderParty)
     }

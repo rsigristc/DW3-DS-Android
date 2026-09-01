@@ -4,6 +4,9 @@ import com.digitaladventure.dw2003.model.GameMode
 
 data class LocationDisplay(
     val title: String,
+    val detail: String,
+    val radarLabel: String,
+    val publicMapId: Int,
     val roomName: String?,
     val mapLabel: String,
     val areaId: Int,
@@ -23,27 +26,31 @@ object LocationResolver {
         val mapName = AreaCatalog.knownName(mapId) ?: AreaCatalog.name(if (mapId != 0) mapId else areaId)
         val areaOverlay = isOverlay(areaId)
         val mapOverlay = isOverlay(mapId)
-
-        val fieldId = when {
-            !areaOverlay && areaId != 0 -> areaId
+        val publicMapId = when {
             !mapOverlay && mapId != 0 -> mapId
-            else -> 0
+            !areaOverlay && areaId != 0 -> areaId
+            else -> mapId
         }
-        val fieldName = if (fieldId != 0) AreaCatalog.name(fieldId) else areaName
-
         val title = when {
-            !mapOverlay && mapId in cityHubs && !areaOverlay && areaId != 0 -> AreaCatalog.name(mapId)
+            !mapOverlay && mapId in cityHubs -> AreaCatalog.name(mapId)
             !areaOverlay && areaId != 0 -> areaName
             !mapOverlay && mapId != 0 -> mapName
-            else -> fieldName
+            else -> areaName
         }
-        val room = areaName.takeIf {
-            !areaOverlay && areaId != 0 && !it.equals(title, ignoreCase = true)
+        val regionSource = if (!mapOverlay && mapId != 0) mapId else areaId
+        val region = MapRegionCatalog.resolve(regionSource).let { mapRegion ->
+            if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(areaId) else mapRegion
         }
+        val radarLabel = "${region.sector.label} · $title"
         return LocationDisplay(
             title = title,
-            roomName = room,
-            mapLabel = if (mapOverlay) mapName else (room ?: mapName),
+            detail = "$radarLabel · 0x${AreaCatalog.hex(publicMapId)}",
+            radarLabel = radarLabel,
+            publicMapId = publicMapId,
+            roomName = areaName.takeIf {
+                !areaOverlay && areaId != 0 && !it.equals(title, ignoreCase = true)
+            },
+            mapLabel = if (mapOverlay) mapName else title,
             areaId = areaId,
             mapId = if (mapId != 0) mapId else areaId
         )

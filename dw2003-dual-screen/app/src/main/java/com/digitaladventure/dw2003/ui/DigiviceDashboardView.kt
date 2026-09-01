@@ -138,10 +138,7 @@ class DigiviceDashboardView(
 
     private fun drawHeader(canvas: Canvas, margin: Float, bottom: Float) {
         drawText(canvas, snapshot.locationTitle.uppercase(), margin, dp(27f), dp(17f), WHITE, true)
-        val locationDetail = snapshot.locationRoom?.let { room ->
-            "${room.uppercase()} · 0x${AreaCatalog.hex(snapshot.areaId)}"
-        } ?: "MAPA: ${snapshot.mapName.uppercase()} · 0x${AreaCatalog.hex(snapshot.mapId)}"
-        drawText(canvas, "$locationDetail · HISTORIA ${snapshot.storyStage}", margin, dp(49f), dp(9f), MUTED)
+        drawText(canvas, "${snapshot.locationDetail.uppercase()} · HISTORIA ${snapshot.storyStage}", margin, dp(49f), dp(9f), MUTED)
         val status = when {
             !snapshot.gameStarted -> "○ ESPERANDO PARTIDA"
             snapshot.isLive -> "● RAM EN VIVO"
@@ -213,8 +210,7 @@ class DigiviceDashboardView(
         canvas.drawLine(map.centerX() - dp(12f), map.centerY(), map.centerX() + dp(12f), map.centerY(), paint)
         canvas.drawLine(map.centerX(), map.centerY() - dp(12f), map.centerX(), map.centerY() + dp(12f), paint)
         paint.style = Paint.Style.FILL
-        val radarName = snapshot.locationRoom ?: snapshot.mapName
-        drawText(canvas, "${snapshot.sectorName.uppercase()} · ${radarName.uppercase()}", bounds.centerX(), bounds.bottom - dp(8f), dp(7.5f), MUTED, true, Paint.Align.CENTER)
+        drawText(canvas, snapshot.radarLabel.uppercase(), bounds.centerX(), bounds.bottom - dp(8f), dp(7.5f), MUTED, true, Paint.Align.CENTER)
         if (snapshot.canFastTravel) {
             drawText(canvas, "TOCA EL MAPA PARA VIAJE RÁPIDO", bounds.centerX(), bounds.top + dp(28f), dp(7f), CYAN, true, Paint.Align.CENTER)
             hitTargets += map to {

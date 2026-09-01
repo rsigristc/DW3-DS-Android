@@ -39,6 +39,8 @@ class GameStateReader {
             areaId = areaId,
             areaName = AreaCatalog.name(areaId),
             locationTitle = location.title,
+            locationDetail = location.detail,
+            radarLabel = location.radarLabel,
             locationRoom = location.roomName,
             mapId = mapId,
             mapName = AreaCatalog.knownName(mapId) ?: AreaCatalog.name(areaId),

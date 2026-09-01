@@ -12,7 +12,11 @@ class LocationResolverTest {
         val location = LocationResolver.resolve(0x0206, 0x0200)
 
         assertEquals("Ciudad Asuka", location.title)
-        assertEquals("Laboratorio Digimon", location.roomName)
+        assertEquals("Sector Central · Ciudad Asuka", location.radarLabel)
+        assertEquals("Sector Central · Ciudad Asuka · 0x0200", location.detail)
+        assertEquals(0x0200, location.publicMapId)
+        assertFalse(location.detail.contains("Laboratorio", ignoreCase = true))
+        assertFalse(location.radarLabel.contains("Laboratorio", ignoreCase = true))
     }
 
     @Test
