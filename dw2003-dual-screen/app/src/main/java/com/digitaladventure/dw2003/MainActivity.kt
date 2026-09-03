@@ -682,25 +682,33 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             Toast.makeText(this, "Viaje rápido bloqueado durante batalla o eventos", Toast.LENGTH_LONG).show()
             return
         }
-        if (memoryController == null || retroView == null) {
+        val controller = memoryController
+        if (controller == null || retroView == null) {
             Toast.makeText(this, "El viaje rápido requiere una partida en emulación", Toast.LENGTH_LONG).show()
             return
         }
+        val currentIcon = FastTravelCatalog.iconId(snapshot.areaId, snapshot.mapId)
         runTravelSequence {
             openMapTab()
             delay(600)
-            val currentIcon = FastTravelCatalog.iconId(
-                repository.snapshot.value.areaId,
-                repository.snapshot.value.mapId
-            )
-            playPadSteps(
-                FastTravelNavigator.stepsToFlaweIcon(
-                    currentIcon,
-                    areaId,
-                    FastTravelCatalog.cycleOrder(areaId)
+            val directToken = runCatching { controller.beginDirectFlaweWarp(areaId) }.getOrNull()
+            if (directToken != null) {
+                try {
+                    playPadSteps(FastTravelNavigator.selectMapDestination())
+                } finally {
+                    controller.restoreDirectFlaweWarp(directToken)
+                }
+                playPadSteps(FastTravelNavigator.exitMapMenu())
+            } else {
+                playPadSteps(
+                    FastTravelNavigator.stepsToFlaweIcon(
+                        currentIcon,
+                        areaId,
+                        FastTravelCatalog.cycleOrder(areaId)
+                    )
                 )
-            )
-            playPadSteps(FastTravelNavigator.confirmMapDestination())
+                playPadSteps(FastTravelNavigator.confirmMapDestination())
+            }
             waitUntil(2500) { !menuIsOpen() }
             if (menuIsOpen()) {
                 playPadSteps(FastTravelNavigator.closeMenu())
@@ -708,7 +716,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             }
             Toast.makeText(
                 this@MainActivity,
-                "Destino ${AreaCatalog.name(areaId)} elegido en el mapa de Flawe. Al salir cargas en el spawn del icono.",
+                if (directToken != null) {
+                    "Destino ${AreaCatalog.name(areaId)} enviado directamente a Flawe con su spawn original."
+                } else {
+                    "Firma directa no disponible; destino elegido con la cruceta de Flawe."
+                },
                 Toast.LENGTH_LONG
             ).show()
         }

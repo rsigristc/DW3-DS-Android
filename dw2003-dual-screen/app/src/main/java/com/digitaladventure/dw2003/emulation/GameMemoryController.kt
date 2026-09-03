@@ -5,6 +5,8 @@ import com.digitaladventure.dw2003.data.GameStateReader
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.LibretroDroid
 
+data class FlaweDirectWarpToken(val originalDispatcher: ByteArray)
+
 class GameMemoryController(private val view: GLRetroView) {
     fun reorderParty(profileIds: List<Int>) {
         require(profileIds.size in 1..3) { "La formación activa solo tiene tres ranuras" }
@@ -29,6 +31,29 @@ class GameMemoryController(private val view: GLRetroView) {
             4
         )
         return GameStateReader.u32(bytes, 0)
+    }
+
+    fun beginDirectFlaweWarp(areaId: Int): FlaweDirectWarpToken? {
+        val original = view.readMemory(
+            LibretroDroid.MEMORY_SYSTEM_RAM,
+            FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
+            FlaweDirectWarpPatch.WINDOW_SIZE
+        )
+        val patched = FlaweDirectWarpPatch.prepare(original, areaId) ?: return null
+        view.writeMemory(
+            LibretroDroid.MEMORY_SYSTEM_RAM,
+            FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
+            patched
+        )
+        return FlaweDirectWarpToken(original)
+    }
+
+    fun restoreDirectFlaweWarp(token: FlaweDirectWarpToken) {
+        view.writeMemory(
+            LibretroDroid.MEMORY_SYSTEM_RAM,
+            FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
+            token.originalDispatcher
+        )
     }
 
     fun applyCheats(enabled: List<CheatSpec>) {

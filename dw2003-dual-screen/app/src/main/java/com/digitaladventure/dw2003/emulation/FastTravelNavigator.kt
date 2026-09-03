@@ -25,11 +25,16 @@ object FastTravelNavigator {
         PadStep(RetroPadButton.CROSS, 220, 90)
     )
 
-    fun confirmMapDestination(): List<PadStep> = listOf(
-        PadStep(RetroPadButton.CROSS, 400, 120),
+    fun selectMapDestination(): List<PadStep> =
+        listOf(PadStep(RetroPadButton.CROSS, 400, 120))
+
+    fun exitMapMenu(): List<PadStep> = listOf(
         PadStep(RetroPadButton.TRIANGLE, 420, 120),
         PadStep(RetroPadButton.TRIANGLE, 500, 120)
     )
+
+    fun confirmMapDestination(): List<PadStep> =
+        selectMapDestination() + exitMapMenu()
 
     fun closeMenu(): List<PadStep> = listOf(PadStep(RetroPadButton.TRIANGLE, 260))
 
