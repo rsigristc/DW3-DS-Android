@@ -26,7 +26,7 @@ object FastTravelCatalog {
         0x021D to setOf(0x021D, 0x021E)
     )
 
-    /** Cycle order of Flawe icons on Asuka Central (L1/R1 on the world map). */
+    /** Vertical D-pad order of the currently exposed Flawe icons on Asuka Central. */
     val asukaCentralOrder: List<Int> = listOf(0x0200, 0x021D)
 
     private val destinations: List<FastTravelDestination> = flaweIcons.map { id ->

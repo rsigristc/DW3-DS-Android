@@ -22,25 +22,25 @@ class FastTravelNavigatorTest {
     }
 
     @Test
-    fun cyclesAsukaToParkWithR1() {
+    fun movesDownFromAsukaToPark() {
         assertEquals(
-            listOf(RetroPadButton.R1),
+            listOf(RetroPadButton.DPAD_DOWN),
             FastTravelNavigator.stepsToFlaweIcon(0x0200, 0x021D, listOf(0x0200, 0x021D)).map { it.button }
         )
     }
 
     @Test
-    fun cyclesParkToAsukaByWrappingR1() {
+    fun movesUpFromParkToAsuka() {
         assertEquals(
-            listOf(RetroPadButton.R1),
+            listOf(RetroPadButton.DPAD_UP),
             FastTravelNavigator.stepsToFlaweIcon(0x021D, 0x0200, listOf(0x0200, 0x021D)).map { it.button }
         )
     }
 
     @Test
-    fun confirmsDestinationWithCrossThenTriangle() {
+    fun confirmsDestinationAndFullyExitsMapMenu() {
         assertEquals(
-            listOf(RetroPadButton.CROSS, RetroPadButton.TRIANGLE),
+            listOf(RetroPadButton.CROSS, RetroPadButton.TRIANGLE, RetroPadButton.TRIANGLE),
             FastTravelNavigator.confirmMapDestination().map { it.button }
         )
     }

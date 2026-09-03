@@ -5,7 +5,7 @@ import com.digitaladventure.dw2003.data.GameStateReader
 /**
  * START opens a vertical list (Items, Sort, Map, Techniques, Status)
  * moved with the D-pad, not L1/R1. Cross on Map opens Flawe's world map,
- * where L1/R1 cycle unlocked icons and Cross + Triangle confirm the warp.
+ * where the D-pad selects icons and Cross + Triangle confirm the warp.
  */
 enum class RetroPadButton { START, L1, R1, CROSS, TRIANGLE, DPAD_UP, DPAD_DOWN }
 
@@ -26,8 +26,9 @@ object FastTravelNavigator {
     )
 
     fun confirmMapDestination(): List<PadStep> = listOf(
-        PadStep(RetroPadButton.CROSS, 240, 100),
-        PadStep(RetroPadButton.TRIANGLE, 300, 100)
+        PadStep(RetroPadButton.CROSS, 400, 120),
+        PadStep(RetroPadButton.TRIANGLE, 420, 120),
+        PadStep(RetroPadButton.TRIANGLE, 500, 120)
     )
 
     fun closeMenu(): List<PadStep> = listOf(PadStep(RetroPadButton.TRIANGLE, 260))
@@ -42,12 +43,10 @@ object FastTravelNavigator {
         val start = order.indexOf(fromIcon).takeIf { it >= 0 } ?: 0
         val end = order.indexOf(toIcon).takeIf { it >= 0 } ?: return emptyList()
         if (start == end) return emptyList()
-        val forward = (end - start + order.size) % order.size
-        val backward = (start - end + order.size) % order.size
-        return if (forward <= backward) {
-            List(forward) { PadStep(RetroPadButton.R1, 220, 100) }
+        return if (end > start) {
+            List(end - start) { PadStep(RetroPadButton.DPAD_DOWN, 420, 120) }
         } else {
-            List(backward) { PadStep(RetroPadButton.L1, 220, 100) }
+            List(start - end) { PadStep(RetroPadButton.DPAD_UP, 420, 120) }
         }
     }
 }
