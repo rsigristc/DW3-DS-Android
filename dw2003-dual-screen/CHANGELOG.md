@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.10-poc
+
+- Selección directa de Ciudad Asuka (`0x14`) y Central Park (`0x1E`) mediante el dispatcher de Flawe en `0x8000C000`; el propio mod conserva su tabla de mapa y spawn.
+- Antes de escribir se validan tres instrucciones exactas del dispatcher. La modificación solo permanece durante × y después se restaura byte por byte.
+- Si la firma de Flawe no coincide, el viaje conserva automáticamente la selección mediante cruceta de 0.7.9.
+
 ## 0.7.9-poc
 
 - Flawe recibe ↑/↓ para cambiar entre Ciudad Asuka y Central Park, espera antes de × y sale completamente con △. L1/R1 no seleccionan iconos; □ cambia de servidor.

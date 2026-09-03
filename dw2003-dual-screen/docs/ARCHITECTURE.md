@@ -65,6 +65,8 @@ Tras crear o reanudar el núcleo, `GLRetroView.applyRuntimeOptions()` vuelve a e
 
 El menú de viaje del radar lista solo iconos del mapa de Flawe (Ciudad Asuka y Central Park al inicio). «Abrir pestaña Mapa» usa la secuencia corta START → ↓↓ → ×, sin el sondeo de RAM anterior. Un destino mueve la cruceta hasta el icono, confirma con × y envía △ dos veces para salir completamente; □ cambia de servidor. La cruceta captura el puntero que comienza dentro de su círculo y conserva la dirección fuera de sus límites hasta levantar ese dedo.
 
+En 0.7.10, `FlaweDirectWarpPatch` valida el dispatcher que Flawe copia a `0x8000C000`. Solo durante la pulsación × omite la comprobación del cursor y fuerza el ID interno solicitado; el mod sigue resolviendo su propia entrada y spawn. La ventana original se restaura antes de salir del mapa. Si cualquiera de las instrucciones esperadas difiere, la app no parchea RAM y conserva la ruta por cruceta.
+
 ## BIOS aportado por el usuario
 
 `BiosManager` acepta únicamente una imagen europea de PlayStation de 512 KiB con firma y marcador regional compatibles con la detección de PCSX-ReARMed. Se instala en el directorio privado del sistema como `scph5502.bin`. Sin ese archivo, el núcleo conserva su alternativa HLE.

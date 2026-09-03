@@ -72,6 +72,18 @@ La POC 0.7 escribe solo cuando el usuario lo pide y la sesión no está en batal
 
 Los destinos del panel son iconos del mapa de Flawe (no el puente ni interiores). START y los iconos del mapa se recorren con la cruceta; □ cambia de servidor. No se escriben `0x80048D68` / `0x8004B3F8` para viajar: Flawe usa el icono seleccionado con × al salir completamente con △. En las transiciones observadas, `MAP_ID` ya contiene el destino mientras `AREA` aún conserva el mapa anterior; por eso títulos e icono actual usan `MAP_ID`.
 
+### Dispatcher de Flawe 2.0
+
+El parche público copia su selector a `0x8000C000`. La selección directa valida:
+
+| Dirección | Instrucción esperada | Uso |
+|---:|---:|---|
+| `0x8000C000` | `0x8E230180` | Lee si el cursor está sobre un icono |
+| `0x8000C00C` | `0x14680271` | Rechaza la selección si no es válida |
+| `0x8000C04C` | `0x8E230184` | Lee el ID interno del icono |
+
+Durante ×, la app sustituye temporalmente la rama por `NOP` y la lectura del icono por `ori v1, zero, ID`. Los IDs confirmados son `0x14` para Ciudad Asuka y `0x1E` para Central Park. Flawe ejecuta después su tabla original, que escribe el mapa y las coordenadas exactas; al soltar × se restaura la ventana completa de 80 bytes. Una firma distinta no se modifica y usa la cruceta como fallback.
+
 Los mods opcionales se aplican con `retro_cheat_set` del núcleo, no con parches permanentes. Datos fuera de rango, perfiles inválidos y punteros externos a RAM se descartan.
 
 No se ha documentado todavía un indicador estable para distinguir el cuadro exacto de pesca del estado normal de campo. La UI solo marca si el área admite pesca y permite previsualizar el sprite aportado; no deduce automáticamente “pescando” por la ubicación.
