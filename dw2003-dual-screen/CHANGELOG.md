@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.9-poc
+
+- Flawe recibe ↑/↓ para cambiar entre Ciudad Asuka y Central Park, espera antes de × y sale completamente con △. L1/R1 no seleccionan iconos; □ cambia de servidor.
+- MP/HP infinito ya no elimina al primer compañero de la segunda pantalla: los valores temporales superiores al máximo se limitan solo para la telemetría.
+- Elimina de Mods **Animaciones rápidas**, **Dithering 2D/3D off** y **Silenciar música**.
+- Restaura en la pantalla azul de APP la opción **Distribución de pantallas**: automático, juego/panel arriba o abajo, y juego/panel a izquierda o derecha.
+
 ## 0.7.8-poc
 
 - Central Park ↔ Entrada del Bosque Alambre usa `MAP_ID`, que ya contiene el destino mientras `AREA` conserva temporalmente el mapa anterior.

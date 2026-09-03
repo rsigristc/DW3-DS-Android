@@ -22,7 +22,7 @@ La capa Android nunca recibe un puntero nativo. Toda lectura o escritura verific
 | Teléfono estrecho (< 600 dp) | Pantalla completa | Oculto |
 | Tablet/pantalla grande | Zona superior o izquierda | Zona inferior o derecha |
 
-`AdaptiveDualPaneLayout` utiliza los límites que entrega `FoldingFeature` cuando la bisagra es separadora. Con una bisagra vertical divide izquierda/derecha; con una horizontal divide arriba/abajo. En ausencia de una bisagra útil decide por relación de aspecto y exige al menos 600 dp para mostrar dos zonas. Si el panel ya vive en un display físico secundario, la pantalla principal queda dedicada al juego.
+`AdaptiveDualPaneLayout` utiliza los límites que entrega `FoldingFeature` cuando la bisagra es separadora. Con una bisagra vertical divide izquierda/derecha; con una horizontal divide arriba/abajo. La pantalla azul de APP permite forzar juego/panel arriba-abajo o izquierda-derecha, o conservar el modo automático. En ausencia de una bisagra útil decide por relación de aspecto y exige al menos 600 dp para mostrar dos zonas. Si el panel ya vive en un display físico secundario, la pantalla principal queda dedicada al juego.
 
 ## Modos del panel
 
@@ -63,7 +63,7 @@ La versión 0.6 empareja cada serialización del núcleo con los 128 KiB de SRAM
 
 Tras crear o reanudar el núcleo, `GLRetroView.applyRuntimeOptions()` vuelve a enviar silencio y velocidad al audio nativo. `create()` reinicia esos flags a valores por defecto, y asignar el mismo valor en Kotlin no dispara el `observable`; por eso el botón SONIDO OFF podía quedar desincronizado al cerrar y reabrir el juego.
 
-El menú de viaje del radar lista solo iconos del mapa de Flawe (Ciudad Asuka y Central Park al inicio). «Abrir pestaña Mapa» usa la secuencia corta START → ↓↓ → ×, sin el sondeo de RAM anterior. Un destino cicla L1/R1 hasta el icono y confirma con × + △. La cruceta captura el puntero que comienza dentro de su círculo y conserva la dirección fuera de sus límites hasta levantar ese dedo.
+El menú de viaje del radar lista solo iconos del mapa de Flawe (Ciudad Asuka y Central Park al inicio). «Abrir pestaña Mapa» usa la secuencia corta START → ↓↓ → ×, sin el sondeo de RAM anterior. Un destino mueve la cruceta hasta el icono, confirma con × y envía △ dos veces para salir completamente; □ cambia de servidor. La cruceta captura el puntero que comienza dentro de su círculo y conserva la dirección fuera de sus límites hasta levantar ese dedo.
 
 ## BIOS aportado por el usuario
 

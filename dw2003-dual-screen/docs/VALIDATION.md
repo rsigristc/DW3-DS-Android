@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 1 de septiembre de 2026 (0.7.8-poc).
+Fecha de compilación: 3 de septiembre de 2026 (0.7.9-poc).
 
 ## Entorno
 
@@ -23,10 +23,11 @@ Resultado: `BUILD SUCCESSFUL`.
 
 ## Pruebas unitarias
 
-- `GameStateReaderTest`: verifica área/mapa, Tamer, región, digievolución, etapa, firma de batalla, formación y estadísticas, y que la pantalla de título no invente a Kotemon.
+- `GameStateReaderTest`: verifica área/mapa, Tamer, región, formación y que MP infinito no oculte al primer compañero.
 - `DwTextDecoderTest`: verifica caracteres latinos, espacios, salto de línea y dígitos del formato de texto europeo.
 - `AppFileRulesTest`: verifica tamaños, cabeceras de Memory Card y firma regional del BIOS europeo.
 - `PanePolicyTest`: verifica juego completo en una pantalla exterior estrecha, panel dual al desplegar y juego completo cuando existe display secundario.
+- `PaneArrangementTest`: verifica las cinco distribuciones y el fallback automático.
 - `VirtualPadMathTest`: verifica zona muerta, diagonales y captura de la cruceta fuera de su círculo.
 - `QuickStateManagerTest`: verifica que cada clave de ROM produzca un nombre de estado privado, seguro y acotado.
 - `ExperienceTableTest`: verifica umbral acumulado, progreso dentro del nivel y tratamiento de nivel 99.
@@ -39,7 +40,7 @@ Resultado: `BUILD SUCCESSFUL`.
 - `TransparencyMaskTest`: verifica que solo el blanco conectado al borde se vuelva transparente.
 - `LocationResolverTest`: verifica interiores, puente y Central Park ↔ Entrada del Bosque usando el destino de `MAP_ID`.
 - `FastTravelCatalogTest`: verifica que el puente no es un icono, que laboratorio visita cuenta como Ciudad Asuka, y que Park se desbloquea al visitarlo.
-- `FastTravelNavigatorTest`: verifica la secuencia rápida START → ↓↓ → ×, L1/R1 entre iconos y × + △.
+- `FastTravelNavigatorTest`: verifica START → ↓↓ → ×, cruceta entre Ciudad Asuka/Central Park y × + △△.
 - `CheatCatalogTest`: verifica códigos PAL de calidad de vida.
 - `GameMemoryControllerTest`: verifica el empaquetado little-endian de la formación.
 
