@@ -96,6 +96,27 @@ class GameStateReaderTest {
     }
 
     @Test
+    fun infiniteBattleMpDoesNotHideFirstPartyMember() {
+        val ram = ByteArray(GameStateReader.MAIN_LENGTH)
+        put16(ram, GameStateReader.AREA - GameStateReader.MAIN_BASE, 0x021D)
+        put16(ram, GameStateReader.MAP_ID - GameStateReader.MAIN_BASE, 0x021D)
+        put32(ram, GameStateReader.ACTIVE_PARTY.first() - GameStateReader.MAIN_BASE, 2)
+        val monmon = GameStateReader.STATS - GameStateReader.MAIN_BASE +
+            2 * GameStateReader.PROFILE_STRIDE
+        put16(ram, monmon + 0x1C, 2)
+        put16(ram, monmon + 0x20, 32)
+        put16(ram, monmon + 0x22, 214)
+        put16(ram, monmon + 0x24, 999)
+        put16(ram, monmon + 0x26, 121)
+
+        val snapshot = GameStateReader().parse(ram, GameStateReader.FIGHTST2_SIGNATURE, null)
+
+        assertEquals(listOf("Monmon"), snapshot.party.map { it.name })
+        assertEquals(121, snapshot.party.first().currentMp)
+        assertEquals(121, snapshot.party.first().maxMp)
+    }
+
+    @Test
     fun titleScreenDoesNotInventKotemonFormation() {
         val ram = ByteArray(GameStateReader.MAIN_LENGTH)
 

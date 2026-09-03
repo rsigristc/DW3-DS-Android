@@ -74,16 +74,18 @@ class GameStateReader {
         val base = STATS - MAIN_BASE + profileId * PROFILE_STRIDE
         val activeDigievolutionId = u16(main, base - 4)
         val activeDigievolutionLevel = findDigievolutionLevel(main, base, activeDigievolutionId)
+        val maxHp = u16(main, base + 0x22)
+        val maxMp = u16(main, base + 0x26)
         return DigimonState(
             profileId = profileId,
             name = DIGIMON_NAMES[profileId],
             experience = u32(main, base + 0x18),
             level = u16(main, base + 0x1C),
             trainingPoints = u16(main, base + 0x1E),
-            currentHp = u16(main, base + 0x20),
-            maxHp = u16(main, base + 0x22),
-            currentMp = u16(main, base + 0x24),
-            maxMp = u16(main, base + 0x26),
+            currentHp = u16(main, base + 0x20).coerceAtMost(maxHp),
+            maxHp = maxHp,
+            currentMp = u16(main, base + 0x24).coerceAtMost(maxMp),
+            maxMp = maxMp,
             strength = u16(main, base + 0x28),
             defense = u16(main, base + 0x2A),
             spirit = u16(main, base + 0x2C),

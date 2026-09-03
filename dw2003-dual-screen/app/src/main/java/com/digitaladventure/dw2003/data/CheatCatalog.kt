@@ -23,24 +23,6 @@ object CheatCatalog {
             code = "80048D64 E0FF+80048D66 05F5"
         ),
         CheatSpec(
-            id = "animation_speed",
-            label = "Animaciones rápidas",
-            detail = "Acelera interpolación de sprites (código PAL).",
-            code = "8001D460 0000"
-        ),
-        CheatSpec(
-            id = "dithering_off",
-            label = "Dithering 2D/3D off",
-            detail = "Quita el tramado de la GPU de PlayStation.",
-            code = "3002916D 0000+30026B25 0000"
-        ),
-        CheatSpec(
-            id = "skip_music",
-            label = "Silenciar música",
-            detail = "Omite la pista BGM del núcleo.",
-            code = "30032440 0000"
-        ),
-        CheatSpec(
             id = "infinite_hp_battle",
             label = "HP infinito en batalla",
             detail = "Solo mientras el overlay de combate está activo.",
