@@ -84,6 +84,8 @@ El parche público copia su selector a `0x8000C000`. La selección directa valid
 
 Durante ×, la app sustituye temporalmente la rama por `NOP` y la lectura del icono por `ori v1, zero, ID`. Los IDs confirmados son `0x14` para Ciudad Asuka y `0x1E` para Central Park. Flawe ejecuta después su tabla original, que escribe el mapa y las coordenadas exactas; al soltar × se restaura la ventana completa de 80 bytes. Una firma distinta no se modifica y usa la cruceta como fallback.
 
+Algunas compilaciones combinadas reubican el dispatcher. En ese caso se busca la misma estructura en toda la RAM, se admite cualquier destino inmediato de `bne v1,t0,*` y se exige que un `j` o `jal` apunte a la copia encontrada. Una coincidencia ausente o ambigua nunca se escribe.
+
 Los mods opcionales se aplican con `retro_cheat_set` del núcleo, no con parches permanentes. Datos fuera de rango, perfiles inválidos y punteros externos a RAM se descartan.
 
 No se ha documentado todavía un indicador estable para distinguir el cuadro exacto de pesca del estado normal de campo. La UI solo marca si el área admite pesca y permite previsualizar el sprite aportado; no deduce automáticamente “pescando” por la ubicación.

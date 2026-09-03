@@ -44,7 +44,7 @@ Implementado y compilado:
 - ⚙ APP reabre la pantalla de configuración inicial y puede activar una pestaña Mods en el panel complementario.
 - La pantalla azul de APP permite intercambiar juego/panel arriba-abajo o izquierda-derecha, además del modo automático.
 - Viaje rápido solo con iconos de Flawe (Ciudad Asuka y Central Park al inicio); **Abrir pestaña Mapa** usa la secuencia rápida START → ↓↓ → ×.
-- La lista fuerza temporalmente el ID interno del icono en el dispatcher validado de Flawe, por lo que evita mover el cursor y conserva el spawn definido por el mod.
+- La lista localiza el dispatcher activo de Flawe por firma y referencia, fuerza temporalmente el ID interno del icono y conserva el spawn definido por el mod.
 - Reorden de la formación activa desde Batalla fuera de combate y de eventos.
 - Estado de espera sin compañeros ficticios antes de iniciar o cargar una partida.
 - Mandos físicos, cruceta y sticks analógicos dirigidos al puerto 1.
@@ -69,7 +69,7 @@ La POC permite continuar con otra imagen, pero desactiva cualquier garantía sob
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v0.7.10-poc-debug.apk` (release `v0.7.10-poc`) en un dispositivo Android ARM64.
+1. Instala `DW2003-Dual-Screen-v0.7.11-poc-debug.apk` (release `v0.7.11-poc`) en un dispositivo Android ARM64.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada o la imagen original europea.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.
@@ -84,7 +84,7 @@ La aplicación conserva permiso de lectura del archivo mediante Storage Access F
 
 - El radar selecciona una imagen regional real según servidor/sector y muestra el nombre del mapa local. La coordenada exacta del jugador dentro de esa imagen todavía no se extrae de RAM.
 - Flawe no expone una entrada directa documentada a su mapa; la app acelera la ruta START → ↓↓ → ×.
-- En Flawe 2.0 la lista valida el dispatcher de `0x8000C000`, fuerza el icono interno solo durante × y lo restaura antes de salir con △△. Si la firma difiere, vuelve a la cruceta. No se escriben manualmente IDs ni coordenadas de área.
+- En Flawe 2.0 la lista prueba `0x8000C000` y, si difiere, busca una copia reubicada referenciada por el overlay. Fuerza el icono interno solo durante × y lo restaura antes de salir con △△. Si no hay una firma activa única, vuelve a la cruceta.
 - El objetivo depende de los punteros del walkthrough de Flawe's Mod 2.0 y puede aparecer solo después de abrir el menú.
 - La detección automática de Batalla/Gestión usa firmas del mod combinado. La imagen original continúa funcionando, pero puede requerir firmas adicionales.
 - La POC abre una imagen BIN individual. El soporte formal para CUE multitrack y CHD queda para una fase posterior.

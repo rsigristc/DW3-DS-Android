@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 3 de septiembre de 2026 (0.7.10-poc).
+Fecha de compilación: 3 de septiembre de 2026 (0.7.11-poc).
 
 ## Entorno
 
@@ -41,7 +41,7 @@ Resultado: `BUILD SUCCESSFUL`.
 - `LocationResolverTest`: verifica interiores, puente y Central Park ↔ Entrada del Bosque usando el destino de `MAP_ID`.
 - `FastTravelCatalogTest`: verifica que el puente no es un icono, que laboratorio visita cuenta como Ciudad Asuka, y que Park se desbloquea al visitarlo.
 - `FastTravelNavigatorTest`: verifica START → ↓↓ → ×, cruceta entre Ciudad Asuka/Central Park y × + △△.
-- `FlaweDirectWarpPatchTest`: verifica firmas, IDs internos, instrucciones temporales y rechazo seguro de versiones desconocidas.
+- `FlaweDirectWarpPatchTest`: verifica firmas, reubicación por referencia `j/jal`, IDs internos y rechazo seguro de versiones desconocidas.
 - `CheatCatalogTest`: verifica códigos PAL de calidad de vida.
 - `GameMemoryControllerTest`: verifica el empaquetado little-endian de la formación.
 

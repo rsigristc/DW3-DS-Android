@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.11-poc
+
+- Si Flawe no instala su dispatcher en `0x8000C000`, busca la firma en los 2 MiB de RAM y selecciona únicamente la copia referenciada por un salto `j/jal` del overlay.
+- Tolera que cambie el desplazamiento del `bne` de validación entre compilaciones, pero conserva la validación de registros e instrucciones de lectura.
+- Mantiene la cruceta como fallback si no existe una única copia activa.
+
 ## 0.7.10-poc
 
 - Selección directa de Ciudad Asuka (`0x14`) y Central Park (`0x1E`) mediante el dispatcher de Flawe en `0x8000C000`; el propio mod conserva su tabla de mapa y spawn.

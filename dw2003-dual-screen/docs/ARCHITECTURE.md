@@ -67,6 +67,8 @@ El menú de viaje del radar lista solo iconos del mapa de Flawe (Ciudad Asuka y 
 
 En 0.7.10, `FlaweDirectWarpPatch` valida el dispatcher que Flawe copia a `0x8000C000`. Solo durante la pulsación × omite la comprobación del cursor y fuerza el ID interno solicitado; el mod sigue resolviendo su propia entrada y spawn. La ventana original se restaura antes de salir del mapa. Si cualquiera de las instrucciones esperadas difiere, la app no parchea RAM y conserva la ruta por cruceta.
 
+En 0.7.11, si esa dirección fija no coincide, se recorren los 2 MiB de RAM buscando el prólogo, la rama `bne v1,t0,*` y la lectura de icono. Para excluir la copia fuente que el cargador no ejecuta, solo se acepta una firma cuyo destino aparezca en una instrucción `j` o `jal` activa.
+
 ## BIOS aportado por el usuario
 
 `BiosManager` acepta únicamente una imagen europea de PlayStation de 512 KiB con firma y marcador regional compatibles con la detección de PCSX-ReARMed. Se instala en el directorio privado del sistema como `scph5502.bin`. Sin ese archivo, el núcleo conserva su alternativa HLE.
