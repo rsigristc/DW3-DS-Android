@@ -5,7 +5,10 @@ import com.digitaladventure.dw2003.data.GameStateReader
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.LibretroDroid
 
-data class FlaweDirectWarpToken(val originalDispatcher: ByteArray)
+data class FlaweDirectWarpToken(
+    val dispatcherRamOffset: Int,
+    val originalDispatcher: ByteArray
+)
 
 class GameMemoryController(private val view: GLRetroView) {
     fun reorderParty(profileIds: List<Int>) {
@@ -34,24 +37,48 @@ class GameMemoryController(private val view: GLRetroView) {
     }
 
     fun beginDirectFlaweWarp(areaId: Int): FlaweDirectWarpToken? {
-        val original = view.readMemory(
+        val preferred = view.readMemory(
             LibretroDroid.MEMORY_SYSTEM_RAM,
             FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
             FlaweDirectWarpPatch.WINDOW_SIZE
         )
+        FlaweDirectWarpPatch.prepare(preferred, areaId)?.let { patched ->
+            view.writeMemory(
+                LibretroDroid.MEMORY_SYSTEM_RAM,
+                FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
+                patched
+            )
+            return FlaweDirectWarpToken(
+                FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
+                preferred
+            )
+        }
+
+        val ram = view.readMemory(
+            LibretroDroid.MEMORY_SYSTEM_RAM,
+            0,
+            FlaweDirectWarpPatch.SYSTEM_RAM_SIZE
+        )
+        val dispatcherOffset = FlaweDirectWarpPatch.findActiveDispatcherOffsets(ram)
+            .singleOrNull()
+            ?: return null
+        val original = ram.copyOfRange(
+            dispatcherOffset,
+            dispatcherOffset + FlaweDirectWarpPatch.WINDOW_SIZE
+        )
         val patched = FlaweDirectWarpPatch.prepare(original, areaId) ?: return null
         view.writeMemory(
             LibretroDroid.MEMORY_SYSTEM_RAM,
-            FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
+            dispatcherOffset,
             patched
         )
-        return FlaweDirectWarpToken(original)
+        return FlaweDirectWarpToken(dispatcherOffset, original)
     }
 
     fun restoreDirectFlaweWarp(token: FlaweDirectWarpToken) {
         view.writeMemory(
             LibretroDroid.MEMORY_SYSTEM_RAM,
-            FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
+            token.dispatcherRamOffset,
             token.originalDispatcher
         )
     }
