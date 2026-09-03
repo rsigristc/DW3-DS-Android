@@ -46,6 +46,7 @@ import com.digitaladventure.dw2003.ui.DashboardActions
 import com.digitaladventure.dw2003.ui.DigiviceDashboardView
 import com.digitaladventure.dw2003.ui.GamePlaceholderView
 import com.digitaladventure.dw2003.ui.GameSetupView
+import com.digitaladventure.dw2003.ui.PaneArrangement
 import com.digitaladventure.dw2003.ui.QuickAction
 import com.digitaladventure.dw2003.ui.VirtualControllerView
 import com.swordfish.libretrodroid.GLRetroView
@@ -271,6 +272,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         hasSave = saveManager.hasSave,
         modsEnabled = modsEnabled,
         onModsChanged = ::setModsEnabled,
+        paneArrangementLabel = paneArrangement().label,
+        onPaneArrangement = ::showPaneArrangementMenu,
         onClose = onClose,
         hasBackup = saveManager.hasBackup,
         onRestoreBackup = if (onClose != null) ::restoreAutomaticBackup else null,
@@ -290,6 +293,32 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         settingsDialog = dialog
         dialog.show()
     }
+
+    private fun showPaneArrangementMenu() {
+        val arrangements = PaneArrangement.entries
+        val current = paneArrangement()
+        AlertDialog.Builder(this)
+            .setTitle("Distribución de pantallas")
+            .setSingleChoiceItems(
+                arrangements.map { it.label }.toTypedArray(),
+                arrangements.indexOf(current)
+            ) { dialog, index ->
+                val selected = arrangements[index]
+                getPreferences(MODE_PRIVATE).edit()
+                    .putString(PREF_PANE_ARRANGEMENT, selected.name)
+                    .apply()
+                dualLayout?.setArrangement(selected)
+                dialog.dismiss()
+                Toast.makeText(this, selected.label, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun paneArrangement(): PaneArrangement =
+        PaneArrangement.fromPreference(
+            getPreferences(MODE_PRIVATE).getString(PREF_PANE_ARRANGEMENT, null)
+        )
 
     private fun acceptRom(uri: Uri) {
         runCatching {
@@ -472,7 +501,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     private fun attachDualContent(gameView: View) {
-        val layout = AdaptiveDualPaneLayout(this)
+        val layout = AdaptiveDualPaneLayout(this).apply {
+            setArrangement(paneArrangement())
+        }
         val dashboard = DigiviceDashboardView(this, dashboardActions()).apply {
             controlsVisible = virtualControlsVisible()
         }
@@ -697,7 +728,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             openMapTab()
             Toast.makeText(
                 this@MainActivity,
-                "Mapa de Flawe. L1/R1 cambian de icono y × confirma; al salir del menú cargas en el spawn de ese icono.",
+                "Mapa de Flawe. La cruceta cambia de icono, □ cambia de servidor y × confirma; el warp carga al salir completamente.",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -834,6 +865,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         private const val PREF_MODS_ENABLED = "mods_enabled"
         private const val PREF_ENABLED_CHEATS = "enabled_cheats"
         private const val PREF_VISITED_MAPS = "visited_maps"
+        private const val PREF_PANE_ARRANGEMENT = "pane_arrangement"
         private val GAME_KEYS = setOf(
             KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
             KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BUTTON_X, KeyEvent.KEYCODE_BUTTON_Y,

@@ -15,6 +15,7 @@ class AdaptiveDualPaneLayout @JvmOverloads constructor(
     private var foldOrientation: FoldingFeature.Orientation? = null
     private var foldSeparating = false
     private var externalDashboardActive = false
+    private var arrangement = PaneArrangement.AUTO
 
     fun setFold(feature: FoldingFeature?) {
         foldBounds = feature?.bounds
@@ -25,6 +26,11 @@ class AdaptiveDualPaneLayout @JvmOverloads constructor(
 
     fun setGameOnly(value: Boolean) {
         externalDashboardActive = value
+        requestLayout()
+    }
+
+    fun setArrangement(value: PaneArrangement) {
+        arrangement = value
         requestLayout()
     }
 
@@ -58,6 +64,9 @@ class AdaptiveDualPaneLayout @JvmOverloads constructor(
     }
 
     private fun resolveSplit(width: Int, height: Int): Pair<Rect, Rect> {
+        if (arrangement != PaneArrangement.AUTO) {
+            return resolveForcedSplit(width, height)
+        }
         val hinge = foldBounds
         if (foldSeparating && hinge != null && foldOrientation == FoldingFeature.Orientation.VERTICAL) {
             val split = hinge.centerX().takeIf { it in 1 until width } ?: width / 2
@@ -83,6 +92,39 @@ class AdaptiveDualPaneLayout @JvmOverloads constructor(
             Rect(0, 0, width, splitY) to Rect(0, splitY, width, height)
         }
     }
+
+    private fun resolveForcedSplit(width: Int, height: Int): Pair<Rect, Rect> =
+        when (arrangement) {
+            PaneArrangement.GAME_LEFT,
+            PaneArrangement.DASHBOARD_LEFT -> {
+                val dashboardFirst = arrangement == PaneArrangement.DASHBOARD_LEFT
+                val hinge = foldBounds?.takeIf {
+                    foldSeparating && foldOrientation == FoldingFeature.Orientation.VERTICAL
+                }
+                val split = hinge?.centerX()?.coerceIn(1, width - 1)
+                    ?: (width * if (dashboardFirst) 0.44f else 0.56f).toInt()
+                val leftEnd = hinge?.left?.coerceIn(1, width - 1) ?: split
+                val rightStart = hinge?.right?.coerceIn(leftEnd, width - 1) ?: split
+                val first = Rect(0, 0, leftEnd, height)
+                val second = Rect(rightStart, 0, width, height)
+                if (dashboardFirst) second to first else first to second
+            }
+            PaneArrangement.GAME_TOP,
+            PaneArrangement.DASHBOARD_TOP -> {
+                val dashboardFirst = arrangement == PaneArrangement.DASHBOARD_TOP
+                val hinge = foldBounds?.takeIf {
+                    foldSeparating && foldOrientation == FoldingFeature.Orientation.HORIZONTAL
+                }
+                val split = hinge?.centerY()?.coerceIn(1, height - 1)
+                    ?: (height * if (dashboardFirst) 0.47f else 0.53f).toInt()
+                val topEnd = hinge?.top?.coerceIn(1, height - 1) ?: split
+                val bottomStart = hinge?.bottom?.coerceIn(topEnd, height - 1) ?: split
+                val first = Rect(0, 0, width, topEnd)
+                val second = Rect(0, bottomStart, width, height)
+                if (dashboardFirst) second to first else first to second
+            }
+            PaneArrangement.AUTO -> error("La distribución automática se resuelve antes")
+        }
 
     private fun measureExact(child: View, width: Int, height: Int) {
         child.measure(

@@ -24,6 +24,8 @@ class GameSetupView(
     hasSave: Boolean,
     modsEnabled: Boolean = false,
     onModsChanged: ((Boolean) -> Unit)? = null,
+    paneArrangementLabel: String = "Automático",
+    onPaneArrangement: (() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
     allowDemo: Boolean = onClose == null,
     hasBackup: Boolean = false,
@@ -99,6 +101,16 @@ class GameSetupView(
             MUTED,
             false
         ).apply { setPadding(0, dp(8), 0, 0) })
+        if (onPaneArrangement != null) {
+            content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
+            content.addView(
+                actionButton(
+                    "Distribución de pantallas: $paneArrangementLabel",
+                    onPaneArrangement,
+                    outlined = true
+                )
+            )
+        }
         if (onRestoreBackup != null) {
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
             content.addView(actionButton("Restaurar respaldo automático", onRestoreBackup, outlined = true, enabled = hasBackup))
