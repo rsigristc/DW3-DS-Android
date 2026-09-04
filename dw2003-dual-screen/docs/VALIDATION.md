@@ -19,7 +19,7 @@ Fecha de compilación: 4 de septiembre de 2026 (0.7.15-poc).
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-Resultado: pendiente de esta revisión; se actualiza tras `./gradlew`.
+Resultado: `BUILD SUCCESSFUL` (77 pruebas unitarias, 0 fallos). Android Lint: 0 errores; 3 avisos `GradleDependency` preexistentes (no introducidos en 0.7.15).
 
 ## Pruebas unitarias
 
@@ -60,7 +60,7 @@ Resultado: las pruebas unitarias de aplicación deben ejecutarse con `./gradlew 
 - No contiene extensiones de imagen de disco ni BIOS propietario.
 - Contiene el icono, sprites y mapas regionales aportados para la interfaz 0.7.
 - La única entrada con sufijo `.bin` es `DebugProbesKt.bin`, un recurso interno estándar de Kotlin Coroutines.
-- Android Lint: se actualiza tras la compilación.
+- Android Lint: 0 errores. Hay 3 avisos `GradleDependency` de bibliotecas AndroidX (no bloquean y no los toca este corte).
 
 ## Pendiente físico
 
