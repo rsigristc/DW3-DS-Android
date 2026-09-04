@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 4 de septiembre de 2026 (0.7.19-poc).
+Fecha de compilación: 4 de septiembre de 2026 (0.7.20-poc).
 
 ## Entorno
 
@@ -16,7 +16,7 @@ Fecha de compilación: 4 de septiembre de 2026 (0.7.19-poc).
 ## Comandos validados
 
 ```bash
-./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
+./gradlew :app:testDebugUnitTest :app:lintRelease :app:assembleRelease
 ```
 
 Resultado: `BUILD SUCCESSFUL` (91 pruebas unitarias, 0 fallos). Android Lint: 0 errores; 3 avisos `GradleDependency` preexistentes (no introducidos en 0.7.19).

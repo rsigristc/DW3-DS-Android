@@ -2,12 +2,15 @@
 .idea/
 .kotlin/
 local.properties
+keystore.properties
 **/build/
 **/.cxx/
 *.apk
 *.aab
 *.jks
+*.jks.old
 *.keystore
+keystore/
 *.bin
 *.cue
 *.chd

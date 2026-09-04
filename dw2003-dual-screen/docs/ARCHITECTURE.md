@@ -85,6 +85,8 @@ En 0.7.18, `openMapTab` solo envía △ si `STSTATUS` está abierto. `FlaweDirec
 
 En 0.7.19, `AppUpdateChecker` distingue «hay release más nuevo», «ya estás al día» y «GitHub no es público / HTTP error». Un 404 de repo privado ya no se pinta como versión actual.
 
+En 0.7.20, el workflow de release firma `assembleRelease` con un keystore persistente (secretos de GitHub). El paquete publicado es `com.digitaladventure.dw2003`, sin sufijo `.debug`.
+
 ## BIOS aportado por el usuario
 
 `BiosManager` acepta únicamente una imagen europea de PlayStation de 512 KiB con firma y marcador regional compatibles con la detección de PCSX-ReARMed. Se instala en el directorio privado del sistema como `scph5502.bin`. Sin ese archivo, el núcleo conserva su alternativa HLE.

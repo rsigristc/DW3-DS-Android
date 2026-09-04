@@ -11,8 +11,8 @@ android {
         applicationId 'com.digitaladventure.dw2003'
         minSdk 26
         targetSdk 35
-        versionCode 26
-        versionName '0.7.19-poc'
+        versionCode 27
+        versionName '0.7.20-poc'
 
         ndk {
             abiFilters 'arm64-v8a'
@@ -34,6 +34,24 @@ android {
         }
     }
 
+    def keystoreProps = new Properties()
+    def keystorePropsFile = rootProject.file('keystore.properties')
+    if (keystorePropsFile.exists()) {
+        keystoreProps.load(new FileInputStream(keystorePropsFile))
+    }
+    def releaseStorePath = System.getenv('DW2003_STORE_FILE') ?: keystoreProps['storeFile']
+
+    signingConfigs {
+        release {
+            if (releaseStorePath) {
+                storeFile file(releaseStorePath)
+                storePassword System.getenv('DW2003_STORE_PASSWORD') ?: keystoreProps['storePassword']
+                keyAlias System.getenv('DW2003_KEY_ALIAS') ?: keystoreProps['keyAlias']
+                keyPassword System.getenv('DW2003_KEY_PASSWORD') ?: keystoreProps['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix '.debug'
@@ -42,6 +60,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (releaseStorePath) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 

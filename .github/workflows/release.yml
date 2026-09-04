@@ -29,15 +29,27 @@ jobs:
       - name: Install Android toolchain
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.3.13750724" "cmake;3.22.1"
 
-      - name: Test, lint, and build
-        run: ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - name: Decode release keystore
+        env:
+          DW2003_KEYSTORE_BASE64: ${{ secrets.DW2003_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$DW2003_KEYSTORE_BASE64"
+          echo "$DW2003_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/dw2003-release.jks"
+
+      - name: Test, lint, and build release
+        env:
+          DW2003_STORE_FILE: ${{ runner.temp }}/dw2003-release.jks
+          DW2003_STORE_PASSWORD: ${{ secrets.DW2003_STORE_PASSWORD }}
+          DW2003_KEY_ALIAS: ${{ secrets.DW2003_KEY_ALIAS }}
+          DW2003_KEY_PASSWORD: ${{ secrets.DW2003_KEY_PASSWORD }}
+        run: ./gradlew :app:testDebugUnitTest :app:lintRelease :app:assembleRelease
 
       - name: Prepare release artifact
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk \
-            app/build/outputs/apk/debug/DW2003-Dual-Screen-${GITHUB_REF_NAME}-debug.apk
-          sha256sum app/build/outputs/apk/debug/DW2003-Dual-Screen-${GITHUB_REF_NAME}-debug.apk \
-            > app/build/outputs/apk/debug/SHA256SUMS.txt
+          cp app/build/outputs/apk/release/app-release.apk \
+            app/build/outputs/apk/release/DW2003-Dual-Screen-${GITHUB_REF_NAME}.apk
+          sha256sum app/build/outputs/apk/release/DW2003-Dual-Screen-${GITHUB_REF_NAME}.apk \
+            > app/build/outputs/apk/release/SHA256SUMS.txt
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
@@ -47,8 +59,8 @@ jobs:
           body: |
             POC Android para SLES-03936 Europa y Flawe's Mod 2.0 combinado.
 
-            El APK utiliza la firma de depuración de Android y está destinado a pruebas.
+            APK de release firmado (`com.digitaladventure.dw2003`). La primera vez hay que desinstalar la POC debug (`.debug`) e instalar este paquete; a partir de aquí el actualizador in-app puede reemplazar la app.
             No incluye ROM, BIOS ni parches del juego.
           files: |
-            dw2003-dual-screen/app/build/outputs/apk/debug/DW2003-Dual-Screen-${{ github.ref_name }}-debug.apk
-            dw2003-dual-screen/app/build/outputs/apk/debug/SHA256SUMS.txt
+            dw2003-dual-screen/app/build/outputs/apk/release/DW2003-Dual-Screen-${{ github.ref_name }}.apk
+            dw2003-dual-screen/app/build/outputs/apk/release/SHA256SUMS.txt

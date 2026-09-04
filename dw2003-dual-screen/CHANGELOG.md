@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.20-poc
+
+- El APK publicado es **release firmado** (`com.digitaladventure.dw2003`), no debug. CI ya no usa el `debug.keystore` efímero que provocaba «App not installed» al actualizar.
+- La primera instalación sobre la POC debug exige desinstalar `com.digitaladventure.dw2003.debug`; después el actualizador puede reemplazar la app.
+
 ## 0.7.19-poc
 
 - Buscar actualización ya no trata un 404 de GitHub como «ya tienes la última versión». Si el repo es privado o no hay APK, muestra el error real.
