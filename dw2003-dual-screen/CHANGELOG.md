@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- El listado con scroll de 1.0.1 solo se usa cuando el panel va a un lado (Fold horizontal). Si el juego y el panel están arriba/abajo, se recupera el diseño de columnas para que no quede cortado.
+
 ## 1.0.1
 
 - El panel complementario se puede desplazar en Exploración, Batalla y Gestión para que el contenido no quede cortado en foldables horizontales.
