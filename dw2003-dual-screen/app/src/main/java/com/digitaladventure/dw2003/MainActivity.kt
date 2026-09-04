@@ -8,6 +8,7 @@ import android.hardware.display.DisplayManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.provider.Settings
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -23,6 +24,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.util.Consumer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -32,6 +34,8 @@ import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatCatalog
+import com.digitaladventure.dw2003.data.AppRelease
+import com.digitaladventure.dw2003.data.AppUpdateChecker
 import com.digitaladventure.dw2003.data.CustomCheatStore
 import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.data.CompanionLanguageResolver
@@ -72,12 +76,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.net.URL
 
 class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private val repository = GameStateRepository()
     private lateinit var displayManager: DisplayManager
     private lateinit var saveManager: SaveManager
     private lateinit var biosManager: BiosManager
+    private val updateChecker = AppUpdateChecker()
     private lateinit var customCheats: CustomCheatStore
     private lateinit var crashLog: CrashLogStore
     private lateinit var windowInfoAdapter: WindowInfoTrackerCallbackAdapter
@@ -177,6 +184,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
         val stored = getPreferences(MODE_PRIVATE).getString(PREF_ROM_URI, null)
         if (stored != null) bootRom(Uri.parse(stored)) else showSetup()
+        checkForAppUpdate(manual = false)
     }
 
     override fun onStart() {
@@ -306,7 +314,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         onRestoreBackup = if (onClose != null) ::restoreAutomaticBackup else null,
         onReturnToStart = if (onClose != null) ::returnToStartScreen else null,
         hasCrashLog = crashLog.hasLog(),
-        onViewCrashLog = ::showCrashLog
+        onViewCrashLog = ::showCrashLog,
+        onCheckUpdate = { checkForAppUpdate(manual = true) }
     )
 
     private fun showAppSettings() {
@@ -767,7 +776,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     private fun rememberVisited(areaId: Int, mapId: Int) {
         var changed = false
-        listOf(areaId, mapId).forEach { id ->
+        listOf(areaId, mapId, FastTravelCatalog.iconId(areaId, mapId)).forEach { id ->
             if (AreaCatalog.isField(id) && visitedMaps.add(id)) changed = true
         }
         if (changed) {
@@ -805,8 +814,13 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         val currentServer = MapRegionCatalog.resolve(currentIcon).server
         crashLog.note("fast-travel dest=0x${areaId.toString(16)} from=0x${currentIcon.toString(16)}")
         runTravelSequence {
-            openMapTab()
-            delay(500)
+            val mapAlreadyOpen = runCatching { controller.hasPreferredFlaweDispatcher() }.getOrDefault(false)
+            if (mapAlreadyOpen) {
+                delay(80)
+            } else {
+                openMapTab()
+                delay(500)
+            }
             if (currentServer != ServerRegion.UNKNOWN &&
                 destinationServer != ServerRegion.UNKNOWN &&
                 currentServer != destinationServer
@@ -876,6 +890,16 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
         crashLog.note("open-map area=0x${snapshot.areaId.toString(16)} map=0x${snapshot.mapId.toString(16)}")
         runTravelSequence {
+            val mapAlreadyOpen = runCatching {
+                memoryController?.hasPreferredFlaweDispatcher() == true
+            }.getOrDefault(false)
+            if (mapAlreadyOpen) {
+                toast(
+                    "El mapa de Flawe ya está abierto.",
+                    "Flawe's map is already open."
+                )
+                return@runTravelSequence
+            }
             openMapTab()
             toast(
                 "Mapa de Flawe. START se ancla en Ítems (↑↑↑↑) y baja a Mapa. La cruceta cambia de icono, □ cambia de servidor y × confirma.",
@@ -1042,6 +1066,81 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         applyEnabledCheats()
         syncDashboardExtras()
         toast("Mod personalizado eliminado", "Custom mod removed", Toast.LENGTH_SHORT)
+    }
+
+    private fun installedVersionName(): String =
+        packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+
+    private fun checkForAppUpdate(manual: Boolean) {
+        lifecycleScope.launch {
+            val installed = installedVersionName()
+            val release = withContext(Dispatchers.IO) {
+                runCatching { updateChecker.latestNewerThan(installed) }.getOrElse { error ->
+                    if (manual) {
+                        toast("No se pudo consultar GitHub: ${error.message}", "Could not reach GitHub: ${error.message}")
+                    }
+                    null
+                }
+            }
+            if (isFinishing || isDestroyed) return@launch
+            if (release == null) {
+                if (manual) toast("Ya tienes la última versión ($installed)", "You already have the latest version ($installed)")
+                return@launch
+            }
+            AlertDialog.Builder(this@MainActivity)
+                .setTitle(CompanionUiText.pick(resolvedLanguage(), "Actualización disponible", "Update available"))
+                .setMessage(
+                    CompanionUiText.pick(
+                        resolvedLanguage(),
+                        "Hay ${release.tag} en GitHub. Esta instalación es $installed. ¿Descargar e instalar el APK?",
+                        "${release.tag} is on GitHub. This install is $installed. Download and install the APK?"
+                    )
+                )
+                .setPositiveButton(CompanionUiText.pick(resolvedLanguage(), "Actualizar", "Update")) { _, _ ->
+                    downloadAndInstall(release)
+                }
+                .setNegativeButton(CompanionUiText.pick(resolvedLanguage(), "Después", "Later"), null)
+                .show()
+        }
+    }
+
+    private fun downloadAndInstall(release: AppRelease) {
+        lifecycleScope.launch {
+            crashLog.note("app-update ${release.tag}")
+            toast("Descargando ${release.tag}…", "Downloading ${release.tag}…")
+            val file = File(cacheDir, "DW2003-update.apk")
+            val downloaded = withContext(Dispatchers.IO) {
+                runCatching {
+                    URL(release.apkUrl).openStream().use { input ->
+                        file.outputStream().use { input.copyTo(it) }
+                    }
+                    file.takeIf { it.length() > 0 }
+                }.getOrElse { error ->
+                    toast("No se pudo descargar: ${error.message}", "Download failed: ${error.message}")
+                    null
+                }
+            }
+            if (downloaded == null || isFinishing || isDestroyed) return@launch
+            if (!packageManager.canRequestPackageInstalls()) {
+                startActivity(
+                    Intent(
+                        Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+                toast(
+                    "Activa instalar apps desconocidas y pulsa Buscar actualización otra vez.",
+                    "Allow unknown apps, then tap Check for update again."
+                )
+                return@launch
+            }
+            val uri = FileProvider.getUriForFile(this@MainActivity, "$packageName.files", downloaded)
+            startActivity(
+                Intent(Intent.ACTION_VIEW)
+                    .setDataAndType(uri, "application/vnd.android.package-archive")
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            )
+        }
     }
 
     private fun showCrashLog() {

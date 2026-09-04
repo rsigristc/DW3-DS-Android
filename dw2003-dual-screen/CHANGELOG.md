@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.17-poc
+
+- El radar usa las listas de Wikimon: Lago de Divermon, Bosque Alambre y Pradera del Viento son Sector Este; Central termina en Entrada del Bosque, Playa de Conchas y Cabo Conexión.
+- El viaje rápido guarda el icono Flawe de cada visita y lista todos esos destinos (no solo Asuka y Central Park). Si el mapa de Flawe ya está abierto, no lo cierra para reabrirlo.
+- ⚙ APP → **Buscar actualización** consulta el último release de GitHub e instala el APK. También avisa al arrancar si hay una versión más nueva.
+
 ## 0.7.16-poc
 
 - Gestión lista las digievoluciones desbloqueadas bajo el compañero: nombre a la izquierda, `NV n` a la derecha y la forma activa en azul. La Rookie usa el nivel del partner (Monmon NV 5), no el nivel de habilidad 1.

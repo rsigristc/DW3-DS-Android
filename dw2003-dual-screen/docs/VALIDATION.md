@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 4 de septiembre de 2026 (0.7.16-poc).
+Fecha de compilación: 4 de septiembre de 2026 (0.7.17-poc).
 
 ## Entorno
 
@@ -39,11 +39,12 @@ Resultado: `BUILD SUCCESSFUL` (81 pruebas unitarias, 0 fallos). Android Lint: 0 
 - `DigimonStateTest`: verifica totales RAM+equipo del demo Guilmon, lista Guilmon/Growlmon y MP/poder Rookie de Monmon.
 - `CheatCodeParserTest`: verifica pares PAL `800XXXXX YYYY` y el rechazo de texto vacío.
 - `AppFileRulesTest`: añade validación de la tarjeta formateada generada automáticamente.
-- `MapRegionCatalogTest`: verifica servidor/sector para Asuka, Amaterasu y menús externos al mundo.
+- `MapRegionCatalogTest`: verifica las listas Wikimon (Lago de Divermon y Bosque Alambre en Este; Entrada del Bosque en Central).
+- `AppVersionTest`: verifica que `v0.7.17-poc` sea más nuevo que `0.7.16-poc-debug` y que el JSON público de GitHub elija el APK.
 - `DigievolutionCatalogTest`: verifica nombre, nivel mínimo, MP y poder (`Picking Claw` = 60; Double Power/Guard sin poder).
 - `TransparencyMaskTest`: verifica que solo el blanco conectado al borde se vuelva transparente.
 - `LocationResolverTest`: verifica interiores, puente y Central Park ↔ Entrada del Bosque usando el destino de `MAP_ID`.
-- `FastTravelCatalogTest`: verifica que el puente no es un icono, que laboratorio visita cuenta como Ciudad Asuka, que Park y la Entrada del Bosque son iconos distintos, y que el norte se desbloquea al visitarlo.
+- `FastTravelCatalogTest`: verifica que el puente no es un icono, que laboratorio visita cuenta como Ciudad Asuka, que Park y la Entrada del Bosque son iconos distintos, que el norte se desbloquea al visitarlo y que un recorrido Asuka→Seiryu lista los siete iconos visitados.
 - `FlaweFastTravelTableTest`: verifica los 46 códigos ASKMAP del IPS y que Amaterasu no inventa iconos.
 - `FastTravelNavigatorTest`: verifica anclaje ↑↑↑↑ + ↓↓ ×, `stepsToMapTab` cuando se conoce la pestaña, □ de servidor y × + △△.
 - `FlaweDirectWarpPatchTest`: verifica firmas, reubicación por referencia `j/jal`, IDs internos de ASKMAP y rechazo seguro de versiones desconocidas.

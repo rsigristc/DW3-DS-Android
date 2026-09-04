@@ -79,6 +79,8 @@ En 0.7.15, `WalkthroughCatalog` deja de añadir la nota de Flawe al objetivo esp
 
 En 0.7.16, Gestión lee hasta 44 registros de digievolución (`base+0x50`, stride `0x14`) y antepone la Rookie con el nivel del partner. Mods guarda códigos PAL del usuario. `CrashLogStore` instala un handler de excepciones no capturadas. El viaje rápido ancla START en Ítems antes de abrir Mapa y espera el dispatcher de Flawe; Amaterasu solo cambia de servidor con □.
 
+En 0.7.17, `MapRegionCatalog` sigue las listas de Wikimon (Central Asuka acaba en `0x0220`). El viaje rápido recuerda iconos Flawe y no cierra un mapa ya abierto. `AppUpdateChecker` lee `releases/latest` de GitHub.
+
 ## BIOS aportado por el usuario
 
 `BiosManager` acepta únicamente una imagen europea de PlayStation de 512 KiB con firma y marcador regional compatibles con la detección de PCSX-ReARMed. Se instala en el directorio privado del sistema como `scph5502.bin`. Sin ese archivo, el núcleo conserva su alternativa HLE.

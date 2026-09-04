@@ -744,7 +744,19 @@ class DigiviceDashboardView(
             snapshot.areaId,
             snapshot.mapId
         )
-        val listTop = openMap.bottom + dp(6f)
+        val destinationCount = groups.sumOf { it.destinations.size }
+        if (destinationCount > 0) {
+            drawText(
+                canvas,
+                tr("$destinationCount DESTINOS VISITADOS", "$destinationCount VISITED DESTINATIONS"),
+                bounds.left + dp(12f),
+                openMap.bottom + dp(14f),
+                dp(8f),
+                MUTED,
+                true
+            )
+        }
+        val listTop = openMap.bottom + if (destinationCount > 0) dp(20f) else dp(6f)
         if (!snapshot.canFastTravel) {
             drawWrapped(
                 canvas,
@@ -780,7 +792,7 @@ class DigiviceDashboardView(
             else -> 0f
         }
         var y = listTop + headerOffset - travelScroll
-        val rowHeight = dp(28f)
+        val rowHeight = dp(24f)
         groups.forEach { group ->
             if (y >= listTop && y < bounds.bottom - dp(8f)) {
                 drawText(
@@ -793,7 +805,7 @@ class DigiviceDashboardView(
                     true
                 )
             }
-            y += dp(22f)
+            y += dp(16f)
             group.destinations.forEach { destination ->
                 val row = RectF(bounds.left + dp(10f), y, bounds.right - dp(10f), y + rowHeight)
                 if (row.top >= listTop && row.top < bounds.bottom - dp(8f)) {

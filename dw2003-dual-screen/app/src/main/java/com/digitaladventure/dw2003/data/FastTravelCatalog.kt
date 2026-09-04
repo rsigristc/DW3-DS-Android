@@ -74,6 +74,12 @@ object FastTravelCatalog {
         }
     }
 
+    fun rememberedIcons(visited: Set<Int>, currentAreaId: Int, currentMapId: Int = currentAreaId): Set<Int> {
+        return (visited + currentAreaId + currentMapId).mapNotNull { tile ->
+            iconId(tile).takeIf { it in flaweIcons }
+        }.toSet()
+    }
+
     fun groups(
         storyStage: Int,
         visited: Set<Int>,
@@ -81,8 +87,10 @@ object FastTravelCatalog {
         currentMapId: Int = currentAreaId
     ): List<FastTravelGroup> {
         val currentIcon = iconId(currentAreaId, currentMapId)
+        val unlockedIcons = rememberedIcons(visited, currentAreaId, currentMapId)
         val unlocked = destinations.filter { destination ->
-            isUnlocked(destination, storyStage, visited, currentIcon)
+            destination.areaId in unlockedIcons ||
+                isUnlocked(destination, storyStage, visited, currentIcon)
         }
         return unlocked
             .groupBy { it.server to it.sector }

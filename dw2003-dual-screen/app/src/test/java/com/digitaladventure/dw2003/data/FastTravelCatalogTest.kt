@@ -66,6 +66,19 @@ class FastTravelCatalogTest {
     }
 
     @Test
+    fun listsEveryVisitedFlaweIconNotJustTheStartingHubs() {
+        val visited = setOf(0x0200, 0x021D, 0x021E, 0x0222, 0x0227, 0x0229, 0x022E)
+        val groups = FastTravelCatalog.groups(4, visited, 0x022E)
+        val ids = groups.flatMap { group -> group.destinations.map { it.areaId } }
+        assertTrue(ids.containsAll(listOf(0x0200, 0x021D, 0x021E, 0x0222, 0x0227, 0x0229, 0x022E)))
+        assertEquals(7, ids.size)
+        assertEquals(
+            setOf(0x0200, 0x021D, 0x021E, 0x0222, 0x0227, 0x0229, 0x022E),
+            FastTravelCatalog.rememberedIcons(visited, 0x022E)
+        )
+    }
+
+    @Test
     fun keepsUnknownServersLocked() {
         val destination = FastTravelDestination(
             areaId = 0x1000,

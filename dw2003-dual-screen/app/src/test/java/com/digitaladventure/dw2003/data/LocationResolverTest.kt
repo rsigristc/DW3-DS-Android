@@ -34,6 +34,13 @@ class LocationResolverTest {
     }
 
     @Test
+    fun divermonLakeUsesEastSectorMap() {
+        val location = LocationResolver.resolve(0x0227, 0x0227)
+        assertEquals("Lago de Divermon", location.title)
+        assertEquals("Sector Este · Lago de Divermon", location.radarLabel)
+    }
+
+    @Test
     fun enteringWireForestUsesDestinationMapId() {
         val location = LocationResolver.resolve(0x021D, 0x021E)
 

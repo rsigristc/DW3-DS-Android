@@ -36,7 +36,8 @@ class GameSetupView(
     onRestoreBackup: (() -> Unit)? = null,
     onReturnToStart: (() -> Unit)? = null,
     hasCrashLog: Boolean = false,
-    onViewCrashLog: (() -> Unit)? = null
+    onViewCrashLog: (() -> Unit)? = null,
+    onCheckUpdate: (() -> Unit)? = null
 ) : ScrollView(context) {
     private val content = LinearLayout(context)
 
@@ -174,6 +175,14 @@ class GameSetupView(
             content.addView(actionButton(
                 pick(language, "Volver a la pantalla inicial", "Return to the start screen"),
                 onReturnToStart,
+                outlined = true
+            ))
+        }
+        if (onCheckUpdate != null) {
+            content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
+            content.addView(actionButton(
+                pick(language, "Buscar actualización", "Check for update"),
+                onCheckUpdate,
                 outlined = true
             ))
         }
