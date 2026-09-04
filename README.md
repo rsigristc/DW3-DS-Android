@@ -1,6 +1,6 @@
 # DW2003 Dual Screen
 
-> v1.0.0 · Android companion for **Digimon World 2003** (PAL `SLES-03936`) and Flawe's Mod 2.0
+> v1.0.1 · Android companion for **Digimon World 2003** (PAL `SLES-03936`) and Flawe's Mod 2.0
 
 [![License: GPL v3 or later](https://img.shields.io/badge/License-GPL_v3_or_later-blue.svg)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/rsigristc/DW3-DS-Android)](https://github.com/rsigristc/DW3-DS-Android/releases)
