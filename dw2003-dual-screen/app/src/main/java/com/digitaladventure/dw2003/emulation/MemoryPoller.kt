@@ -81,7 +81,7 @@ class MemoryPoller(
         val pointerText = WalkthroughTextFinder.best(
             WalkthroughTextFinder.pointers(scratch).mapNotNull { pointer ->
                 WalkthroughTextFinder.decodeWindow(
-                    read((pointer and RAM_MASK).toInt(), POINTER_WINDOW)
+                    read((pointer and RAM_MASK.toLong()).toInt(), POINTER_WINDOW)
                 )
             }
         )
