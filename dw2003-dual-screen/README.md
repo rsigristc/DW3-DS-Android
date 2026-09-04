@@ -44,7 +44,7 @@ Implementado y compilado:
 - ⚙ APP reabre la pantalla de configuración inicial y puede activar una pestaña Mods en el panel complementario.
 - La pantalla azul de APP permite intercambiar juego/panel arriba-abajo o izquierda-derecha, además del modo automático.
 - Viaje rápido con los 46 iconos ASKMAP de Flawe en Asuka (ciudades, campo, norte) más los hubs de Amaterasu; **Abrir pestaña Mapa** ancla START en Ítems (↑↑↑↑) y baja a Mapa (↓↓ ×).
-- La lista localiza el dispatcher activo de Flawe por firma y referencia, fuerza temporalmente el ID interno del icono y conserva el spawn definido por el mod.
+- La lista localiza el dispatcher activo de Flawe por firma (o una lectura `0x184` única), fuerza temporalmente el ID interno del icono y conserva el spawn definido por el mod. Sin camino de cruceta no confirma el icono actual.
 - Reorden de la formación activa desde Batalla fuera de combate y de eventos.
 - Estado de espera sin compañeros ficticios antes de iniciar o cargar una partida.
 - Mandos físicos, cruceta y sticks analógicos dirigidos al puerto 1.

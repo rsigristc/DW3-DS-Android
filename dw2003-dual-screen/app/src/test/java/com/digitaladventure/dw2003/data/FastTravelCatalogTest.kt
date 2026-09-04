@@ -79,6 +79,13 @@ class FastTravelCatalogTest {
     }
 
     @Test
+    fun keepsEastDpadOrderAsASingleIcon() {
+        assertEquals(listOf(0x022E), FastTravelCatalog.cycleOrder(0x022E))
+        assertEquals(listOf(0x0222), FastTravelCatalog.cycleOrder(0x0222))
+        assertEquals(listOf(0x0200, 0x021D), FastTravelCatalog.cycleOrder(0x0200))
+    }
+
+    @Test
     fun keepsUnknownServersLocked() {
         val destination = FastTravelDestination(
             areaId = 0x1000,

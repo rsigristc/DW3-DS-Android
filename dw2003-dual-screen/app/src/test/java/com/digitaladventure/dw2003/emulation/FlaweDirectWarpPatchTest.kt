@@ -71,6 +71,53 @@ class FlaweDirectWarpPatchTest {
         assertTrue(!FlaweDirectWarpPatch.matchesPreferred(ByteArray(FlaweDirectWarpPatch.WINDOW_SIZE)))
     }
 
+    @Test
+    fun acceptsUniqueDispatcherWithoutJumpThunk() {
+        val ram = ByteArray(0x8000)
+        val offset = 0x2000
+        dispatcherWindow().copyInto(ram, offset)
+
+        assertEquals(listOf(offset), FlaweDirectWarpPatch.findActiveDispatcherOffsets(ram))
+        val site = FlaweDirectWarpPatch.selectActiveSite(ram)!!
+        val window = ram.copyOfRange(site.ramOffset, site.ramOffset + site.windowSize)
+        assertEquals(
+            0x3403000FL,
+            GameStateReader.u32(
+                FlaweDirectWarpPatch.prepare(window, 0x022E, site.copy(ramOffset = 0))!!,
+                site.iconLoadOffset
+            )
+        )
+    }
+
+    @Test
+    fun patchesLooseIconLoadWhenPrologueOffsetsDiffer() {
+        val ram = ByteArray(0x4000)
+        val branchAt = 0x1100
+        val loadAt = 0x1130
+        GameMemoryController.writeU32(ram, branchAt, 0x14680010L)
+        GameMemoryController.writeU32(ram, loadAt, 0x8E230184L)
+
+        val site = FlaweDirectWarpPatch.selectActiveSite(ram)!!
+        assertEquals(branchAt, site.ramOffset)
+        val window = ram.copyOfRange(site.ramOffset, site.ramOffset + site.windowSize)
+        val patched = FlaweDirectWarpPatch.prepare(window, 0x0222, site.copy(ramOffset = 0))!!
+        assertEquals(0L, GameStateReader.u32(patched, site.branchOffset))
+        assertEquals(0x34030015L, GameStateReader.u32(patched, site.iconLoadOffset))
+        assertTrue(FlaweDirectWarpPatch.matchesNearby(ram.copyOfRange(0x1100, 0x1140)))
+    }
+
+    @Test
+    fun refusesAmbiguousLooseCopies() {
+        val ram = ByteArray(0x4000)
+        GameMemoryController.writeU32(ram, 0x1000, 0x14680010L)
+        GameMemoryController.writeU32(ram, 0x1030, 0x8E230184L)
+        GameMemoryController.writeU32(ram, 0x2000, 0x14680010L)
+        GameMemoryController.writeU32(ram, 0x2030, 0x8E230184L)
+
+        assertTrue(FlaweDirectWarpPatch.findActiveDispatcherOffsets(ram).isEmpty())
+        assertNull(FlaweDirectWarpPatch.selectActiveSite(ram))
+    }
+
     private fun dispatcherWindow(
         branch: Long = 0x14680271L
     ) = ByteArray(FlaweDirectWarpPatch.WINDOW_SIZE).also {

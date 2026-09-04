@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 4 de septiembre de 2026 (0.7.17-poc).
+Fecha de compilación: 4 de septiembre de 2026 (0.7.18-poc).
 
 ## Entorno
 
@@ -19,7 +19,7 @@ Fecha de compilación: 4 de septiembre de 2026 (0.7.17-poc).
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-Resultado: `BUILD SUCCESSFUL` (85 pruebas unitarias, 0 fallos). Android Lint: 0 errores; 3 avisos `GradleDependency` preexistentes (no introducidos en 0.7.17).
+Resultado: `BUILD SUCCESSFUL` (90 pruebas unitarias, 0 fallos). Android Lint: 0 errores; 3 avisos `GradleDependency` preexistentes (no introducidos en 0.7.18).
 
 ## Pruebas unitarias
 
@@ -40,14 +40,14 @@ Resultado: `BUILD SUCCESSFUL` (85 pruebas unitarias, 0 fallos). Android Lint: 0 
 - `CheatCodeParserTest`: verifica pares PAL `800XXXXX YYYY` y el rechazo de texto vacío.
 - `AppFileRulesTest`: añade validación de la tarjeta formateada generada automáticamente.
 - `MapRegionCatalogTest`: verifica las listas Wikimon (Lago de Divermon y Bosque Alambre en Este; Entrada del Bosque en Central).
-- `AppVersionTest`: verifica que `v0.7.17-poc` sea más nuevo que `0.7.16-poc-debug` y que el JSON público de GitHub elija el APK.
+- `AppVersionTest`: verifica que `v0.7.18-poc` sea más nuevo que `0.7.17-poc-debug` y que el JSON público de GitHub elija el APK.
 - `DigievolutionCatalogTest`: verifica nombre, nivel mínimo, MP y poder (`Picking Claw` = 60; Double Power/Guard sin poder).
 - `TransparencyMaskTest`: verifica que solo el blanco conectado al borde se vuelva transparente.
 - `LocationResolverTest`: verifica interiores, puente y Central Park ↔ Entrada del Bosque usando el destino de `MAP_ID`.
-- `FastTravelCatalogTest`: verifica que el puente no es un icono, que laboratorio visita cuenta como Ciudad Asuka, que Park y la Entrada del Bosque son iconos distintos, que el norte se desbloquea al visitarlo y que un recorrido Asuka→Seiryu lista los siete iconos visitados.
+- `FastTravelCatalogTest`: verifica que el puente no es un icono, que laboratorio visita cuenta como Ciudad Asuka, que Park y la Entrada del Bosque son iconos distintos, que el norte se desbloquea al visitarlo, que un recorrido Asuka→Seiryu lista los siete iconos visitados y que el Este no finge un orden vertical de cruceta.
 - `FlaweFastTravelTableTest`: verifica los 46 códigos ASKMAP del IPS y que Amaterasu no inventa iconos.
-- `FastTravelNavigatorTest`: verifica anclaje ↑↑↑↑ + ↓↓ ×, `stepsToMapTab` cuando se conoce la pestaña, □ de servidor y × + △△.
-- `FlaweDirectWarpPatchTest`: verifica firmas, reubicación por referencia `j/jal`, IDs internos de ASKMAP y rechazo seguro de versiones desconocidas.
+- `FastTravelNavigatorTest`: verifica anclaje ↑↑↑↑ + ↓↓ ×, `stepsToMapTab` cuando se conoce la pestaña, □ de servidor, × + △△ y que un solo icono del Este no inventa cruceta.
+- `FlaweDirectWarpPatchTest`: verifica firmas, reubicación por referencia `j/jal`, copia única sin thunk, layout suelto `lw 0x184` y rechazo de copias ambiguas.
 - `CheatCatalogTest`: verifica códigos PAL de calidad de vida.
 - `GameMemoryControllerTest`: verifica el empaquetado little-endian de la formación.
 - `WalkthroughTextFinderTest`: verifica guía DW y ASCII, idioma y rechazo de ruido de menú.

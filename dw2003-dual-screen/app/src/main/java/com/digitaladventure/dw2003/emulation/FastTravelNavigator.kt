@@ -87,4 +87,7 @@ object FastTravelNavigator {
             List(start - end) { PadStep(RetroPadButton.DPAD_UP, 420, 120) }
         }
     }
+
+    fun canWalkToFlaweIcon(fromIcon: Int, toIcon: Int, order: List<Int>): Boolean =
+        stepsToFlaweIcon(fromIcon, toIcon, order).isNotEmpty()
 }

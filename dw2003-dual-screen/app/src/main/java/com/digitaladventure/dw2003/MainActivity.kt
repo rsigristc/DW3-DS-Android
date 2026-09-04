@@ -814,7 +814,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         val currentServer = MapRegionCatalog.resolve(currentIcon).server
         crashLog.note("fast-travel dest=0x${areaId.toString(16)} from=0x${currentIcon.toString(16)}")
         runTravelSequence {
-            val mapAlreadyOpen = runCatching { controller.hasPreferredFlaweDispatcher() }.getOrDefault(false)
+            val mapAlreadyOpen = runCatching { controller.hasFlaweDispatcher() }.getOrDefault(false)
             if (mapAlreadyOpen) {
                 delay(80)
             } else {
@@ -828,11 +828,15 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 playPadSteps(FastTravelNavigator.switchServer())
                 delay(450)
             }
-            waitUntil(2200) { controller.hasPreferredFlaweDispatcher() }
-            val directToken = if (destinationServer == ServerRegion.ASUKA) {
+            waitUntil(1800) { controller.hasFlaweDispatcher() }
+            var directToken = if (destinationServer == ServerRegion.ASUKA) {
                 runCatching { controller.beginDirectFlaweWarp(areaId) }.getOrNull()
             } else {
                 null
+            }
+            if (directToken == null && destinationServer == ServerRegion.ASUKA) {
+                waitUntil(1200) { controller.hasFlaweDispatcher() }
+                directToken = runCatching { controller.beginDirectFlaweWarp(areaId) }.getOrNull()
             }
             if (directToken != null) {
                 try {
@@ -842,13 +846,20 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 }
                 playPadSteps(FastTravelNavigator.exitMapMenu())
             } else if (destinationServer == ServerRegion.ASUKA) {
-                playPadSteps(
-                    FastTravelNavigator.stepsToFlaweIcon(
-                        currentIcon,
-                        areaId,
-                        FastTravelCatalog.cycleOrder(areaId)
-                    )
+                val walk = FastTravelNavigator.stepsToFlaweIcon(
+                    currentIcon,
+                    areaId,
+                    FastTravelCatalog.cycleOrder(areaId)
                 )
+                if (walk.isEmpty()) {
+                    crashLog.note("fast-travel left map open dest=0x${areaId.toString(16)}")
+                    toast(
+                        "Mapa de Flawe abierto. La firma directa no está en esta ROM; mueve el hexágono con la cruceta hasta el destino y pulsa ×. No confirmo el icono actual.",
+                        "Flawe map is open. Direct signature is not in this ROM; move the hex to the destination with the D-pad and press ×. The current icon will not be confirmed."
+                    )
+                    return@runTravelSequence
+                }
+                playPadSteps(walk)
                 playPadSteps(FastTravelNavigator.confirmMapDestination())
             } else {
                 toast(
@@ -867,12 +878,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 if (directToken != null) {
                     "Destino ${CompanionUiText.area(CompanionLanguage.SPANISH, areaId)} enviado directamente a Flawe con su spawn original."
                 } else {
-                    "Firma directa no disponible; destino elegido con la cruceta de Flawe."
+                    "Destino elegido con la cruceta de Flawe (Asuka Central)."
                 },
                 if (directToken != null) {
                     "Destination $destination sent directly to Flawe with its original spawn."
                 } else {
-                    "Direct signature unavailable; destination chosen with Flawe's D-pad."
+                    "Destination chosen with Flawe's D-pad (Asuka Central)."
                 }
             )
         }
@@ -891,7 +902,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         crashLog.note("open-map area=0x${snapshot.areaId.toString(16)} map=0x${snapshot.mapId.toString(16)}")
         runTravelSequence {
             val mapAlreadyOpen = runCatching {
-                memoryController?.hasPreferredFlaweDispatcher() == true
+                memoryController?.hasFlaweDispatcher() == true
             }.getOrDefault(false)
             if (mapAlreadyOpen) {
                 toast(
@@ -927,12 +938,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     private suspend fun openMapTab() {
-        playPadSteps(FastTravelNavigator.dismissMenu())
         if (menuIsOpen()) {
             playPadSteps(FastTravelNavigator.dismissMenu())
             waitUntil(900) { !menuIsOpen() }
+            delay(120)
         }
-        delay(120)
         playPadSteps(FastTravelNavigator.pressStart())
         delay(FastTravelNavigator.MENU_SETTLE_MS + 80)
         playPadSteps(FastTravelNavigator.stepsToMapFromUnknown())

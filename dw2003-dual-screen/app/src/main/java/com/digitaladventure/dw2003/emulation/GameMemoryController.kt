@@ -45,6 +45,16 @@ class GameMemoryController(private val view: GLRetroView) {
         return FlaweDirectWarpPatch.matchesPreferred(preferred)
     }
 
+    fun hasFlaweDispatcher(): Boolean {
+        if (hasPreferredFlaweDispatcher()) return true
+        val nearby = view.readMemory(
+            LibretroDroid.MEMORY_SYSTEM_RAM,
+            FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
+            0x100
+        )
+        return FlaweDirectWarpPatch.matchesNearby(nearby)
+    }
+
     fun beginDirectFlaweWarp(areaId: Int): FlaweDirectWarpToken? {
         val preferred = view.readMemory(
             LibretroDroid.MEMORY_SYSTEM_RAM,
@@ -68,20 +78,15 @@ class GameMemoryController(private val view: GLRetroView) {
             0,
             FlaweDirectWarpPatch.SYSTEM_RAM_SIZE
         )
-        val dispatcherOffset = FlaweDirectWarpPatch.findActiveDispatcherOffsets(ram)
-            .singleOrNull()
-            ?: return null
-        val original = ram.copyOfRange(
-            dispatcherOffset,
-            dispatcherOffset + FlaweDirectWarpPatch.WINDOW_SIZE
-        )
-        val patched = FlaweDirectWarpPatch.prepare(original, areaId) ?: return null
-        view.writeMemory(
-            LibretroDroid.MEMORY_SYSTEM_RAM,
-            dispatcherOffset,
-            patched
-        )
-        return FlaweDirectWarpToken(dispatcherOffset, original)
+        val site = FlaweDirectWarpPatch.selectActiveSite(ram) ?: return null
+        val original = ram.copyOfRange(site.ramOffset, site.ramOffset + site.windowSize)
+        val patched = FlaweDirectWarpPatch.prepare(
+            original,
+            areaId,
+            site.copy(ramOffset = 0)
+        ) ?: return null
+        view.writeMemory(LibretroDroid.MEMORY_SYSTEM_RAM, site.ramOffset, patched)
+        return FlaweDirectWarpToken(site.ramOffset, original)
     }
 
     fun restoreDirectFlaweWarp(token: FlaweDirectWarpToken) {

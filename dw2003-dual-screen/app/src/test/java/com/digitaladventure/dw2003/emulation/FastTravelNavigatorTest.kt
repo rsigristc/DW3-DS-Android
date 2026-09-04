@@ -71,4 +71,11 @@ class FastTravelNavigatorTest {
             FastTravelNavigator.confirmMapDestination().map { it.button }
         )
     }
+
+    @Test
+    fun doesNotInventAVerticalWalkOnASingleIcon() {
+        assertTrue(FastTravelNavigator.stepsToFlaweIcon(0x0222, 0x022E, listOf(0x022E)).isEmpty())
+        assertTrue(!FastTravelNavigator.canWalkToFlaweIcon(0x0222, 0x022E, listOf(0x0222)))
+        assertTrue(FastTravelNavigator.canWalkToFlaweIcon(0x0200, 0x021D, listOf(0x0200, 0x021D)))
+    }
 }

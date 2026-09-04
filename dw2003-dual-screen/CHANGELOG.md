@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.18-poc
+
+- El viaje rápido ya no pulsa △ en el campo: eso abría Estado (`Botón Δ : Cerrar Estado`) antes de START.
+- La firma directa de Flawe acepta una copia única aunque no haya un `j/jal`, y también un `lw *, 0x184(*)` con un `bne` cercano. Combined 2.0 deja de caer siempre al fallback.
+- Si no hay camino 1D de cruceta (todo el Este/Oeste/Norte), no se confirma el icono actual. El mapa se deja abierto para elegir el hexágono a mano.
+
 ## 0.7.17-poc
 
 - El radar usa las listas de Wikimon: Lago de Divermon, Bosque Alambre y Pradera del Viento son Sector Este; Central termina en Entrada del Bosque, Playa de Conchas y Cabo Conexión.

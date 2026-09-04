@@ -89,7 +89,7 @@ El parche público copia su selector a `0x8000C000`. La selección directa valid
 
 Durante ×, la app sustituye temporalmente la rama por `NOP` y la lectura del icono por `ori v1, zero, ID`. Los IDs son los índices de ASKMAP extraídos del IPS de [dmw_2003_patcher](https://github.com/markisha64/dmw_2003_patcher) (`0x14` Ciudad Asuka, `0x1E` Central Park, `0x16` Entrada del Bosque Alambre, `0x0A` Montaña de Bota, `0x06` Ciudad Genbu, y el resto de los 46 campos). Flawe ejecuta después su tabla original, que escribe el mapa y las coordenadas exactas; al soltar × se restaura la ventana completa de 80 bytes. Una firma distinta no se modifica y usa la cruceta como fallback. Amaterasu reutiliza los mismos índices de icono en otro mapa; el blob del parche solo escribe MAP_ID de Asuka, así que esos hubs siguen el fallback por cruceta.
 
-Algunas compilaciones combinadas reubican el dispatcher. En ese caso se busca la misma estructura en toda la RAM, se admite cualquier destino inmediato de `bne v1,t0,*` y se exige que un `j` o `jal` apunte a la copia encontrada. Una coincidencia ausente o ambigua nunca se escribe.
+Algunas compilaciones combinadas reubican el dispatcher. Se busca la misma estructura en toda la RAM y se prefiere la copia referenciada por un `j` o `jal`. Si no hay thunk, una coincidencia única sigue siendo válida. También se acepta un `lw` con inmediato `0x184` y un `bne` de ese registro en los 112 bytes anteriores. Varias copias sin desempate nunca se escriben.
 
 Los mods opcionales se aplican con `retro_cheat_set` del núcleo, no con parches permanentes. Datos fuera de rango, perfiles inválidos y punteros externos a RAM se descartan.
 
