@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1
+
+- El panel complementario se puede desplazar en Exploración, Batalla y Gestión para que el contenido no quede cortado en foldables horizontales.
+- El radar regional conserva la proporción original del mapa y centra el título «Radar Regional · Servidor Asuka».
+- Batalla muestra HP, MP, EXP y la lista de digievoluciones (forma activa en azul) en cada carta.
+- Gestión deja las columnas comprimidas y pasa a una lista vertical: partner, parámetros, resistencias, habilidades y equipo.
+
 ## 1.0.0
 
 - Primera release oficial firmada (`com.digitaladventure.dw2003`). El código, la licencia GPL-3.0-or-later y `scripts/build.sh` están en el árbol público.
