@@ -19,7 +19,7 @@ Fecha de compilación: 4 de septiembre de 2026 (0.7.17-poc).
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-Resultado: pendiente de esta revisión (0.7.17-poc).
+Resultado: `BUILD SUCCESSFUL` (85 pruebas unitarias, 0 fallos). Android Lint: 0 errores; 3 avisos `GradleDependency` preexistentes (no introducidos en 0.7.17).
 
 ## Pruebas unitarias
 
