@@ -95,6 +95,7 @@ La aplicación conserva permiso de lectura del archivo mediante Storage Access F
 - Las técnicas activas muestran MP y poder cuando el catálogo los tiene. Las de apoyo (cura, campos, Double Power/Guard) dejan el poder en `—`.
 - El sprite de pesca está integrado y puede previsualizarse tocando el panel del Tamer en un punto de pesca conocido. ddw3 no publica un overlay de pesca; sigue haciendo falta un dump de RAM de pie vs. pescando para activar `isFishing`.
 - Si la app se cierra de forma inesperada, ⚙ APP → **Ver último crash** muestra `last-crash.log` (traza Java/Kotlin, no abortos nativos del núcleo).
+- ⚙ APP → **Buscar actualización** compara esta instalación con el último release de GitHub e instala el APK. El arranque también avisa si hay una versión más nueva.
 - Los nombres del equipo corresponden al catálogo inglés de referencia; parámetros y bonificaciones sí se muestran con abreviaturas españolas.
 
 ## Compilación
