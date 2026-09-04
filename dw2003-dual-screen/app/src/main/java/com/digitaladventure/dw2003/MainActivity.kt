@@ -36,6 +36,7 @@ import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatCatalog
 import com.digitaladventure.dw2003.data.AppRelease
 import com.digitaladventure.dw2003.data.AppUpdateChecker
+import com.digitaladventure.dw2003.data.AppUpdateStatus
 import com.digitaladventure.dw2003.data.CustomCheatStore
 import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.data.CompanionLanguageResolver
@@ -1084,33 +1085,48 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun checkForAppUpdate(manual: Boolean) {
         lifecycleScope.launch {
             val installed = installedVersionName()
-            val release = withContext(Dispatchers.IO) {
-                runCatching { updateChecker.latestNewerThan(installed) }.getOrElse { error ->
-                    if (manual) {
-                        toast("No se pudo consultar GitHub: ${error.message}", "Could not reach GitHub: ${error.message}")
-                    }
-                    null
+            val status = withContext(Dispatchers.IO) {
+                runCatching { updateChecker.check(installed) }.getOrElse { error ->
+                    AppUpdateStatus.Unavailable(error.message ?: error.javaClass.simpleName)
                 }
             }
             if (isFinishing || isDestroyed) return@launch
-            if (release == null) {
-                if (manual) toast("Ya tienes la última versión ($installed)", "You already have the latest version ($installed)")
-                return@launch
-            }
-            AlertDialog.Builder(this@MainActivity)
-                .setTitle(CompanionUiText.pick(resolvedLanguage(), "Actualización disponible", "Update available"))
-                .setMessage(
-                    CompanionUiText.pick(
-                        resolvedLanguage(),
-                        "Hay ${release.tag} en GitHub. Esta instalación es $installed. ¿Descargar e instalar el APK?",
-                        "${release.tag} is on GitHub. This install is $installed. Download and install the APK?"
-                    )
-                )
-                .setPositiveButton(CompanionUiText.pick(resolvedLanguage(), "Actualizar", "Update")) { _, _ ->
-                    downloadAndInstall(release)
+            when (status) {
+                is AppUpdateStatus.Available -> {
+                    val release = status.release
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle(CompanionUiText.pick(resolvedLanguage(), "Actualización disponible", "Update available"))
+                        .setMessage(
+                            CompanionUiText.pick(
+                                resolvedLanguage(),
+                                "Hay ${release.tag} en GitHub. Esta instalación es $installed. ¿Descargar e instalar el APK?",
+                                "${release.tag} is on GitHub. This install is $installed. Download and install the APK?"
+                            )
+                        )
+                        .setPositiveButton(CompanionUiText.pick(resolvedLanguage(), "Actualizar", "Update")) { _, _ ->
+                            downloadAndInstall(release)
+                        }
+                        .setNegativeButton(CompanionUiText.pick(resolvedLanguage(), "Después", "Later"), null)
+                        .show()
                 }
-                .setNegativeButton(CompanionUiText.pick(resolvedLanguage(), "Después", "Later"), null)
-                .show()
+                is AppUpdateStatus.Current -> {
+                    if (manual) {
+                        toast(
+                            "Ya tienes la última versión ($installed; GitHub ${status.remoteTag})",
+                            "You already have the latest version ($installed; GitHub ${status.remoteTag})"
+                        )
+                    }
+                }
+                is AppUpdateStatus.Unavailable -> {
+                    crashLog.note("app-update-check-failed ${status.reason}")
+                    if (manual) {
+                        toast(
+                            "No se pudo consultar GitHub: ${status.reason}",
+                            "Could not reach GitHub: ${status.reason}"
+                        )
+                    }
+                }
+            }
         }
     }
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.19-poc
+
+- Buscar actualización ya no trata un 404 de GitHub como «ya tienes la última versión». Si el repo es privado o no hay APK, muestra el error real.
+
 ## 0.7.18-poc
 
 - El viaje rápido ya no pulsa △ en el campo: eso abría Estado (`Botón Δ : Cerrar Estado`) antes de START.

@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 4 de septiembre de 2026 (0.7.18-poc).
+Fecha de compilación: 4 de septiembre de 2026 (0.7.19-poc).
 
 ## Entorno
 
@@ -19,7 +19,7 @@ Fecha de compilación: 4 de septiembre de 2026 (0.7.18-poc).
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-Resultado: `BUILD SUCCESSFUL` (90 pruebas unitarias, 0 fallos). Android Lint: 0 errores; 3 avisos `GradleDependency` preexistentes (no introducidos en 0.7.18).
+Resultado: `BUILD SUCCESSFUL` (91 pruebas unitarias, 0 fallos). Android Lint: 0 errores; 3 avisos `GradleDependency` preexistentes (no introducidos en 0.7.19).
 
 ## Pruebas unitarias
 
@@ -40,7 +40,7 @@ Resultado: `BUILD SUCCESSFUL` (90 pruebas unitarias, 0 fallos). Android Lint: 0 
 - `CheatCodeParserTest`: verifica pares PAL `800XXXXX YYYY` y el rechazo de texto vacío.
 - `AppFileRulesTest`: añade validación de la tarjeta formateada generada automáticamente.
 - `MapRegionCatalogTest`: verifica las listas Wikimon (Lago de Divermon y Bosque Alambre en Este; Entrada del Bosque en Central).
-- `AppVersionTest`: verifica que `v0.7.18-poc` sea más nuevo que `0.7.17-poc-debug` y que el JSON público de GitHub elija el APK.
+- `AppVersionTest`: verifica que `v0.7.18-poc` sea más nuevo que `0.7.17-poc-debug`, que el JSON público de GitHub elija el APK y que acepte URLs con barras escapadas.
 - `DigievolutionCatalogTest`: verifica nombre, nivel mínimo, MP y poder (`Picking Claw` = 60; Double Power/Guard sin poder).
 - `TransparencyMaskTest`: verifica que solo el blanco conectado al borde se vuelva transparente.
 - `LocationResolverTest`: verifica interiores, puente y Central Park ↔ Entrada del Bosque usando el destino de `MAP_ID`.
