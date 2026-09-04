@@ -27,6 +27,15 @@ class FlaweDirectWarpPatchTest {
     }
 
     @Test
+    fun forcesOfficialAskmapIconsFromThePatcherTable() {
+        val beach = FlaweDirectWarpPatch.prepare(dispatcherWindow(), 0x021F)!!
+        val gym = FlaweDirectWarpPatch.prepare(dispatcherWindow(), 0x0267)!!
+
+        assertEquals(0x34030021L, GameStateReader.u32(beach, 0x4C))
+        assertEquals(0x34030001L, GameStateReader.u32(gym, 0x4C))
+    }
+
+    @Test
     fun findsRelocatedDispatcherReferencedByMapOverlay() {
         val ram = ByteArray(0x10000)
         val sourceOffset = 0x3000

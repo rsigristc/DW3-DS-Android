@@ -18,8 +18,8 @@ object MapRegionCatalog {
                 in 0x0200..0x0228 -> SectorRegion.CENTRAL
                 in 0x0229..0x0231 -> SectorRegion.EAST
                 in 0x0232..0x0246 -> SectorRegion.SOUTH
-                in 0x0247..0x026F -> SectorRegion.WEST
-                in 0x0270..0x02DF -> SectorRegion.NORTH
+                in 0x0247..0x0260 -> SectorRegion.WEST
+                in 0x0261..0x02DF -> SectorRegion.NORTH
                 else -> SectorRegion.UNKNOWN
             }
             ServerRegion.AMATERASU -> when (mapId) {

@@ -14,16 +14,31 @@ data class FastTravelGroup(
 )
 
 object FastTravelCatalog {
-    /** Icons that appear on Flawe's world map, not city interiors or the bridge. */
-    private val flaweIcons = setOf(
-        0x0200, 0x021D, 0x021F, 0x0220, 0x0228,
-        0x022C, 0x022E, 0x0232, 0x023E, 0x025D, 0x0780,
-        0x0810, 0x0825, 0x0845, 0x0855
-    )
+    /** Amaterasu city icons. Square swaps server; Flawe's IPS table only encodes Asuka MAP_IDs. */
+    private val amaterasuIcons = setOf(0x0780, 0x0810, 0x0825, 0x0845, 0x0855)
 
+    private val flaweIcons: Set<Int> = FlaweFastTravelTable.asukaMapIds + amaterasuIcons
+
+    /**
+     * Field tiles that share a nearby Flawe icon. Keys must themselves be Flawe icons.
+     * Wire Forest Entrance, beaches and inns have their own ASKMAP slots, so they
+     * are not folded into Central Park / Asuka City.
+     */
     private val iconGroups: Map<Int, Set<Int>> = mapOf(
         0x0200 to (0x0200..0x021C).toSet(),
-        0x021D to setOf(0x021D, 0x021E)
+        0x0222 to setOf(0x0221, 0x0222),
+        0x0225 to setOf(0x0225, 0x0226),
+        0x022E to (0x022E..0x0231).toSet(),
+        0x0234 to setOf(0x0233, 0x0234),
+        0x023E to (0x023E..0x0241).toSet(),
+        0x024D to (0x024D..0x0257).toSet(),
+        0x025B to setOf(0x025A, 0x025B, 0x025C),
+        0x025D to (0x025D..0x0260).toSet(),
+        0x026F to setOf(0x026F, 0x02D7, 0x02D8, 0x02D9),
+        0x0780 to setOf(0x0780, 0x0785, 0x0790, 0x0795, 0x0800, 0x0805),
+        0x0810 to setOf(0x0810, 0x0820),
+        0x0825 to setOf(0x0825, 0x0830, 0x0835, 0x0840),
+        0x0845 to setOf(0x0845, 0x0850)
     )
 
     /** Vertical D-pad order of the currently exposed Flawe icons on Asuka Central. */
@@ -41,9 +56,8 @@ object FastTravelCatalog {
 
     fun iconId(areaId: Int, mapId: Int = areaId): Int {
         val stage = LocationResolver.stageId(areaId, mapId)
-        return iconGroups.entries.firstOrNull { stage in it.value }?.key
-            ?: stage.takeIf { it in flaweIcons }
-            ?: 0
+        if (stage in flaweIcons) return stage
+        return iconGroups.entries.firstOrNull { stage in it.value }?.key ?: 0
     }
 
     fun cycleOrder(iconId: Int): List<Int> {

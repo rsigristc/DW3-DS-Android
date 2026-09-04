@@ -71,6 +71,8 @@ En 0.7.11, si esa dirección fija no coincide, se recorren los 2 MiB de RAM busc
 
 En 0.7.12 el panel es bilingüe. `CompanionLanguageSetting` (automático / español / inglés) se guarda en preferencias. Automático usa el idioma detectado en la guía de Flawe. `WalkthroughTextFinder` lee punteros de `0x8000B200`, acepta texto DW y ASCII, y al abrir START barre overlay y RAM. Flawe no expone walkthrough en el menú español; `WalkthroughCatalog` entonces ofrece pistas del panel y traduce frases inglesas conocidas.
 
+En 0.7.13, `FlaweFastTravelTable` incorpora los 46 destinos ASKMAP del IPS de fast travel y los nombres de [ddw3](https://github.com/markisha64/ddw3). El parche directo fuerza cualquier icono visitado de ese mapa; el Sector Norte (`0x0261`–`0x026F`) deja de clasificarse como oeste.
+
 ## BIOS aportado por el usuario
 
 `BiosManager` acepta únicamente una imagen europea de PlayStation de 512 KiB con firma y marcador regional compatibles con la detección de PCSX-ReARMed. Se instala en el directorio privado del sistema como `scph5502.bin`. Sin ese archivo, el núcleo conserva su alternativa HLE.

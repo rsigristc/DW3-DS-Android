@@ -41,6 +41,22 @@ class FastTravelCatalogTest {
     }
 
     @Test
+    fun treatsWireForestEntranceAsItsOwnFlaweIcon() {
+        assertEquals(0x021E, FastTravelCatalog.iconId(0x021E))
+        val groups = FastTravelCatalog.groups(99, setOf(0x021E), 0x021E)
+        assertTrue(groups.any { group -> group.destinations.any { it.areaId == 0x021E } })
+        assertFalse(groups.any { group -> group.destinations.any { it.areaId == 0x021D } })
+    }
+
+    @Test
+    fun unlocksNorthSectorAskmapIconsAfterVisitingThem() {
+        val groups = FastTravelCatalog.groups(99, setOf(0x0261, 0x026F), 0x0261)
+        assertTrue(groups.any { group -> group.destinations.any { it.areaId == 0x0261 } })
+        assertTrue(groups.any { group -> group.destinations.any { it.areaId == 0x026F } })
+        assertEquals(SectorRegion.NORTH, groups.single { group -> group.destinations.any { it.areaId == 0x0261 } }.sector)
+    }
+
+    @Test
     fun keepsUnknownServersLocked() {
         val destination = FastTravelDestination(
             areaId = 0x1000,

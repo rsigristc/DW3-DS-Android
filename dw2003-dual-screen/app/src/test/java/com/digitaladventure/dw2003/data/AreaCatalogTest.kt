@@ -11,6 +11,8 @@ class AreaCatalogTest {
         assertEquals("Ciudad Asuka", AreaCatalog.name(0x0200))
         assertEquals("Laboratorio Digimon", AreaCatalog.name(0x0206))
         assertEquals("Centro Online", AreaCatalog.name(0x02D8))
+        assertEquals("Montaña de Bota", AreaCatalog.name(0x0261))
+        assertEquals("Ciudad Genbu", AreaCatalog.name(0x026F))
         assertEquals("Ciudad Amaterasu", AreaCatalog.name(0x0780))
         assertEquals("Ciudad Bai Hu", AreaCatalog.name(0x0845))
         assertEquals("Área 0x7777", AreaCatalog.name(0x7777))

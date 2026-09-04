@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.13-poc
+
+- El dispatcher de Flawe ya no se limita a Ciudad Asuka y Central Park: los 46 iconos de ASKMAP del IPS público (`dmw_2003_patcher`, SLES `0x095500`) se fuerzan con el ID interno real y el spawn del mod.
+- La lista de viaje rápido desbloquea esos campos al visitarlos (posadas, pantanos, desierto, montañas del norte, Ciudad Genbu). La Entrada del Bosque Alambre deja de agruparse con Central Park porque Flawe le da icono propio.
+- Nombres EN/ES de Montaña de Bota, nieve, hielo, Mina Kulon, Lago de Hielo, Gimnasio Legendario, Agujero Kulon y Ciudad Genbu salen de `ddw3` (`esstname` / `esaskmap`). El Sector Norte empieza en `0x0261`, no en `0x0270`.
+- La guía del panel añade pistas por mapa para este y oeste, posadas y el norte. Flawe sigue sin walkthrough en el menú español.
+
 ## 0.7.12-poc
 
 - El panel complementario puede mostrarse en español o inglés. ⚙ APP añade **Idioma del panel**: automático, español o English.

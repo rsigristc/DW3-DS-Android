@@ -43,7 +43,7 @@ Implementado y compilado:
 - Título de ubicación sincronizado con `MAP_ID`, que cambia al destino antes que `AREA` durante las transiciones.
 - ⚙ APP reabre la pantalla de configuración inicial y puede activar una pestaña Mods en el panel complementario.
 - La pantalla azul de APP permite intercambiar juego/panel arriba-abajo o izquierda-derecha, además del modo automático.
-- Viaje rápido solo con iconos de Flawe (Ciudad Asuka y Central Park al inicio); **Abrir pestaña Mapa** usa la secuencia rápida START → ↓↓ → ×.
+- Viaje rápido con los 46 iconos ASKMAP de Flawe en Asuka (ciudades, campo, norte) más los hubs de Amaterasu; **Abrir pestaña Mapa** usa START → ↓↓ → ×.
 - La lista localiza el dispatcher activo de Flawe por firma y referencia, fuerza temporalmente el ID interno del icono y conserva el spawn definido por el mod.
 - Reorden de la formación activa desde Batalla fuera de combate y de eventos.
 - Estado de espera sin compañeros ficticios antes de iniciar o cargar una partida.
@@ -69,7 +69,7 @@ La POC permite continuar con otra imagen, pero desactiva cualquier garantía sob
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v0.7.12-poc-debug.apk` (release `v0.7.12-poc`) en un dispositivo Android ARM64.
+1. Instala `DW2003-Dual-Screen-v0.7.13-poc-debug.apk` (release `v0.7.13-poc`) en un dispositivo Android ARM64.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada o la imagen original europea.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.

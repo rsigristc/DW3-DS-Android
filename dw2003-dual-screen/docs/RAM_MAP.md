@@ -48,7 +48,7 @@ Base `0x8004949C`, ocho perfiles, stride `0x3DC`.
 
 Orden de perfiles: Kotemon, Kumamon, Monmon, Agumon, Veemon, Guilmon, Renamon y Patamon.
 
-Los IDs de área se presentan como hexadecimales (`0x0200`, `0x0206`, `0x02D8`, etc.). No deben usarse como índices de una lista consecutiva. El catálogo 0.6 añade ubicaciones principales de Amaterasu y conserva el ID hexadecimal cuando todavía no existe un nombre confirmado.
+Los IDs de área se presentan como hexadecimales (`0x0200`, `0x0206`, `0x0261`, `0x02D8`, etc.). No deben usarse como índices de una lista consecutiva. El catálogo incluye el Sector Norte confirmado por el IPS de Flawe (`0x0261` Montaña de Bota … `0x026F` Ciudad Genbu) y conserva el ID hexadecimal cuando todavía no existe un nombre confirmado.
 
 El umbral acumulado de EXP para el siguiente nivel no está almacenado junto al perfil. La interfaz lo obtiene de una tabla por compañero y nivel; la barra usa el intervalo entre el umbral actual y el siguiente. En nivel 99 se muestra “Nivel máx.”.
 
@@ -82,7 +82,7 @@ El parche público copia su selector a `0x8000C000`. La selección directa valid
 | `0x8000C00C` | `0x14680271` | Rechaza la selección si no es válida |
 | `0x8000C04C` | `0x8E230184` | Lee el ID interno del icono |
 
-Durante ×, la app sustituye temporalmente la rama por `NOP` y la lectura del icono por `ori v1, zero, ID`. Los IDs confirmados son `0x14` para Ciudad Asuka y `0x1E` para Central Park. Flawe ejecuta después su tabla original, que escribe el mapa y las coordenadas exactas; al soltar × se restaura la ventana completa de 80 bytes. Una firma distinta no se modifica y usa la cruceta como fallback.
+Durante ×, la app sustituye temporalmente la rama por `NOP` y la lectura del icono por `ori v1, zero, ID`. Los IDs son los índices de ASKMAP extraídos del IPS de [dmw_2003_patcher](https://github.com/markisha64/dmw_2003_patcher) (`0x14` Ciudad Asuka, `0x1E` Central Park, `0x16` Entrada del Bosque Alambre, `0x0A` Montaña de Bota, `0x06` Ciudad Genbu, y el resto de los 46 campos). Flawe ejecuta después su tabla original, que escribe el mapa y las coordenadas exactas; al soltar × se restaura la ventana completa de 80 bytes. Una firma distinta no se modifica y usa la cruceta como fallback. Amaterasu reutiliza los mismos índices de icono en otro mapa; el blob del parche solo escribe MAP_ID de Asuka, así que esos hubs siguen el fallback por cruceta.
 
 Algunas compilaciones combinadas reubican el dispatcher. En ese caso se busca la misma estructura en toda la RAM, se admite cualquier destino inmediato de `bne v1,t0,*` y se exige que un `j` o `jal` apunte a la copia encontrada. Una coincidencia ausente o ambigua nunca se escribe.
 

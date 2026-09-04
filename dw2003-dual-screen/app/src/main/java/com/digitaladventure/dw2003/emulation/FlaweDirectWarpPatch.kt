@@ -1,13 +1,15 @@
 package com.digitaladventure.dw2003.emulation
 
+import com.digitaladventure.dw2003.data.FlaweFastTravelTable
 import com.digitaladventure.dw2003.data.GameStateReader
 
 /**
  * Flawe copies its fast-travel dispatcher to this scratch-RAM window.
  *
  * The unmodified dispatcher validates the map cursor at +0x00C and reads the
- * hovered icon at +0x04C. Replacing those two instructions only while Cross is
- * pressed lets Flawe's own table write the destination and exact spawn.
+ * hovered ASKMAP icon at +0x04C. Replacing those two instructions only while
+ * Cross is pressed lets Flawe's own table write the destination and exact spawn.
+ * Icon codes come from [FlaweFastTravelTable] (patcher IPS + ddw3 ASKMAP).
  */
 object FlaweDirectWarpPatch {
     const val DISPATCHER_RAM_OFFSET = 0x0C000
@@ -23,12 +25,7 @@ object FlaweDirectWarpPatch {
     private const val NOP = 0L
     private const val ORI_V1_ZERO = 0x34030000L
 
-    private val iconCodes = mapOf(
-        0x0200 to 0x14,
-        0x021D to 0x1E
-    )
-
-    fun iconCode(areaId: Int): Int? = iconCodes[areaId]
+    fun iconCode(areaId: Int): Int? = FlaweFastTravelTable.iconCode(areaId)
 
     fun findActiveDispatcherOffsets(ram: ByteArray): List<Int> {
         val candidates = (0..ram.size - WINDOW_SIZE step 4).filter { offset ->

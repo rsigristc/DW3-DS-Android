@@ -223,20 +223,60 @@ object WalkthroughCatalog {
                 "Explora la costa de Central Park y vuelve al parque para seguir la historia.",
                 "Explore the Central Park coast, then return to the park to continue the story."
             )
+            0x0223, 0x0224 -> pair(
+                language,
+                "Descansa en la Posada del Bosque y sigue al este hacia las Ruinas Protocolo o Ciudad Seiryu.",
+                "Rest at the Forest Inn, then continue east toward Protocol Ruins or Seiryu City."
+            )
+            0x0225, 0x0226 -> pair(
+                language,
+                "Investiga el Bosque Protocolo y las Ruinas Protocolo antes de volver a la ruta este.",
+                "Search Protocol Forest and Protocol Ruins, then return to the east route."
+            )
+            0x0227, 0x0228 -> pair(
+                language,
+                "Explora el Lago de Divermon o la Isla del Duelo y vuelve a la ruta hacia Ciudad Seiryu.",
+                "Explore Divermon's Lake or Duel Island, then return toward Seiryu City."
+            )
+            in 0x0229..0x022D -> pair(
+                language,
+                "Sigue el Sector Este por la pradera y el valle hasta Ciudad Seiryu.",
+                "Follow the East Sector through the prairie and valley to Seiryu City."
+            )
             0x022E, 0x022F, 0x0230, 0x0231 -> pair(
                 language,
                 "Explora Ciudad Seiryu y habla con los habitantes para el siguiente paso.",
                 "Explore Seiryu City and talk to the residents for the next story beat."
+            )
+            in 0x0232..0x023D -> pair(
+                language,
+                "Recorre el Sector Sur: pantanos, posada y Bahía Fénix conducen a Ciudad Suzaku.",
+                "Travel the South Sector: swamps, the inn and Phoenix Bay lead to Suzaku City."
             )
             0x023E, 0x023F, 0x0240, 0x0241 -> pair(
                 language,
                 "Explora Ciudad Suzaku y sigue las pistas del sector sur.",
                 "Explore Suzaku City and follow the leads in the south sector."
             )
-            0x025D, 0x025E -> pair(
+            in 0x0242..0x0246 -> pair(
+                language,
+                "Explora el Santuario de la Jungla y las catacumbas del sur.",
+                "Explore the Jungle Shrine and the southern catacombs."
+            )
+            in 0x0247..0x025C -> pair(
+                language,
+                "Atraviesa el desierto del Sector Oeste hacia Ciudad Byakko, el oasis y la Fábrica Dum Dum.",
+                "Cross the West Sector desert toward Byakko City, the oasis and Dum Dum Factory."
+            )
+            in 0x025D..0x0260 -> pair(
                 language,
                 "Explora Ciudad Byakko y el desierto del sector oeste.",
                 "Explore Byakko City and the west-sector desert."
+            )
+            in 0x0261..0x02D9 -> pair(
+                language,
+                "Sube el Sector Norte: Montaña de Bota, nieve, Mina Kulon y Ciudad Genbu.",
+                "Climb the North Sector: Boot Mountain, snow, Kulon Mine and Genbu City."
             )
             in 0x0780..0x0855 -> pair(
                 language,

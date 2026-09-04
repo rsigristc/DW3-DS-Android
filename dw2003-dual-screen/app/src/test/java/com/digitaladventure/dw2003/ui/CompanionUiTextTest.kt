@@ -21,6 +21,12 @@ class CompanionUiTextTest {
             "Central Sector · Digimon Lab · 0x0206",
             CompanionUiText.locationDetail(CompanionLanguage.ENGLISH, 0x0200, 0x0206)
         )
+        assertEquals("Boot Mountain", CompanionUiText.area(CompanionLanguage.ENGLISH, 0x0261))
+        assertEquals("Montaña de Bota", CompanionUiText.area(CompanionLanguage.SPANISH, 0x0261))
+        assertEquals(
+            "North Sector · Genbu City · 0x026F",
+            CompanionUiText.locationDetail(CompanionLanguage.ENGLISH, 0x026F, 0x026F)
+        )
     }
 
     @Test

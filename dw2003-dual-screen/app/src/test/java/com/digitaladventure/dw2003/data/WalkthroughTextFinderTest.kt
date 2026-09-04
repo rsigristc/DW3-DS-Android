@@ -104,6 +104,18 @@ class WalkthroughCatalogTest {
     }
 
     @Test
+    fun usesNorthSectorCompanionHintForBootMountain() {
+        val text = WalkthroughCatalog.localized(
+            WalkthroughCatalog.SYNC_PROMPT_ES,
+            0,
+            CompanionLanguage.ENGLISH,
+            0x0261
+        )
+        assertTrue(text.contains("Boot Mountain"))
+        assertTrue(text.contains("Genbu City"))
+    }
+
+    @Test
     fun keepsStartPromptLocalized() {
         assertEquals(
             WalkthroughCatalog.START_PROMPT_EN,
