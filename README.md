@@ -66,9 +66,3 @@ fan project is not affiliated with Bandai Namco, AYN or Samsung.
 
 Contributions and device reports are welcome. See
 [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
-
-## Support development
-
-Source, downloads and features stay public. Optional support:
-
-[![Support the project on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/rodrigosigrist)
