@@ -10,8 +10,7 @@ shows a live Digivice-style companion on a second display (AYN Thor), a foldable
 hinge, or a split pane on tablets.
 
 **The source used to build v1.0.0 and later APKs is visible in this repository.**
-There is no encoded tarball, overlay blob or hidden patch script in GitHub
-Actions. CI clones this tree and runs [`scripts/build.sh`](scripts/build.sh).
+CI clones this tree and runs [`scripts/build.sh`](scripts/build.sh).
 
 The app does **not** include a ROM, BIOS or Flawe patch. You must supply your
 own legal copy.
@@ -19,9 +18,7 @@ own legal copy.
 ## Why this repo looks the way it does
 
 Parts of the companion and the release automation were written with AI
-assistance. That is not a reason to hide sources. Community review of a
-related project asked for the usual open-source norms, and this tree follows
-them:
+assistance.
 
 | Expectation | Here |
 |---|---|
@@ -35,7 +32,7 @@ them:
 
 ## Features
 
-- Dual-screen / fold / large-display layout with Exploración, Batalla and Gestión.
+- Dual-screen / fold / large-display layout with Explore, Battle and Management.
 - Live RAM read of Tamer, partners, story stage, equipment and walkthrough hints.
 - Flawe Fast Travel list of visited ASKMAP icons; signed in-app updates from GitHub Releases.
 - Optional quality-of-life cheats, crash log, bilingual companion panel.
