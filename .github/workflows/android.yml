@@ -3,18 +3,12 @@ name: Android
 on:
   push:
     branches:
-      - "**"
-    tags-ignore:
-      - "v*-poc"
+      - main
   pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: dw2003-dual-screen
-
     steps:
       - uses: actions/checkout@v4
 
@@ -30,7 +24,7 @@ jobs:
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.3.13750724" "cmake;3.22.1"
 
       - name: Test, lint and build
-        run: ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+        run: ./scripts/build.sh
 
       - uses: actions/upload-artifact@v4
         with:

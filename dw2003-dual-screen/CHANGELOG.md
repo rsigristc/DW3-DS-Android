@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0
+
+- Primera release oficial firmada (`com.digitaladventure.dw2003`). El código, la licencia GPL-3.0-or-later y `scripts/build.sh` están en el árbol público.
+- Las etiquetas y APKs `v0.7.x-poc` se retiran. Quien tenga la POC debug debe desinstalarla una vez.
+
 ## 0.7.20-poc
 
 - El APK publicado es **release firmado** (`com.digitaladventure.dw2003`), no debug. CI ya no usa el `debug.keystore` efímero que provocaba «App not installed» al actualizar.

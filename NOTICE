@@ -1,0 +1,40 @@
+DW2003 Dual Screen
+==================
+
+This repository contains an Android dual-screen companion for Digimon World 2003
+(PAL SLES-03936) and Flawe's Mod 2.0. All application, emulator-frontend and
+PlayStation-core sources used to build official APKs live in this Git tree.
+
+Vendored upstream
+-----------------
+LibretroDroid
+  Upstream: https://github.com/Swordfish90/LibretroDroid
+  Vendored revision: 8835c3098514390a271e36983957f7bb5f40abf1
+  License: GNU GPL v3 or later
+  Local changes: defensive libretro memory-read API, NDK 27 include fixes,
+  ARM64-only packaging.
+
+PCSX-ReARMed
+  Upstream: https://github.com/libretro/pcsx_rearmed
+  Vendored revision: ba61a4fdee1f789e8012f205f1b63826667644fa
+  License: GNU GPL v2 or later; distributed here under GPL v3 or later.
+
+Oboe, libchdr and other bundled dependencies keep their original licenses
+under dw2003-dual-screen/licenses/ and their upstream directories. See
+dw2003-dual-screen/THIRD_PARTY_NOTICES.md.
+
+What this repository does not contain
+-------------------------------------
+This project does not ship a PlayStation BIOS, a Digimon World 2003 ISO/BIN,
+or Flawe's patch files. Those must be supplied by the user from a copy they
+own. The only Base64 material used by CI is the private Android release
+keystore stored as an encrypted GitHub Actions secret. It is not source code.
+
+Trademarks
+----------
+Digimon, Digimon World and related marks belong to Bandai Namco and their
+licensors. AYN Thor and Samsung Galaxy Z Fold are marks of their respective
+owners. This unofficial fan project is not affiliated with or endorsed by
+Bandai Namco, AYN, Samsung, the Libretro authors or Flawe.
+
+No warranty is provided. See LICENSE for the complete license terms.

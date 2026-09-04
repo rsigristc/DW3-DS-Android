@@ -87,6 +87,8 @@ En 0.7.19, `AppUpdateChecker` distingue «hay release más nuevo», «ya estás 
 
 En 0.7.20, el workflow de release firma `assembleRelease` con un keystore persistente (secretos de GitHub). El paquete publicado es `com.digitaladventure.dw2003`, sin sufijo `.debug`.
 
+En 1.0.0 el repositorio se documenta como open source en la raíz (`LICENSE`, `NOTICE`, `scripts/build.sh`). Las POC `0.7.x-poc` se retiran.
+
 ## BIOS aportado por el usuario
 
 `BiosManager` acepta únicamente una imagen europea de PlayStation de 512 KiB con firma y marcador regional compatibles con la detección de PCSX-ReARMed. Se instala en el directorio privado del sistema como `scph5502.bin`. Sin ese archivo, el núcleo conserva su alternativa HLE.

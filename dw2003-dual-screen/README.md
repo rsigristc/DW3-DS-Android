@@ -6,9 +6,9 @@ Prueba de concepto Android para ejecutar **Digimon World 2003 (Europa)** y aprov
 - Samsung Galaxy Z Fold y otros plegables compatibles con Jetpack WindowManager.
 - Tablets o pantallas grandes, con división lógica adaptable.
 
-La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La POC 0.7 incorpora los sprites y mapas aportados por el usuario, corrige el nombre de ubicación frente a la pantalla de carga y añade viaje rápido, reorden de equipo y una pestaña de mods opcional.
+La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.0.0** es la primera release oficial firmada. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
 
-## Estado de la POC 0.7
+## Estado 1.0.0
 
 Implementado y compilado:
 
@@ -69,7 +69,7 @@ La POC permite continuar con otra imagen, pero desactiva cualquier garantía sob
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v0.7.17-poc-debug.apk` (release `v0.7.17-poc`) en un dispositivo Android ARM64.
+1. Instala `DW2003-Dual-Screen-v1.0.0.apk` (release `v1.0.0`) en un dispositivo Android ARM64. Si tenías la POC debug, desinstálala antes.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada o la imagen original europea.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.
@@ -107,15 +107,17 @@ Requisitos:
 - Android NDK `27.3.13750724`.
 - CMake 3.22.1.
 
+Desde la raíz del repositorio:
+
 ```bash
-./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
+./scripts/build.sh
 ```
 
-El APK se genera en `app/build/outputs/apk/debug/app-debug.apk` y solo empaqueta bibliotecas `arm64-v8a`.
+El APK debug se genera en `app/build/outputs/apk/debug/app-debug.apk` y solo empaqueta bibliotecas `arm64-v8a`. Detalle en [docs/BUILDING.md](../docs/BUILDING.md).
 
 ## Publicación
 
-Cada versión generada se fusiona en `main` y se etiqueta `vX.Y.Z-poc`. El workflow `.github/workflows/release.yml` publica el GitHub Release con el APK de depuración y `SHA256SUMS.txt`. No se dejan cortes en ramas laterales: `companion-fixes`, `companion-i18n`, `companion-gestion` y `companion-forms` ya están en esa línea histórica.
+Cada versión oficial se fusiona en `main` y se etiqueta `vX.Y.Z`. El workflow llama a `scripts/build.sh` y publica el APK **release firmado**, `SHA256SUMS.txt` y `CERT.txt`.
 
 ## Estructura
 
@@ -128,4 +130,4 @@ Cada versión generada se fusiona en `main` y se etiqueta `vX.Y.Z-poc`. El workf
 
 Este proyecto fan no está afiliado con Bandai Namco, AYN ni Samsung. Digimon y Digimon World son marcas de sus respectivos titulares. Debes aportar tu propia copia legal del juego.
 
-El código se distribuye bajo GPL-3.0-or-later debido a LibretroDroid. PCSX-ReARMed permite GPL-2.0-or-later y se distribuye aquí bajo los términos compatibles de GPL-3.0-or-later. Consulta `LICENSE`, `THIRD_PARTY_NOTICES.md` y `licenses/`.
+El código se distribuye bajo GPL-3.0-or-later debido a LibretroDroid. PCSX-ReARMed permite GPL-2.0-or-later y se distribuye aquí bajo los términos compatibles de GPL-3.0-or-later. Consulta el `LICENSE` de la raíz, `THIRD_PARTY_NOTICES.md` y `licenses/`.
