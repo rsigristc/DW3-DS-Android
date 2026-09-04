@@ -325,10 +325,10 @@ class DigiviceDashboardView(
         drawText(canvas, "${tr("ACTIVIDAD", "ACTIVITY")}  $activity", textX, tamerBounds.top + dp(69f), dp(9f), CYAN, true)
         drawText(canvas, "BITS", textX, tamerBounds.top + dp(96f), dp(8f), MUTED, true)
         drawText(canvas, formatNumber(snapshot.bits), textX, tamerBounds.top + dp(119f), dp(18f), AMBER, true)
-        val fishingText = if (snapshot.fishingAvailable) {
-            tr("PESCA DISPONIBLE · TOCA PARA PREVISUALIZAR", "FISHING AVAILABLE · TAP TO PREVIEW")
-        } else {
-            tr("SIN PUNTO DE PESCA EN ESTA ÁREA", "NO FISHING SPOT IN THIS AREA")
+        val fishingText = when {
+            snapshot.isFishing -> tr("PESCANDO AHORA", "FISHING NOW")
+            snapshot.fishingAvailable -> tr("PESCA DISPONIBLE · TOCA PARA PREVISUALIZAR", "FISHING AVAILABLE · TAP TO PREVIEW")
+            else -> tr("SIN PUNTO DE PESCA EN ESTA ÁREA", "NO FISHING SPOT IN THIS AREA")
         }
         drawWrapped(canvas, fishingText, textX, tamerBounds.top + dp(143f), tamerBounds.right - textX - dp(12f), dp(7.5f), MUTED, 2)
         if (snapshot.fishingAvailable) {
@@ -368,12 +368,12 @@ class DigiviceDashboardView(
         if (wide) {
             val identity = RectF(bounds.left, bounds.top, bounds.left + bounds.width() * .26f, bounds.bottom)
             val details = RectF(identity.right + dp(7f), bounds.top, bounds.right, bounds.bottom)
-            val parameters = RectF(details.left, details.top, details.left + details.width() * .30f, details.bottom)
-            val elements = RectF(parameters.right + dp(7f), details.top, parameters.right + dp(7f) + details.width() * .30f, details.bottom)
-            val equipment = RectF(elements.right + dp(7f), details.top, details.right, details.bottom)
+            val stats = RectF(details.left, details.top, details.left + details.width() * .30f, details.bottom)
+            val skills = RectF(stats.right + dp(7f), details.top, stats.right + dp(7f) + details.width() * .30f, details.bottom)
+            val equipment = RectF(skills.right + dp(7f), details.top, details.right, details.bottom)
             drawIdentity(canvas, identity, selected, vertical = true)
-            drawParameters(canvas, parameters, selected)
-            drawElementsAndSkills(canvas, elements, selected)
+            drawParametersAndResists(canvas, stats, selected)
+            drawActiveSkills(canvas, skills, selected)
             drawEquipment(canvas, equipment, selected)
         } else {
             val identityHeight = min(dp(210f), max(dp(200f), bounds.height() * .34f))
@@ -381,18 +381,18 @@ class DigiviceDashboardView(
             val details = RectF(bounds.left, identity.bottom + dp(7f), bounds.right, bounds.bottom)
             drawIdentity(canvas, identity, selected, vertical = false)
             if (details.width() > dp(350f)) {
-                val parameters = RectF(details.left, details.top, details.left + details.width() * .43f, details.bottom)
-                val right = RectF(parameters.right + dp(7f), details.top, details.right, details.bottom)
-                val elements = RectF(right.left, right.top, right.right, right.top + right.height() * .47f)
-                drawParameters(canvas, parameters, selected)
-                drawElementsAndSkills(canvas, elements, selected)
-                drawEquipment(canvas, RectF(right.left, elements.bottom + dp(7f), right.right, right.bottom), selected)
+                val stats = RectF(details.left, details.top, details.left + details.width() * .43f, details.bottom)
+                val right = RectF(stats.right + dp(7f), details.top, details.right, details.bottom)
+                val skills = RectF(right.left, right.top, right.right, right.top + right.height() * .47f)
+                drawParametersAndResists(canvas, stats, selected)
+                drawActiveSkills(canvas, skills, selected)
+                drawEquipment(canvas, RectF(right.left, skills.bottom + dp(7f), right.right, right.bottom), selected)
             } else {
-                val parameters = RectF(details.left, details.top, details.right, details.top + details.height() * .29f)
-                val elements = RectF(details.left, parameters.bottom + dp(7f), details.right, parameters.bottom + dp(7f) + details.height() * .31f)
-                drawParameters(canvas, parameters, selected)
-                drawElementsAndSkills(canvas, elements, selected)
-                drawEquipment(canvas, RectF(details.left, elements.bottom + dp(7f), details.right, details.bottom), selected)
+                val stats = RectF(details.left, details.top, details.right, details.top + details.height() * .38f)
+                val skills = RectF(details.left, stats.bottom + dp(7f), details.right, stats.bottom + dp(7f) + details.height() * .24f)
+                drawParametersAndResists(canvas, stats, selected)
+                drawActiveSkills(canvas, skills, selected)
+                drawEquipment(canvas, RectF(details.left, skills.bottom + dp(7f), details.right, details.bottom), selected)
             }
         }
     }
@@ -494,29 +494,28 @@ class DigiviceDashboardView(
         drawText(canvas, "${tr("DIGIEVOLUCIÓN", "DIGIVOLUTION")} · ${digimon.activeDigievolutionName.uppercase()}  LV ${digimon.activeDigievolutionLevel}", x, bounds.top + dp(181f), dp(7.5f), CYAN, true)
     }
 
-    private fun drawParameters(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
-        drawPanel(canvas, bounds, tr("PARÁMETROS EN RAM", "RAM PARAMETERS"))
-        val values = listOf(
-            tr("FUERZA", "STRENGTH") to digimon.strength,
-            tr("DEFENSA", "DEFENSE") to digimon.defense,
-            tr("ESPÍRITU", "SPIRIT") to digimon.spirit,
-            tr("SABIDURÍA", "WISDOM") to digimon.wisdom,
-            tr("VELOCIDAD", "SPEED") to digimon.speed,
-            tr("CARISMA", "CHARISMA") to digimon.charisma
-        )
-        val columns = if (bounds.width() > dp(300f)) 3 else 2
-        val rows = (values.size + columns - 1) / columns
-        val cellW = (bounds.width() - dp(20f)) / columns
-        val cellH = (bounds.height() - dp(35f)) / rows
-        values.forEachIndexed { index, value ->
-            val x = bounds.left + dp(10f) + (index % columns) * cellW
-            val y = bounds.top + dp(42f) + (index / columns) * cellH
-            drawText(canvas, value.first, x, y, dp(8f), MUTED, true)
-            drawText(canvas, value.second.toString(), x, y + dp(21f), dp(17f), WHITE, true)
-        }
+    private fun drawParametersAndResists(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
+        val gap = dp(7f)
+        val split = bounds.top + (bounds.height() - gap) / 2f
+        drawParameters(canvas, RectF(bounds.left, bounds.top, bounds.right, split), digimon)
+        drawResists(canvas, RectF(bounds.left, split + gap, bounds.right, bounds.bottom), digimon)
     }
 
-    private fun drawElementsAndSkills(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
+    private fun drawParameters(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
+        drawPanel(canvas, bounds, tr("PARÁMETROS", "PARAMETERS"))
+        val bonuses = digimon.equipmentBonuses
+        val values = listOf(
+            Triple(tr("FUERZA", "STRENGTH"), digimon.totalStrength, bonuses.strength),
+            Triple(tr("DEFENSA", "DEFENSE"), digimon.totalDefense, bonuses.defense),
+            Triple(tr("ESPÍRITU", "SPIRIT"), digimon.totalSpirit, bonuses.spirit),
+            Triple(tr("SABIDURÍA", "WISDOM"), digimon.totalWisdom, bonuses.wisdom),
+            Triple(tr("VELOCIDAD", "SPEED"), digimon.totalSpeed, bonuses.speed),
+            Triple(tr("CARISMA", "CHARISMA"), digimon.totalCharisma, bonuses.charisma)
+        )
+        drawBonusGrid(canvas, bounds, values, columns = 2, valueSize = dp(15f))
+    }
+
+    private fun drawResists(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
         drawPanel(canvas, bounds, tr("RESISTENCIAS ELEMENTALES", "ELEMENTAL RESISTS"))
         val names = listOf(
             tr("FUEGO", "FIRE"),
@@ -527,30 +526,84 @@ class DigiviceDashboardView(
             tr("MÁQUINA", "MACHINE"),
             tr("OSCURIDAD", "DARKNESS")
         )
-        val values = names.zip(digimon.tolerances + List(max(0, names.size - digimon.tolerances.size)) { 0 })
-        val columns = if (bounds.width() > dp(310f)) 4 else 2
+        val totals = digimon.totalResistances
+        val values = names.mapIndexed { index, name ->
+            Triple(name, totals.getOrElse(index) { 0 }, digimon.equipmentBonuses.resistance(index))
+        }
+        drawBonusGrid(canvas, bounds, values, columns = 2, valueSize = dp(13f), labelSize = dp(7f))
+    }
+
+    private fun drawBonusGrid(
+        canvas: Canvas,
+        bounds: RectF,
+        values: List<Triple<String, Int, Int>>,
+        columns: Int,
+        valueSize: Float,
+        labelSize: Float = dp(7.5f)
+    ) {
         val rows = (values.size + columns - 1) / columns
-        val skillHeight = dp(56f)
-        val gridHeight = max(dp(80f), bounds.height() - dp(35f) - skillHeight)
         val cellW = (bounds.width() - dp(20f)) / columns
-        val cellH = gridHeight / rows
+        val cellH = (bounds.height() - dp(32f)) / rows
         values.forEachIndexed { index, value ->
             val x = bounds.left + dp(10f) + (index % columns) * cellW
-            val y = bounds.top + dp(39f) + (index / columns) * cellH
-            drawText(canvas, value.first, x, y, dp(7.5f), MUTED, true)
-            drawText(canvas, value.second.toString(), x, y + dp(18f), dp(14f), WHITE, true)
+            val y = bounds.top + dp(36f) + (index / columns) * cellH
+            val color = bonusColor(value.third)
+            drawText(canvas, value.first, x, y, labelSize, if (value.third == 0) MUTED else color, true)
+            drawText(canvas, value.second.toString(), x, y + dp(16f), valueSize, color, true)
         }
-        val skillTop = bounds.bottom - skillHeight
-        paint.color = CYAN_DARK
-        canvas.drawRect(bounds.left + dp(10f), skillTop, bounds.right - dp(10f), skillTop + dp(1f), paint)
-        drawText(canvas, "${tr("HABILIDADES", "SKILLS")} · ${digimon.activeDigievolutionName.uppercase()}", bounds.left + dp(10f), skillTop + dp(18f), dp(7.5f), CYAN, true)
+    }
+
+    private fun drawActiveSkills(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
+        drawPanel(canvas, bounds, tr("HABILIDADES ACTIVAS", "ACTIVE SKILLS"))
+        drawText(
+            canvas,
+            digimon.activeDigievolutionName.uppercase(),
+            bounds.left + dp(10f),
+            bounds.top + dp(36f),
+            dp(7.5f),
+            CYAN,
+            true
+        )
         val skills = digimon.activeSkills
-        val text = if (skills.isEmpty()) {
-            tr("Sin técnicas identificadas", "No techniques identified")
-        } else skills.joinToString("  ·  ") { skill ->
-            "${skill.name} · MP ${skill.mp?.toString() ?: "—"}"
+        if (skills.isEmpty()) {
+            drawWrapped(
+                canvas,
+                tr("Sin técnicas identificadas", "No techniques identified"),
+                bounds.left + dp(10f),
+                bounds.top + dp(54f),
+                bounds.width() - dp(20f),
+                dp(8f),
+                MUTED,
+                3
+            )
+            return
         }
-        drawWrapped(canvas, text, bounds.left + dp(10f), skillTop + dp(39f), bounds.width() - dp(20f), dp(8f), WHITE, 2)
+        val rowHeight = max(dp(36f), (bounds.height() - dp(46f)) / max(3, skills.size))
+        skills.forEachIndexed { index, skill ->
+            val top = bounds.top + dp(46f) + index * rowHeight
+            if (index > 0) {
+                paint.color = Color.rgb(8, 49, 61)
+                canvas.drawRect(bounds.left + dp(10f), top - dp(3f), bounds.right - dp(10f), top - dp(2f), paint)
+            }
+            drawText(canvas, skill.name, bounds.left + dp(10f), top + dp(11f), dp(9f), WHITE, true)
+            val mp = skill.mp?.toString() ?: "—"
+            val power = skill.power?.toString() ?: "—"
+            drawText(
+                canvas,
+                "${tr("MP", "MP")} $mp  ·  ${tr("PODER", "POWER")} $power",
+                bounds.left + dp(10f),
+                top + dp(25f),
+                dp(7.5f),
+                CYAN,
+                true
+            )
+        }
+    }
+
+    private fun bonusColor(delta: Int): Int = when {
+        delta > 0 -> BLUE
+        delta < 0 -> RED
+        else -> WHITE
     }
 
     private fun drawEquipment(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
@@ -883,6 +936,7 @@ class DigiviceDashboardView(
         private val MUTED = Color.rgb(111, 158, 175)
         private val GREEN = Color.rgb(86, 220, 118)
         private val BLUE = Color.rgb(38, 155, 241)
+        private val RED = Color.rgb(232, 88, 88)
         private val AMBER = Color.rgb(244, 181, 61)
         private const val TAB_MODS = "MODS"
     }

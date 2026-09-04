@@ -10,6 +10,7 @@ class DigievolutionCatalogTest {
         val techniques = DigievolutionCatalog.techniques(367, 25)
         assertEquals(listOf("Double Power", "Double Guard", "Picking Claw"), techniques.map { it.name })
         assertEquals(listOf(42, 42, 18), techniques.map { it.mp })
+        assertEquals(listOf(null, null, 60), techniques.map { it.power })
     }
 
     @Test fun rejectsUnknownForm() {

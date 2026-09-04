@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.15-poc
+
+- Quita la etiqueta extra de que Flawe no muestra la guía en el menú español. El objetivo conserva la pista del panel o el texto en vivo, sin esa nota.
+- Gestión junta parámetros y resistencias en una sola columna (arriba/abajo). Los números suman las bonificaciones del catálogo de equipo: azul si el equipo sube el valor, rojo si lo baja.
+- La columna que ocupaban las resistencias pasa a habilidades activas con MP y poder de ataque. Las Rookie dejan de mostrar `MP —` cuando el coste está catalogado.
+- El sprite de pesca sigue listo y la demo lo muestra. ddw3 no tiene overlay de pesca (`FIELDSTG` sigue en el campo), así que no se recompila el `.bin`: hace falta un dump de RAM pescando para activar el icono solo.
+
 ## 0.7.14-poc
 
 - AUTO lee el índice de idioma PAL en `0x8005CCA8` (ddw3 / parche japonés): 2 inglés europeo, 6 español. Ese byte manda sobre la guía inglesa de Flawe, que ya no fuerza el panel a inglés en una partida española.

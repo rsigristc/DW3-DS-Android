@@ -127,6 +127,14 @@ object CompanionUiText {
         if (language == CompanionLanguage.SPANISH) return value
         return value
             .replace("FUEGO", "FIRE")
+            .replace("OSCURIDAD", "DARKNESS")
+            .replace("MÁQUINA", "MACHINE")
+            .replace("HIELO", "ICE")
+            .replace("VIENTO", "WIND")
+            .replace("AGUA", "WATER")
+            .replace("RAYO", "THUNDER")
+            .replace("MÁQ", "MCH")
+            .replace("OSC", "DRK")
             .replace("FUE", "STR")
             .replace("ESP", "SPI")
             .replace("SAB", "WIS")

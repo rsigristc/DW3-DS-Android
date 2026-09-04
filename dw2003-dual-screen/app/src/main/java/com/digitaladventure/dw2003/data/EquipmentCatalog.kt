@@ -276,3 +276,90 @@ object EquipmentCatalog {
 
     fun get(id: Int): EquipmentInfo? = items[id]
 }
+
+data class EquipmentBonuses(
+    val strength: Int = 0,
+    val defense: Int = 0,
+    val spirit: Int = 0,
+    val wisdom: Int = 0,
+    val speed: Int = 0,
+    val charisma: Int = 0,
+    val fire: Int = 0,
+    val water: Int = 0,
+    val ice: Int = 0,
+    val wind: Int = 0,
+    val thunder: Int = 0,
+    val machine: Int = 0,
+    val dark: Int = 0
+) {
+    operator fun plus(other: EquipmentBonuses) = EquipmentBonuses(
+        strength + other.strength,
+        defense + other.defense,
+        spirit + other.spirit,
+        wisdom + other.wisdom,
+        speed + other.speed,
+        charisma + other.charisma,
+        fire + other.fire,
+        water + other.water,
+        ice + other.ice,
+        wind + other.wind,
+        thunder + other.thunder,
+        machine + other.machine,
+        dark + other.dark
+    )
+
+    fun parameter(index: Int): Int = when (index) {
+        0 -> strength
+        1 -> defense
+        2 -> spirit
+        3 -> wisdom
+        4 -> speed
+        5 -> charisma
+        else -> 0
+    }
+
+    fun resistance(index: Int): Int = when (index) {
+        0 -> fire
+        1 -> water
+        2 -> ice
+        3 -> wind
+        4 -> thunder
+        5 -> machine
+        6 -> dark
+        else -> 0
+    }
+
+    companion object {
+        private val TOKEN_PATTERN = Regex(
+            """([+-]?\d+)\s+(FUEGO|AGUA|HIELO|VIENTO|RAYO|MÁQUINA|OSCURIDAD|MÁQ|OSC|FUE|DEF|ESP|SAB|VEL|CAR)"""
+        )
+
+        fun parse(stats: String): EquipmentBonuses {
+            var bonus = EquipmentBonuses()
+            TOKEN_PATTERN.findAll(stats).forEach { match ->
+                val amount = match.groupValues[1].toInt()
+                bonus = when (match.groupValues[2]) {
+                    "FUE" -> bonus.copy(strength = bonus.strength + amount)
+                    "DEF" -> bonus.copy(defense = bonus.defense + amount)
+                    "ESP" -> bonus.copy(spirit = bonus.spirit + amount)
+                    "SAB" -> bonus.copy(wisdom = bonus.wisdom + amount)
+                    "VEL" -> bonus.copy(speed = bonus.speed + amount)
+                    "CAR" -> bonus.copy(charisma = bonus.charisma + amount)
+                    "FUEGO" -> bonus.copy(fire = bonus.fire + amount)
+                    "AGUA" -> bonus.copy(water = bonus.water + amount)
+                    "HIELO" -> bonus.copy(ice = bonus.ice + amount)
+                    "VIENTO" -> bonus.copy(wind = bonus.wind + amount)
+                    "RAYO" -> bonus.copy(thunder = bonus.thunder + amount)
+                    "MÁQUINA", "MÁQ" -> bonus.copy(machine = bonus.machine + amount)
+                    "OSCURIDAD", "OSC" -> bonus.copy(dark = bonus.dark + amount)
+                    else -> bonus
+                }
+            }
+            return bonus
+        }
+
+        fun of(items: List<EquipmentInfo?>): EquipmentBonuses =
+            items.mapNotNull { item -> item?.let { parse(it.stats) } }
+                .fold(EquipmentBonuses()) { total, bonus -> total + bonus }
+    }
+}

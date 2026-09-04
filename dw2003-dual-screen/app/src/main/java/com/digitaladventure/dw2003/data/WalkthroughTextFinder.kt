@@ -155,8 +155,6 @@ object WalkthroughCatalog {
     const val SYNC_PROMPT_ES = "Abre el menú del juego para sincronizar la guía integrada."
     const val START_PROMPT_EN = "Start or load a game to activate the companion panel."
     const val SYNC_PROMPT_EN = "Open the game menu to sync Flawe's integrated walkthrough."
-    const val SPANISH_NOTE =
-        "Flawe no muestra la guía en el menú español; esta pista la genera el panel."
 
     fun localized(
         raw: String,
@@ -174,11 +172,9 @@ object WalkthroughCatalog {
                 CompanionLanguage.ENGLISH -> START_PROMPT_EN
             }
         }
-        fallback(storyStage, mapId, language)?.let { hint ->
-            return if (language == CompanionLanguage.SPANISH) "$hint $SPANISH_NOTE" else hint
-        }
+        fallback(storyStage, mapId, language)?.let { return it }
         return when (language) {
-            CompanionLanguage.SPANISH -> "$SYNC_PROMPT_ES $SPANISH_NOTE"
+            CompanionLanguage.SPANISH -> SYNC_PROMPT_ES
             CompanionLanguage.ENGLISH -> SYNC_PROMPT_EN
         }
     }

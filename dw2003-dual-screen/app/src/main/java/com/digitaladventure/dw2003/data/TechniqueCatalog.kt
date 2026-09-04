@@ -14,4 +14,9 @@ object TechniqueCatalog {
     )
 
     fun signatureFor(profileId: Int): String? = rookieSignature.getOrNull(profileId)
+
+    fun signatureInfo(profileId: Int): TechniqueInfo? =
+        signatureFor(profileId)?.let { name ->
+            TechniquePower.enrich(TechniqueInfo(name, null, 1))
+        }
 }

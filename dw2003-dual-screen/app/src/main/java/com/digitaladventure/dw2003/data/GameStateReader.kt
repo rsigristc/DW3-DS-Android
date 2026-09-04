@@ -57,6 +57,9 @@ class GameStateReader {
             bits = u32(main, BITS - MAIN_BASE),
             fishingAvailable = AreaCatalog.supportsFishing(location.publicMapId) ||
                 AreaCatalog.supportsFishing(areaId),
+            // FIELDSTG has no dedicated fishing overlay in ddw3; the tamer stays
+            // on the field module. A live RAM dump while fishing is still needed
+            // before this flag can flip automatically.
             isFishing = false,
             gameStarted = gameStarted,
             canReorderParty = LocationResolver.canReorderParty(areaId, mapId, mode, gameStarted),

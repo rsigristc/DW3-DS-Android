@@ -28,7 +28,7 @@ La capa Android nunca recibe un puntero nativo. Toda lectura o escritura verific
 
 - **Exploración:** área/mapa, objetivo, radar regional y estado del Tamer con nombre, Bits y pesca disponible.
 - **Batalla:** tarjetas de telemetría HP/MP/EXP/TP y digievolución activa para el equipo.
-- **Gestión:** selector de compañero, parámetros, resistencias, equipo y técnicas disponibles con MP.
+- **Gestión:** selector de compañero, parámetros y resistencias con totales de equipo (azul/rojo), habilidades activas con MP y poder, y ranuras de equipo.
 
 La versión 0.5 elimina los comandos PlayStation del panel complementario: la entrada táctil permanece exclusivamente sobre el juego. El botón `PAD ON/OFF` del encabezado conmuta esa capa mediante la actividad principal, incluso cuando el panel está en un `Presentation` físico.
 
@@ -74,6 +74,8 @@ En 0.7.12 el panel es bilingüe. `CompanionLanguageSetting` (automático / espa�
 En 0.7.13, `FlaweFastTravelTable` incorpora los 46 destinos ASKMAP del IPS de fast travel y los nombres de [ddw3](https://github.com/markisha64/ddw3). El parche directo fuerza cualquier icono visitado de ese mapa; el Sector Norte (`0x0261`–`0x026F`) deja de clasificarse como oeste.
 
 En 0.7.14, AUTO lee `0x8005CCA8` (fuera de la ventana principal) y solo aplica inglés (1/2) o español (6). La guía de Flawe ya no pisa ese byte. `FastTravelNavigator.stepsToMapTab` calcula ↑/↓ hasta la pestaña 2 sin escribir `widget+0x178`. El catálogo rellena salas SSTNAME entre IDs confirmados; Amaterasu no recibe códigos ASKMAP que el IPS no escribe.
+
+En 0.7.15, `WalkthroughCatalog` deja de añadir la nota de Flawe al objetivo español. Gestión muestra `RAM + bonificaciones de equipo` y colorea por signo. `TechniquePower` completa MP/poder de las técnicas activas. La pesca automática no cambia: FIELDSTG no tiene overlay de pesca en ddw3.
 
 ## BIOS aportado por el usuario
 

@@ -1,6 +1,7 @@
 package com.digitaladventure.dw2003.model
 
 import com.digitaladventure.dw2003.data.ExperienceTable
+import com.digitaladventure.dw2003.data.EquipmentBonuses
 import com.digitaladventure.dw2003.data.EquipmentCatalog
 import com.digitaladventure.dw2003.data.EquipmentInfo
 import com.digitaladventure.dw2003.data.TechniqueCatalog
@@ -37,11 +38,22 @@ data class DigimonState(
         get() = DigievolutionCatalog.name(activeDigievolutionId) ?: "Forma Rookie"
     val activeSkills: List<TechniqueInfo>
         get() = if (activeDigievolutionId == 0 || activeDigievolutionId == 0xFFFF) {
-            listOfNotNull(TechniqueCatalog.signatureFor(profileId)?.let { TechniqueInfo(it, null, 1) })
+            listOfNotNull(TechniqueCatalog.signatureInfo(profileId))
         } else {
             DigievolutionCatalog.techniques(activeDigievolutionId, activeDigievolutionLevel)
         }
     val equippedItems: List<EquipmentInfo?> get() = equipmentIds.map(EquipmentCatalog::get)
+    val equipmentBonuses: EquipmentBonuses get() = EquipmentBonuses.of(equippedItems)
+    val totalStrength: Int get() = strength + equipmentBonuses.strength
+    val totalDefense: Int get() = defense + equipmentBonuses.defense
+    val totalSpirit: Int get() = spirit + equipmentBonuses.spirit
+    val totalWisdom: Int get() = wisdom + equipmentBonuses.wisdom
+    val totalSpeed: Int get() = speed + equipmentBonuses.speed
+    val totalCharisma: Int get() = charisma + equipmentBonuses.charisma
+    val totalResistances: List<Int>
+        get() = List(7) { index ->
+            (tolerances.getOrNull(index) ?: 0) + equipmentBonuses.resistance(index)
+        }
 
     private fun ratio(value: Int, maximum: Int): Float =
         if (maximum <= 0) 0f else (value.toFloat() / maximum).coerceIn(0f, 1f)

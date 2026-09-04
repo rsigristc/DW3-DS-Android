@@ -92,7 +92,7 @@ class WalkthroughCatalogTest {
     }
 
     @Test
-    fun providesSpanishCompanionHintWhenFlaweHasNoSpanishGuide() {
+    fun providesSpanishCompanionHintWithoutFlaweMenuNote() {
         val text = WalkthroughCatalog.localized(
             WalkthroughCatalog.SYNC_PROMPT_ES,
             4,
@@ -100,7 +100,7 @@ class WalkthroughCatalogTest {
             0x021D
         )
         assertTrue(text.contains("Central Park") || text.contains("Bosque Alambre"))
-        assertTrue(text.contains(WalkthroughCatalog.SPANISH_NOTE))
+        assertTrue(!text.contains("Flawe", ignoreCase = true))
     }
 
     @Test

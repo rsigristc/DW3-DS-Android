@@ -64,7 +64,7 @@
 - Catalogar IDs de equipo, objetos y técnicas heredadas/aprendidas con nombres localizados.
 - Resolver objetivo/título del walkthrough de manera determinista en todos los menús.
 - Identificar enemigo, turno y selección de comando para una vista de batalla más contextual.
-- Resolver mediante capturas comparativas el indicador de animación/estado de pesca.
+- Resolver mediante capturas comparativas el indicador de animación/estado de pesca (ddw3 no tiene overlay dedicado; hace falta un dump de RAM mientras el Tamer pesca).
 
 ## Fase 3 — Experiencia de uso
 

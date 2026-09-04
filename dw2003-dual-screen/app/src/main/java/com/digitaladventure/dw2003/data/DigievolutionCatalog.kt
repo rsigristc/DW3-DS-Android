@@ -1,6 +1,11 @@
 package com.digitaladventure.dw2003.data
 
-data class TechniqueInfo(val name: String, val mp: Int?, val learnLevel: Int)
+data class TechniqueInfo(
+    val name: String,
+    val mp: Int?,
+    val learnLevel: Int,
+    val power: Int? = null
+)
 
 /** Digievolution and technique data extracted from jeanheck/digivice's DW3 tables. */
 object DigievolutionCatalog {
@@ -70,5 +75,6 @@ object DigievolutionCatalog {
     fun techniques(id: Int, skillLevel: Int): List<TechniqueInfo> =
         techniques[id].orEmpty().filter { it.learnLevel <= skillLevel }.takeLast(3)
 
-    private fun t(name: String, mp: Int, level: Int) = TechniqueInfo(name, mp, level)
+    private fun t(name: String, mp: Int, level: Int) =
+        TechniqueInfo(name, mp, level, TechniquePower.powerOf(name))
 }

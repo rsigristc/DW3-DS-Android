@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 4 de septiembre de 2026 (0.7.14-poc).
+Fecha de compilación: 4 de septiembre de 2026 (0.7.15-poc).
 
 ## Entorno
 
@@ -19,11 +19,11 @@ Fecha de compilación: 4 de septiembre de 2026 (0.7.14-poc).
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-Resultado: `BUILD SUCCESSFUL` (71 pruebas unitarias, 0 fallos). Android Lint: 0 errores; 3 avisos `GradleDependency` preexistentes (no introducidos en 0.7.14).
+Resultado: pendiente de esta revisión; se actualiza tras `./gradlew`.
 
 ## Pruebas unitarias
 
-- `GameStateReaderTest`: verifica área/mapa, Tamer, región, formación y que MP infinito no oculte al primer compañero.
+- `GameStateReaderTest`: verifica área/mapa, Tamer, región, formación, que MP infinito no oculte al primer compañero y que `isFishing` siga en falso sin dump de pesca.
 - `DwTextDecoderTest`: verifica caracteres latinos, espacios, salto de línea y dígitos del formato de texto europeo.
 - `AppFileRulesTest`: verifica tamaños, cabeceras de Memory Card y firma regional del BIOS europeo.
 - `PanePolicyTest`: verifica juego completo en una pantalla exterior estrecha, panel dual al desplegar y juego completo cuando existe display secundario.
@@ -31,13 +31,15 @@ Resultado: `BUILD SUCCESSFUL` (71 pruebas unitarias, 0 fallos). Android Lint: 0 
 - `VirtualPadMathTest`: verifica zona muerta, diagonales y captura de la cruceta fuera de su círculo.
 - `QuickStateManagerTest`: verifica que cada clave de ROM produzca un nombre de estado privado, seguro y acotado.
 - `ExperienceTableTest`: verifica umbral acumulado, progreso dentro del nivel y tratamiento de nivel 99.
-- `TechniqueCatalogTest`: verifica las técnicas características Rookie y el rechazo de perfiles desconocidos.
+- `TechniqueCatalogTest`: verifica las técnicas características Rookie, MP/poder de Swing Swing y el rechazo de perfiles desconocidos.
+- `TechniquePowerTest`: verifica alias (`Vee Headbutt`/`Pyro Sphere`) y que no se pise el MP del catálogo.
 - `PalLanguageTest`: verifica `0x8005CCA8` → inglés (2) / español (6) y que francés o un 0 no cambian AUTO.
 - `AreaCatalogTest`: verifica IDs reales no consecutivos, salas SSTNAME de 0.7.14 y puntos de pesca confirmados.
-- `EquipmentCatalogTest`: verifica nombre, tipo y bonificaciones de equipo.
+- `EquipmentCatalogTest`: verifica nombre, tipo, parser de bonificaciones (`FUE`, `-VEL`, `FUEGO`, `MÁQ`, `OSC`) y la carga de Evil Fang + Iron Helmet + Glasses.
+- `DigimonStateTest`: verifica totales RAM+equipo del demo Guilmon y MP/poder Rookie de Monmon.
 - `AppFileRulesTest`: añade validación de la tarjeta formateada generada automáticamente.
 - `MapRegionCatalogTest`: verifica servidor/sector para Asuka, Amaterasu y menús externos al mundo.
-- `DigievolutionCatalogTest`: verifica nombre, nivel mínimo y MP de técnicas desbloqueadas.
+- `DigievolutionCatalogTest`: verifica nombre, nivel mínimo, MP y poder (`Picking Claw` = 60; Double Power/Guard sin poder).
 - `TransparencyMaskTest`: verifica que solo el blanco conectado al borde se vuelva transparente.
 - `LocationResolverTest`: verifica interiores, puente y Central Park ↔ Entrada del Bosque usando el destino de `MAP_ID`.
 - `FastTravelCatalogTest`: verifica que el puente no es un icono, que laboratorio visita cuenta como Ciudad Asuka, que Park y la Entrada del Bosque son iconos distintos, y que el norte se desbloquea al visitarlo.
@@ -47,8 +49,8 @@ Resultado: `BUILD SUCCESSFUL` (71 pruebas unitarias, 0 fallos). Android Lint: 0 
 - `CheatCatalogTest`: verifica códigos PAL de calidad de vida.
 - `GameMemoryControllerTest`: verifica el empaquetado little-endian de la formación.
 - `WalkthroughTextFinderTest`: verifica guía DW y ASCII, idioma y rechazo de ruido de menú.
-- `WalkthroughCatalogTest`: verifica traducción inglesa conocida, aviso español y prompts de sincronización.
-- `CompanionUiTextTest`: verifica nombres de mapa, cheats, distribución e idioma del panel.
+- `WalkthroughCatalogTest`: verifica traducción inglesa conocida, pista española sin etiqueta de Flawe y prompts de sincronización.
+- `CompanionUiTextTest`: verifica nombres de mapa, cheats, distribución, idioma del panel y abreviaturas de equipo.
 
 Resultado: las pruebas unitarias de aplicación deben ejecutarse con `./gradlew :app:testDebugUnitTest`.
 
@@ -58,7 +60,7 @@ Resultado: las pruebas unitarias de aplicación deben ejecutarse con `./gradlew 
 - No contiene extensiones de imagen de disco ni BIOS propietario.
 - Contiene el icono, sprites y mapas regionales aportados para la interfaz 0.7.
 - La única entrada con sufijo `.bin` es `DebugProbesKt.bin`, un recurso interno estándar de Kotlin Coroutines.
-- Android Lint: 0 errores. Hay 3 avisos `GradleDependency` de bibliotecas AndroidX (no bloquean y no los toca este corte).
+- Android Lint: se actualiza tras la compilación.
 
 ## Pendiente físico
 
@@ -67,3 +69,5 @@ No hay emulador en el entorno de compilación y no se simula la API de múltiple
 Las rutas de importación/exportación usan Android Storage Access Framework y están cubiertas por validadores puros, pero todavía deben probarse con los proveedores de documentos instalados en los dispositivos finales.
 
 La distribución compacta de tres líneas HP/MP/EXP elimina las coordenadas rígidas que recortaban la última barra de Exploración. La validación final de densidad y legibilidad debe realizarse con las mismas posturas del Fold mostradas en las capturas del usuario.
+
+Gestión 0.7.15 (columna partida, colores azul/rojo y habilidades con MP/poder) no puede verificarse en dispositivo en este entorno: no hay ROM ni emulador Android. Las pruebas unitarias cubren totales, parser de equipo y catálogo de técnicas.

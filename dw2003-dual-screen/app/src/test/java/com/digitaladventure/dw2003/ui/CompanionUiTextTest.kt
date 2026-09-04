@@ -44,6 +44,7 @@ class CompanionUiTextTest {
         assertEquals("Automatic", CompanionUiText.languageSetting(CompanionLanguage.ENGLISH, CompanionLanguageSetting.AUTO))
         assertEquals("+14 STR · +15 CHA", CompanionUiText.equipmentStats(CompanionLanguage.ENGLISH, "+14 FUE · +15 CAR"))
         assertEquals("+20 FIRE", CompanionUiText.equipmentStats(CompanionLanguage.ENGLISH, "+20 FUEGO"))
+        assertEquals("+20 MCH · +3 CHA", CompanionUiText.equipmentStats(CompanionLanguage.ENGLISH, "+20 MÁQ · +3 CAR"))
         assertEquals("1H Weapon", CompanionUiText.equipmentType(CompanionLanguage.ENGLISH, "Arma 1 mano"))
     }
 }

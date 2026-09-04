@@ -47,6 +47,8 @@ Base `0x8004949C`, ocho perfiles, stride `0x3DC`.
 | `-0x04` | `u16` | ID de digievolución activa; `0/FFFF` representa forma Rookie |
 | `+0x50 + n×0x14` | registro | Digievolución desbloqueada: ID `+0`, nivel `+2`, DVXP `+4` |
 
+Gestión 0.7.15 trata `+0x28…+0x40` como base de RAM y suma las bonificaciones parseadas del catálogo de equipo. El color azul/rojo sale del signo de esa suma, no de otro campo de RAM.
+
 Orden de perfiles: Kotemon, Kumamon, Monmon, Agumon, Veemon, Guilmon, Renamon y Patamon.
 
 Los IDs de área se presentan como hexadecimales (`0x0200`, `0x0206`, `0x0261`, `0x02D8`, etc.). No deben usarse como índices de una lista consecutiva. El catálogo incluye el Sector Norte confirmado por el IPS de Flawe (`0x0261` Montaña de Bota … `0x026F` Ciudad Genbu) y conserva el ID hexadecimal cuando todavía no existe un nombre confirmado.
@@ -91,4 +93,4 @@ Algunas compilaciones combinadas reubican el dispatcher. En ese caso se busca la
 
 Los mods opcionales se aplican con `retro_cheat_set` del núcleo, no con parches permanentes. Datos fuera de rango, perfiles inválidos y punteros externos a RAM se descartan.
 
-No se ha documentado todavía un indicador estable para distinguir el cuadro exacto de pesca del estado normal de campo. La UI solo marca si el área admite pesca y permite previsualizar el sprite aportado; no deduce automáticamente “pescando” por la ubicación.
+No se ha documentado todavía un indicador estable para distinguir el cuadro exacto de pesca del estado normal de campo. ddw3 carga la pesca dentro de `FIELDSTG` (no hay overlay FISH/CAST/ROD). Recompilar el `.bin` no aportaría una firma nueva. La UI marca si el área admite pesca, permite previsualizar el sprite y cambiaría a `tamer_fishing` si `isFishing` pasara a verdadero tras un dump comparativo.

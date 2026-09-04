@@ -49,6 +49,7 @@ class GameStateReaderTest {
         assertEquals("Sector Central", snapshot.sectorName)
         assertEquals(24_560L, snapshot.bits)
         assertTrue(snapshot.fishingAvailable)
+        assertTrue(!snapshot.isFishing)
         assertEquals(42, snapshot.storyStage)
         assertEquals(listOf("Guilmon", "Renamon", "Agumon"), snapshot.party.map { it.name })
         assertEquals(1280, snapshot.party.first().currentHp)
