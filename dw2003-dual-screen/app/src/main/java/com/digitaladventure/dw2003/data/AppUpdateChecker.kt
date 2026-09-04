@@ -1,6 +1,5 @@
 package com.digitaladventure.dw2003.data
 
-import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -35,24 +34,22 @@ class AppUpdateChecker(
     }
 
     fun parse(json: String): AppRelease? {
-        val root = runCatching { JSONObject(json) }.getOrNull() ?: return null
-        val tag = root.optString("tag_name")
-        if (tag.isBlank()) return null
-        val assets = root.optJSONArray("assets") ?: return null
-        val apk = (0 until assets.length())
-            .map { assets.optJSONObject(it) }
-            .firstOrNull { item ->
-                item?.optString("name").orEmpty().endsWith(".apk", ignoreCase = true)
-            } ?: return null
-        val apkUrl = apk.optString("browser_download_url")
-        if (apkUrl.isBlank()) return null
+        val tag = stringField(json, "tag_name") ?: return null
+        val apkUrl = Regex(""""browser_download_url"\s*:\s*"(https?://[^"]+\.apk)"""", RegexOption.IGNORE_CASE)
+            .find(json)
+            ?.groupValues
+            ?.get(1)
+            ?: return null
         return AppRelease(
             tag = tag,
-            name = root.optString("name").ifBlank { tag },
+            name = stringField(json, "name") ?: tag,
             apkUrl = apkUrl,
-            htmlUrl = root.optString("html_url")
+            htmlUrl = stringField(json, "html_url").orEmpty()
         )
     }
+
+    private fun stringField(json: String, key: String): String? =
+        Regex(""""$key"\s*:\s*"([^"]+)"""").find(json)?.groupValues?.get(1)?.takeIf { it.isNotBlank() }
 
     companion object {
         const val LATEST_RELEASE = "https://api.github.com/repos/rsigristc/DW3-DS-Android/releases/latest"
