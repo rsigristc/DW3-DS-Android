@@ -1,5 +1,6 @@
 package com.digitaladventure.dw2003.data
 
+import com.digitaladventure.dw2003.model.DigievolutionForm
 import com.digitaladventure.dw2003.model.DigimonState
 import com.digitaladventure.dw2003.model.GameMode
 import com.digitaladventure.dw2003.model.GameSnapshot
@@ -76,13 +77,14 @@ class GameStateReader {
         val base = STATS - MAIN_BASE + profileId * PROFILE_STRIDE
         val activeDigievolutionId = u16(main, base - 4)
         val activeDigievolutionLevel = findDigievolutionLevel(main, base, activeDigievolutionId)
+        val partnerLevel = u16(main, base + 0x1C)
         val maxHp = u16(main, base + 0x22)
         val maxMp = u16(main, base + 0x26)
         return DigimonState(
             profileId = profileId,
             name = DIGIMON_NAMES[profileId],
             experience = u32(main, base + 0x18),
-            level = u16(main, base + 0x1C),
+            level = partnerLevel,
             trainingPoints = u16(main, base + 0x1E),
             currentHp = u16(main, base + 0x20).coerceAtMost(maxHp),
             maxHp = maxHp,
@@ -97,7 +99,14 @@ class GameStateReader {
             tolerances = (0 until 7).map { u16(main, base + 0x34 + it * 2) },
             equipmentIds = (0 until 6).map { u16(main, base + 0x3C0 + it * 2) },
             activeDigievolutionId = activeDigievolutionId,
-            activeDigievolutionLevel = activeDigievolutionLevel
+            activeDigievolutionLevel = activeDigievolutionLevel,
+            unlockedForms = parseUnlockedForms(
+                main,
+                base,
+                DIGIMON_NAMES[profileId],
+                partnerLevel,
+                activeDigievolutionId
+            )
         )
     }
 
@@ -108,6 +117,32 @@ class GameStateReader {
             if (u16(main, record) == activeId) return u16(main, record + 2).coerceIn(1, 99)
         }
         return 1
+    }
+
+    private fun parseUnlockedForms(
+        main: ByteArray,
+        base: Int,
+        rookieName: String,
+        partnerLevel: Int,
+        activeId: Int
+    ): List<DigievolutionForm> {
+        val rookieActive = activeId == 0 || activeId == 0xFFFF
+        val forms = mutableListOf(DigievolutionForm(0, rookieName, partnerLevel, rookieActive))
+        val seen = mutableSetOf<Int>()
+        repeat(DIGIEVOLUTION_RECORDS) { index ->
+            val record = base + DIGIEVOLUTION_OFFSET + index * DIGIEVOLUTION_STRIDE
+            val id = u16(main, record)
+            val skillLevel = u16(main, record + 2)
+            if (id == 0 || id == 0xFFFF || skillLevel !in 1..99 || !seen.add(id)) return@repeat
+            val name = DigievolutionCatalog.name(id) ?: "Forma 0x${id.toString(16).uppercase()}"
+            forms += DigievolutionForm(
+                id = id,
+                name = name,
+                level = skillLevel,
+                active = !rookieActive && id == activeId
+            )
+        }
+        return forms
     }
 
     private fun parseTamerName(main: ByteArray): String {

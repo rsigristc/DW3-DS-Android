@@ -13,16 +13,19 @@ class FastTravelNavigatorTest {
     }
 
     @Test
-    fun opensMapFromItemsWithTwoFastDownStepsThenCross() {
+    fun opensMapByResettingUnknownTabToItemsThenDownToMap() {
+        val expected = List(4) { RetroPadButton.DPAD_UP } +
+            List(2) { RetroPadButton.DPAD_DOWN } +
+            RetroPadButton.CROSS
+        assertEquals(expected, FastTravelNavigator.stepsToMapFromUnknown().map { it.button })
         assertEquals(
-            listOf(RetroPadButton.DPAD_DOWN, RetroPadButton.DPAD_DOWN, RetroPadButton.CROSS),
-            FastTravelNavigator.selectMapFromItems().map { it.button }
+            FastTravelNavigator.stepsToMapFromUnknown(),
+            FastTravelNavigator.selectMapFromItems()
         )
         assertEquals(
-            FastTravelNavigator.selectMapFromItems(),
-            FastTravelNavigator.stepsToMapTab(FastTravelNavigator.TAB_ITEMS)
+            listOf(RetroPadButton.SQUARE),
+            FastTravelNavigator.switchServer().map { it.button }
         )
-        assertTrue(FastTravelNavigator.selectMapFromItems().sumOf { it.afterMs + it.holdMs } < 600)
     }
 
     @Test

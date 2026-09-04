@@ -14,6 +14,7 @@ import android.view.View
 import com.digitaladventure.dw2003.R
 import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatCatalog
+import com.digitaladventure.dw2003.data.CheatSpec
 import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.data.FastTravelCatalog
 import com.digitaladventure.dw2003.data.LocationResolver
@@ -60,6 +61,8 @@ class DigiviceDashboardView(
             invalidate()
         }
     var enabledCheats: Set<String> = emptySet()
+        set(value) { field = value; invalidate() }
+    var customCheats: List<CheatSpec> = emptyList()
         set(value) { field = value; invalidate() }
     var visitedMaps: Set<Int> = emptySet()
         set(value) { field = value; invalidate() }
@@ -376,7 +379,7 @@ class DigiviceDashboardView(
             drawActiveSkills(canvas, skills, selected)
             drawEquipment(canvas, equipment, selected)
         } else {
-            val identityHeight = min(dp(210f), max(dp(200f), bounds.height() * .34f))
+            val identityHeight = min(dp(300f), max(dp(248f), bounds.height() * .42f))
             val identity = RectF(bounds.left, bounds.top, bounds.right, bounds.top + identityHeight)
             val details = RectF(bounds.left, identity.bottom + dp(7f), bounds.right, bounds.bottom)
             drawIdentity(canvas, identity, selected, vertical = false)
@@ -491,7 +494,37 @@ class DigiviceDashboardView(
             "EXP ${digimon.experience}/$next · ${tr("FALTAN", "LEFT")} ${digimon.experienceRemaining}"
         }
         drawLabeledBar(canvas, exp, x, bounds.top + dp(151f), w, digimon.experienceFraction, AMBER)
-        drawText(canvas, "${tr("DIGIEVOLUCIÓN", "DIGIVOLUTION")} · ${digimon.activeDigievolutionName.uppercase()}  LV ${digimon.activeDigievolutionLevel}", x, bounds.top + dp(181f), dp(7.5f), CYAN, true)
+        drawFormList(canvas, digimon, x, bounds.top + dp(176f), bounds.right - dp(12f), bounds.bottom - dp(8f))
+    }
+
+    private fun drawFormList(
+        canvas: Canvas,
+        digimon: DigimonState,
+        left: Float,
+        top: Float,
+        right: Float,
+        bottom: Float
+    ) {
+        if (bottom - top < dp(22f)) return
+        drawText(canvas, tr("DIGIEVOLUCIONES", "DIGIVOLUTIONS"), left, top, dp(7.5f), CYAN, true)
+        val forms = digimon.displayedForms
+        val rowHeight = dp(16f)
+        forms.forEachIndexed { index, form ->
+            val y = top + dp(16f) + index * rowHeight
+            if (y + dp(2f) > bottom) return
+            val color = if (form.active) BLUE else WHITE
+            drawText(canvas, form.name.uppercase(), left, y, dp(8f), color, form.active)
+            drawText(
+                canvas,
+                "NV ${form.level}",
+                right,
+                y,
+                dp(8f),
+                color,
+                form.active,
+                Paint.Align.RIGHT
+            )
+        }
     }
 
     private fun drawParametersAndResists(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
@@ -798,10 +831,24 @@ class DigiviceDashboardView(
             MUTED,
             2
         )
-        var y = bounds.top + dp(72f) - modsScroll
-        CheatCatalog.all.forEach { cheat ->
+        val add = RectF(bounds.left + dp(10f), bounds.top + dp(68f), bounds.right - dp(10f), bounds.top + dp(100f))
+        paint.color = CYAN_DARK
+        canvas.drawRoundRect(add, dp(6f), dp(6f), paint)
+        drawText(
+            canvas,
+            tr("AÑADIR MOD PERSONALIZADO", "ADD CUSTOM MOD"),
+            add.centerX(),
+            add.centerY() + dp(4f),
+            dp(10f),
+            WHITE,
+            true,
+            Paint.Align.CENTER
+        )
+        hitTargets += add to { actions.onAddCustomCheat() }
+        var y = add.bottom + dp(8f) - modsScroll
+        (CheatCatalog.all + customCheats).forEach { cheat ->
             val row = RectF(bounds.left + dp(10f), y, bounds.right - dp(10f), y + dp(52f))
-            if (row.bottom > bounds.top + dp(64f) && row.top < bounds.bottom - dp(8f)) {
+            if (row.bottom > add.bottom + dp(4f) && row.top < bounds.bottom - dp(8f)) {
                 paint.color = PANEL_INNER
                 canvas.drawRoundRect(row, dp(6f), dp(6f), paint)
                 val enabled = cheat.id in enabledCheats
@@ -809,8 +856,17 @@ class DigiviceDashboardView(
                 paint.color = if (enabled) CYAN else CYAN_DARK
                 canvas.drawRoundRect(toggle, dp(5f), dp(5f), paint)
                 drawText(canvas, if (enabled) "ON" else "OFF", toggle.centerX(), toggle.centerY() + dp(4f), dp(10f), if (enabled) Color.rgb(2, 16, 22) else WHITE, true, Paint.Align.CENTER)
+                val custom = cheat.id.startsWith("custom_")
+                if (custom) {
+                    val remove = RectF(toggle.left - dp(54f), row.top + dp(12f), toggle.left - dp(8f), row.bottom - dp(12f))
+                    paint.color = Color.rgb(72, 24, 28)
+                    canvas.drawRoundRect(remove, dp(5f), dp(5f), paint)
+                    drawText(canvas, "✕", remove.centerX(), remove.centerY() + dp(4f), dp(11f), RED, true, Paint.Align.CENTER)
+                    hitTargets += remove to { actions.onRemoveCustomCheat(cheat.id) }
+                }
                 drawText(canvas, CompanionUiText.cheatLabel(language, cheat).uppercase(), row.left + dp(10f), row.top + dp(18f), dp(11f), WHITE, true)
-                drawText(canvas, CompanionUiText.cheatDetail(language, cheat), row.left + dp(10f), row.top + dp(36f), dp(8f), MUTED)
+                val detail = if (custom) cheat.code else CompanionUiText.cheatDetail(language, cheat)
+                drawText(canvas, detail, row.left + dp(10f), row.top + dp(36f), dp(8f), MUTED)
                 hitTargets += toggle to { actions.onCheatToggle(cheat.id, !enabled) }
             }
             y += dp(58f)

@@ -56,9 +56,41 @@ class GameStateReaderTest {
         assertEquals(119, snapshot.party.first().strength)
         assertEquals("Growlmon", snapshot.party.first().activeDigievolutionName)
         assertEquals(25, snapshot.party.first().activeDigievolutionLevel)
+        assertEquals(
+            listOf("Guilmon" to 28, "Growlmon" to 25),
+            snapshot.party.first().displayedForms.map { it.name to it.level }
+        )
+        assertEquals(listOf(false, true), snapshot.party.first().displayedForms.map { it.active })
         assertEquals(listOf(42, 42, 18), snapshot.party.first().activeSkills.map { it.mp })
         assertTrue(snapshot.gameStarted)
         assertTrue(snapshot.isLive)
+    }
+
+    @Test
+    fun listsRookiePartnerLevelAndUnlockedChampionSkillLevel() {
+        val ram = ByteArray(GameStateReader.MAIN_LENGTH)
+        put16(ram, GameStateReader.AREA - GameStateReader.MAIN_BASE, 0x0227)
+        put16(ram, GameStateReader.MAP_ID - GameStateReader.MAIN_BASE, 0x0227)
+        put16(ram, GameStateReader.STORY_STAGE - GameStateReader.MAIN_BASE, 4)
+        put32(ram, 0x48DA4 - GameStateReader.MAIN_BASE, 2)
+        val monmon = GameStateReader.STATS - GameStateReader.MAIN_BASE + 2 * GameStateReader.PROFILE_STRIDE
+        put16(ram, monmon + 0x1C, 5)
+        put16(ram, monmon + 0x20, 438)
+        put16(ram, monmon + 0x22, 438)
+        put16(ram, monmon + 0x24, 258)
+        put16(ram, monmon + 0x26, 258)
+        put16(ram, monmon - 4, 0)
+        put16(ram, monmon + GameStateReader.DIGIEVOLUTION_OFFSET, 387)
+        put16(ram, monmon + GameStateReader.DIGIEVOLUTION_OFFSET + 2, 1)
+
+        val snapshot = GameStateReader().parse(ram, 0L, null)
+        val forms = snapshot.party.first().displayedForms
+
+        assertEquals("Monmon", snapshot.party.first().name)
+        assertEquals(5, snapshot.party.first().level)
+        assertEquals("Monmon", snapshot.party.first().activeDigievolutionName)
+        assertEquals(listOf("Monmon" to 5, "Hookmon" to 1), forms.map { it.name to it.level })
+        assertEquals(listOf(true, false), forms.map { it.active })
     }
 
     @Test

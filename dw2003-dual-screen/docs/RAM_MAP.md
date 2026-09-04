@@ -47,7 +47,7 @@ Base `0x8004949C`, ocho perfiles, stride `0x3DC`.
 | `-0x04` | `u16` | ID de digievolución activa; `0/FFFF` representa forma Rookie |
 | `+0x50 + n×0x14` | registro | Digievolución desbloqueada: ID `+0`, nivel `+2`, DVXP `+4` |
 
-Gestión 0.7.15 trata `+0x28…+0x40` como base de RAM y suma las bonificaciones parseadas del catálogo de equipo. El color azul/rojo sale del signo de esa suma, no de otro campo de RAM.
+Gestión 0.7.15 trata `+0x28…+0x40` como base de RAM y suma las bonificaciones parseadas del catálogo de equipo. El color azul/rojo sale del signo de esa suma, no de otro campo de RAM. En 0.7.16 la lista de formas antepone la Rookie (`ID 0`, nivel `+0x1C`) y recorre hasta 44 registros `+0x50`; el nivel de Champion/Ultimate es el de habilidad (`+2`), no el del partner.
 
 Orden de perfiles: Kotemon, Kumamon, Monmon, Agumon, Veemon, Guilmon, Renamon y Patamon.
 
@@ -93,4 +93,4 @@ Algunas compilaciones combinadas reubican el dispatcher. En ese caso se busca la
 
 Los mods opcionales se aplican con `retro_cheat_set` del núcleo, no con parches permanentes. Datos fuera de rango, perfiles inválidos y punteros externos a RAM se descartan.
 
-No se ha documentado todavía un indicador estable para distinguir el cuadro exacto de pesca del estado normal de campo. ddw3 carga la pesca dentro de `FIELDSTG` (no hay overlay FISH/CAST/ROD). Recompilar el `.bin` no aportaría una firma nueva. La UI marca si el área admite pesca, permite previsualizar el sprite y cambiaría a `tamer_fishing` si `isFishing` pasara a verdadero tras un dump comparativo.
+No se ha documentado todavía un indicador estable para distinguir el cuadro exacto de pesca del estado normal de campo. ddw3 carga la pesca dentro de `FIELDSTG` (no hay overlay FISH/CAST/ROD). Recompilar el `.bin` no aportaría una firma nueva. Sigue haciendo falta un dump de los 2 MiB (o al menos la ventana principal y overlay) **de pie** y **con la caña echada** en el mismo mapa para localizar el byte de pose. Sin ese par, `isFishing` permanece en falso y la UI solo ofrece previsualización táctil.

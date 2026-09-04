@@ -1,6 +1,7 @@
 package com.digitaladventure.dw2003.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DigimonStateTest {
@@ -42,5 +43,15 @@ class DigimonStateTest {
         assertEquals(listOf(80), monmon.activeSkills.map { it.power })
         assertEquals(50, monmon.totalStrength)
         assertEquals(101, monmon.totalResistances[0])
+        assertEquals(listOf("Monmon" to 2), monmon.displayedForms.map { it.name to it.level })
+        assertTrue(monmon.displayedForms.single().active)
+    }
+
+    @Test
+    fun demoGuilmonListsRookieAndActiveChampion() {
+        val guilmon = GameSnapshot.demo().party.first()
+        assertEquals(listOf("Guilmon" to 28, "Growlmon" to 25), guilmon.displayedForms.map { it.name to it.level })
+        assertEquals(listOf(false, true), guilmon.displayedForms.map { it.active })
+        assertEquals("Growlmon", guilmon.activeDigievolutionName)
     }
 }

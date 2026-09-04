@@ -12,7 +12,7 @@ import com.digitaladventure.dw2003.data.GameStateReader
  * Cross on Map opens Flawe's world map, where the D-pad selects icons
  * and Cross + Triangle confirm the warp.
  */
-enum class RetroPadButton { START, L1, R1, CROSS, TRIANGLE, DPAD_UP, DPAD_DOWN }
+enum class RetroPadButton { START, L1, R1, CROSS, TRIANGLE, SQUARE, DPAD_UP, DPAD_DOWN }
 
 data class PadStep(val button: RetroPadButton, val afterMs: Long, val holdMs: Long = 70)
 
@@ -44,7 +44,19 @@ object FastTravelNavigator {
         return moves + PadStep(RetroPadButton.CROSS, 220, 90)
     }
 
-    fun selectMapFromItems(): List<PadStep> = stepsToMapTab(TAB_ITEMS)
+    fun selectMapFromItems(): List<PadStep> = stepsToMapFromUnknown()
+
+    /**
+     * START remembers the last tab and the list does not wrap. Four ups
+     * clamp on Items, then two downs always land on Map before Cross.
+     */
+    fun stepsToMapFromUnknown(): List<PadStep> {
+        val reset = List(TAB_STATUS - TAB_ITEMS) { PadStep(RetroPadButton.DPAD_UP, 60, 80) }
+        val down = List(TAB_MAP - TAB_ITEMS) { PadStep(RetroPadButton.DPAD_DOWN, 60, 80) }
+        return reset + down + PadStep(RetroPadButton.CROSS, 280, 100)
+    }
+
+    fun switchServer(): List<PadStep> = listOf(PadStep(RetroPadButton.SQUARE, 380, 110))
 
     fun selectMapDestination(): List<PadStep> =
         listOf(PadStep(RetroPadButton.CROSS, 400, 120))

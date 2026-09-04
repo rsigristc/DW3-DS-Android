@@ -8,6 +8,13 @@ import com.digitaladventure.dw2003.data.TechniqueCatalog
 import com.digitaladventure.dw2003.data.DigievolutionCatalog
 import com.digitaladventure.dw2003.data.TechniqueInfo
 
+data class DigievolutionForm(
+    val id: Int,
+    val name: String,
+    val level: Int,
+    val active: Boolean
+)
+
 data class DigimonState(
     val profileId: Int,
     val name: String,
@@ -27,15 +34,22 @@ data class DigimonState(
     val tolerances: List<Int>,
     val equipmentIds: List<Int>,
     val activeDigievolutionId: Int = 0,
-    val activeDigievolutionLevel: Int = 1
+    val activeDigievolutionLevel: Int = 1,
+    val unlockedForms: List<DigievolutionForm> = emptyList()
 ) {
     val hpFraction: Float get() = ratio(currentHp, maxHp)
     val mpFraction: Float get() = ratio(currentMp, maxMp)
     val nextLevelExperience: Long? get() = ExperienceTable.nextLevel(profileId, level)
     val experienceRemaining: Long get() = (nextLevelExperience?.minus(experience) ?: 0L).coerceAtLeast(0L)
     val experienceFraction: Float get() = ExperienceTable.progress(profileId, level, experience)
+    val isRookieForm: Boolean
+        get() = activeDigievolutionId == 0 || activeDigievolutionId == 0xFFFF
     val activeDigievolutionName: String
-        get() = DigievolutionCatalog.name(activeDigievolutionId) ?: "Forma Rookie"
+        get() = if (isRookieForm) name else DigievolutionCatalog.name(activeDigievolutionId) ?: "Forma $activeDigievolutionId"
+    val displayedForms: List<DigievolutionForm>
+        get() = unlockedForms.ifEmpty {
+            listOf(DigievolutionForm(0, name, level, isRookieForm))
+        }
     val activeSkills: List<TechniqueInfo>
         get() = if (activeDigievolutionId == 0 || activeDigievolutionId == 0xFFFF) {
             listOfNotNull(TechniqueCatalog.signatureInfo(profileId))

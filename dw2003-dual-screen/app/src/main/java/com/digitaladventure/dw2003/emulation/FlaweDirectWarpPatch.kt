@@ -45,10 +45,12 @@ object FlaweDirectWarpPatch {
         }
     }
 
+    fun matchesPreferred(bytes: ByteArray): Boolean =
+        bytes.size == WINDOW_SIZE && matchesDispatcher(bytes, 0)
+
     fun prepare(original: ByteArray, areaId: Int): ByteArray? {
         val iconCode = iconCode(areaId) ?: return null
-        if (original.size != WINDOW_SIZE) return null
-        if (!matchesDispatcher(original, 0)) return null
+        if (!matchesPreferred(original)) return null
 
         return original.copyOf().also { patched ->
             GameMemoryController.writeU32(patched, VALIDATION_BRANCH_OFFSET, NOP)

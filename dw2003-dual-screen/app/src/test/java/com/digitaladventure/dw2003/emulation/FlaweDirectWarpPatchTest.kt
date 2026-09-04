@@ -67,6 +67,8 @@ class FlaweDirectWarpPatchTest {
         assertNull(FlaweDirectWarpPatch.prepare(ByteArray(FlaweDirectWarpPatch.WINDOW_SIZE), 0x0200))
         assertNull(FlaweDirectWarpPatch.prepare(dispatcherWindow(), 0x0202))
         assertNull(FlaweDirectWarpPatch.prepare(dispatcherWindow(), 0x0780))
+        assertTrue(FlaweDirectWarpPatch.matchesPreferred(dispatcherWindow()))
+        assertTrue(!FlaweDirectWarpPatch.matchesPreferred(ByteArray(FlaweDirectWarpPatch.WINDOW_SIZE)))
     }
 
     private fun dispatcherWindow(

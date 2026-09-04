@@ -13,7 +13,11 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.ComponentActivity
@@ -28,14 +32,18 @@ import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatCatalog
+import com.digitaladventure.dw2003.data.CustomCheatStore
 import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.data.CompanionLanguageResolver
 import com.digitaladventure.dw2003.data.CompanionLanguageSetting
 import com.digitaladventure.dw2003.data.FastTravelCatalog
+import com.digitaladventure.dw2003.data.MapRegionCatalog
+import com.digitaladventure.dw2003.data.ServerRegion
 import com.digitaladventure.dw2003.data.GameStateRepository
 import com.digitaladventure.dw2003.model.GameMode
 import com.digitaladventure.dw2003.ui.CompanionUiText
 import com.digitaladventure.dw2003.emulation.BiosManager
+import com.digitaladventure.dw2003.emulation.CrashLogStore
 import com.digitaladventure.dw2003.emulation.FastTravelNavigator
 import com.digitaladventure.dw2003.emulation.GameMemoryController
 import com.digitaladventure.dw2003.emulation.MemoryPoller
@@ -70,6 +78,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private lateinit var displayManager: DisplayManager
     private lateinit var saveManager: SaveManager
     private lateinit var biosManager: BiosManager
+    private lateinit var customCheats: CustomCheatStore
+    private lateinit var crashLog: CrashLogStore
     private lateinit var windowInfoAdapter: WindowInfoTrackerCallbackAdapter
     private var windowInfoConsumer: Consumer<androidx.window.layout.WindowLayoutInfo>? = null
 
@@ -121,6 +131,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
         saveManager = SaveManager(this)
         biosManager = BiosManager(this)
+        customCheats = CustomCheatStore(getPreferences(MODE_PRIVATE))
+        crashLog = (application as? Dw2003App)?.crashLog ?: CrashLogStore(this).also { it.install() }
         muted = getPreferences(MODE_PRIVATE).getBoolean(PREF_MUTED, false)
         modsEnabled = getPreferences(MODE_PRIVATE).getBoolean(PREF_MODS_ENABLED, false)
         enabledCheats = getPreferences(MODE_PRIVATE).getString(PREF_ENABLED_CHEATS, "")
@@ -292,7 +304,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         onClose = onClose,
         hasBackup = saveManager.hasBackup,
         onRestoreBackup = if (onClose != null) ::restoreAutomaticBackup else null,
-        onReturnToStart = if (onClose != null) ::returnToStartScreen else null
+        onReturnToStart = if (onClose != null) ::returnToStartScreen else null,
+        hasCrashLog = crashLog.hasLog(),
+        onViewCrashLog = ::showCrashLog
     )
 
     private fun showAppSettings() {
@@ -691,7 +705,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         onFastTravel = ::requestFastTravel,
         onOpenGameMap = ::openInGameMap,
         onPartyMove = ::movePartyMember,
-        onCheatToggle = ::toggleCheat
+        onCheatToggle = ::toggleCheat,
+        onAddCustomCheat = ::showAddCustomCheat,
+        onRemoveCustomCheat = ::removeCustomCheat
     )
 
     private fun applyAudioAndSpeed() {
@@ -706,10 +722,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun syncDashboardExtras() {
         localDashboard?.modsEnabled = modsEnabled
         localDashboard?.enabledCheats = enabledCheats
+        localDashboard?.customCheats = customCheats.all()
         localDashboard?.visitedMaps = visitedMaps
         applyCompanionLanguage()
         presentation?.setModsEnabled(modsEnabled)
         presentation?.setEnabledCheats(enabledCheats)
+        presentation?.setCustomCheats(customCheats.all())
         presentation?.setVisitedMaps(visitedMaps)
     }
 
@@ -783,10 +801,25 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             return
         }
         val currentIcon = FastTravelCatalog.iconId(snapshot.areaId, snapshot.mapId)
+        val destinationServer = MapRegionCatalog.resolve(areaId).server
+        val currentServer = MapRegionCatalog.resolve(currentIcon).server
+        crashLog.note("fast-travel dest=0x${areaId.toString(16)} from=0x${currentIcon.toString(16)}")
         runTravelSequence {
             openMapTab()
-            delay(600)
-            val directToken = runCatching { controller.beginDirectFlaweWarp(areaId) }.getOrNull()
+            delay(500)
+            if (currentServer != ServerRegion.UNKNOWN &&
+                destinationServer != ServerRegion.UNKNOWN &&
+                currentServer != destinationServer
+            ) {
+                playPadSteps(FastTravelNavigator.switchServer())
+                delay(450)
+            }
+            waitUntil(2200) { controller.hasPreferredFlaweDispatcher() }
+            val directToken = if (destinationServer == ServerRegion.ASUKA) {
+                runCatching { controller.beginDirectFlaweWarp(areaId) }.getOrNull()
+            } else {
+                null
+            }
             if (directToken != null) {
                 try {
                     playPadSteps(FastTravelNavigator.selectMapDestination())
@@ -794,7 +827,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                     controller.restoreDirectFlaweWarp(directToken)
                 }
                 playPadSteps(FastTravelNavigator.exitMapMenu())
-            } else {
+            } else if (destinationServer == ServerRegion.ASUKA) {
                 playPadSteps(
                     FastTravelNavigator.stepsToFlaweIcon(
                         currentIcon,
@@ -803,6 +836,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                     )
                 )
                 playPadSteps(FastTravelNavigator.confirmMapDestination())
+            } else {
+                toast(
+                    "Mapa de Amaterasu abierto. El IPS de Flawe no publica esos iconos; elige el destino con la cruceta y ×.",
+                    "Amaterasu map opened. Flawe's IPS does not publish those icons; pick the destination with the D-pad and ×."
+                )
+                return@runTravelSequence
             }
             waitUntil(2500) { !menuIsOpen() }
             if (menuIsOpen()) {
@@ -835,11 +874,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             toast("El mapa del juego requiere una partida en emulación", "The in-game map needs an emulated session")
             return
         }
+        crashLog.note("open-map area=0x${snapshot.areaId.toString(16)} map=0x${snapshot.mapId.toString(16)}")
         runTravelSequence {
             openMapTab()
             toast(
-                "Mapa de Flawe. La cruceta cambia de icono, □ cambia de servidor y × confirma; el warp carga al salir completamente.",
-                "Flawe map. D-pad changes icons, □ changes server and × confirms; the warp loads after you fully exit."
+                "Mapa de Flawe. START se ancla en Ítems (↑↑↑↑) y baja a Mapa. La cruceta cambia de icono, □ cambia de servidor y × confirma.",
+                "Flawe map. START is reset to Items (↑↑↑↑) then down to Map. D-pad changes icons, □ changes server and × confirms."
             )
         }
     }
@@ -863,17 +903,16 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     private suspend fun openMapTab() {
+        playPadSteps(FastTravelNavigator.dismissMenu())
         if (menuIsOpen()) {
             playPadSteps(FastTravelNavigator.dismissMenu())
             waitUntil(900) { !menuIsOpen() }
         }
+        delay(120)
         playPadSteps(FastTravelNavigator.pressStart())
-        if (!waitUntil(1800) { menuIsOpen() }) {
-            delay(180)
-        }
-        delay(FastTravelNavigator.MENU_SETTLE_MS)
-        playPadSteps(FastTravelNavigator.selectMapFromItems())
-        delay(300)
+        delay(FastTravelNavigator.MENU_SETTLE_MS + 80)
+        playPadSteps(FastTravelNavigator.stepsToMapFromUnknown())
+        delay(360)
     }
 
     private fun menuIsOpen(): Boolean {
@@ -911,6 +950,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         RetroPadButton.R1 -> KeyEvent.KEYCODE_BUTTON_R1
         RetroPadButton.CROSS -> KeyEvent.KEYCODE_BUTTON_B
         RetroPadButton.TRIANGLE -> KeyEvent.KEYCODE_BUTTON_X
+        RetroPadButton.SQUARE -> KeyEvent.KEYCODE_BUTTON_Y
         RetroPadButton.DPAD_UP -> KeyEvent.KEYCODE_DPAD_UP
         RetroPadButton.DPAD_DOWN -> KeyEvent.KEYCODE_DPAD_DOWN
     }
@@ -954,9 +994,86 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     private fun applyEnabledCheats() {
         val controller = memoryController ?: return
-        val selected = enabledCheats.mapNotNull(CheatCatalog::byId)
+        val selected = enabledCheats.mapNotNull { id -> CheatCatalog.byId(id) ?: customCheats.byId(id) }
         runCatching { controller.applyCheats(selected) }
             .onFailure { toast("No se pudieron aplicar los mods: ${it.message}", "Could not apply mods: ${it.message}") }
+    }
+
+    private fun showAddCustomCheat() {
+        val language = resolvedLanguage()
+        val name = EditText(this).apply {
+            hint = CompanionUiText.pick(language, "Nombre del mod", "Mod name")
+        }
+        val code = EditText(this).apply {
+            hint = "800XXXXX YYYY"
+            minLines = 2
+        }
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 24, 48, 0)
+            addView(name)
+            addView(code)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(CompanionUiText.pick(language, "Añadir mod personalizado", "Add custom mod"))
+            .setView(body)
+            .setPositiveButton(CompanionUiText.pick(language, "Guardar", "Save")) { _, _ ->
+                val spec = customCheats.add(name.text.toString(), code.text.toString())
+                crashLog.note("add-custom-cheat")
+                if (spec == null) {
+                    toast(
+                        "El código debe ser pares PAL 800XXXXX YYYY",
+                        "The code must be PAL 800XXXXX YYYY pairs"
+                    )
+                    return@setPositiveButton
+                }
+                syncDashboardExtras()
+                toast("Mod añadido", "Mod added", Toast.LENGTH_SHORT)
+            }
+            .setNegativeButton(CompanionUiText.pick(language, "Cancelar", "Cancel"), null)
+            .show()
+    }
+
+    private fun removeCustomCheat(id: String) {
+        crashLog.note("remove-custom-cheat id=$id")
+        enabledCheats -= id
+        customCheats.remove(id)
+        persistEnabledCheats()
+        applyEnabledCheats()
+        syncDashboardExtras()
+        toast("Mod personalizado eliminado", "Custom mod removed", Toast.LENGTH_SHORT)
+    }
+
+    private fun showCrashLog() {
+        val language = resolvedLanguage()
+        val text = crashLog.read().orEmpty().ifBlank {
+            CompanionUiText.pick(language, "Todavía no hay un crash registrado.", "No crash has been recorded yet.")
+        }
+        val view = ScrollView(this).apply {
+            addView(TextView(this@MainActivity).apply {
+                this.text = text
+                setPadding(36, 24, 36, 24)
+                textSize = 12f
+                setTextIsSelectable(true)
+            })
+        }
+        AlertDialog.Builder(this)
+            .setTitle(CompanionUiText.pick(language, "Último crash", "Last crash"))
+            .setView(view)
+            .setPositiveButton(CompanionUiText.pick(language, "Cerrar", "Close"), null)
+            .setNeutralButton(CompanionUiText.pick(language, "Borrar", "Clear")) { _, _ ->
+                crashLog.clear()
+                if (settingsDialog != null) showAppSettings()
+            }
+            .setNegativeButton(CompanionUiText.pick(language, "Compartir", "Share")) { _, _ ->
+                val send = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, "DW2003 Dual Screen crash")
+                    putExtra(Intent.EXTRA_TEXT, text)
+                }
+                startActivity(Intent.createChooser(send, "Crash log"))
+            }
+            .show()
     }
 
     private fun toggleVirtualControls() {

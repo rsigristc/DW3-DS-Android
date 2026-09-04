@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.16-poc
+
+- Gestión lista las digievoluciones desbloqueadas bajo el compañero: nombre a la izquierda, `NV n` a la derecha y la forma activa en azul. La Rookie usa el nivel del partner (Monmon NV 5), no el nivel de habilidad 1.
+- Mods permite añadir códigos PAL personalizados (`800XXXXX YYYY`) y borrarlos. Los cuatro mods incluidos se mantienen.
+- ⚙ APP muestra **Ver último crash**: un handler guarda hilo, versión, última acción del panel y la traza en `last-crash.log`.
+- **Abrir pestaña Mapa** y el viaje rápido ya no asumen Ítems: envían ↑↑↑↑ (ancla en Ítems) y ↓↓ ×. Si el destino está en el otro servidor, pulsan □. Amaterasu sigue sin códigos ASKMAP inventados.
+- Pesca: no hay dump comparativo de pie vs. caña. `isFishing` permanece en falso y el sprite se previsualiza tocando el Tamer.
+
 ## 0.7.15-poc
 
 - Quita la etiqueta extra de que Flawe no muestra la guía en el menú español. El objetivo conserva la pista del panel o el texto en vivo, sin esa nota.

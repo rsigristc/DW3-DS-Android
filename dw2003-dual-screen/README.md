@@ -43,7 +43,7 @@ Implementado y compilado:
 - Título de ubicación sincronizado con `MAP_ID`, que cambia al destino antes que `AREA` durante las transiciones.
 - ⚙ APP reabre la pantalla de configuración inicial y puede activar una pestaña Mods en el panel complementario.
 - La pantalla azul de APP permite intercambiar juego/panel arriba-abajo o izquierda-derecha, además del modo automático.
-- Viaje rápido con los 46 iconos ASKMAP de Flawe en Asuka (ciudades, campo, norte) más los hubs de Amaterasu; **Abrir pestaña Mapa** usa START → ↓↓ → ×.
+- Viaje rápido con los 46 iconos ASKMAP de Flawe en Asuka (ciudades, campo, norte) más los hubs de Amaterasu; **Abrir pestaña Mapa** ancla START en Ítems (↑↑↑↑) y baja a Mapa (↓↓ ×).
 - La lista localiza el dispatcher activo de Flawe por firma y referencia, fuerza temporalmente el ID interno del icono y conserva el spawn definido por el mod.
 - Reorden de la formación activa desde Batalla fuera de combate y de eventos.
 - Estado de espera sin compañeros ficticios antes de iniciar o cargar una partida.
@@ -69,7 +69,7 @@ La POC permite continuar con otra imagen, pero desactiva cualquier garantía sob
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v0.7.15-poc-debug.apk` (release `v0.7.15-poc`) en un dispositivo Android ARM64.
+1. Instala `DW2003-Dual-Screen-v0.7.16-poc-debug.apk` (release `v0.7.16-poc`) en un dispositivo Android ARM64.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada o la imagen original europea.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.
@@ -84,7 +84,7 @@ La aplicación conserva permiso de lectura del archivo mediante Storage Access F
 ## Limitaciones conocidas
 
 - El radar selecciona una imagen regional real según servidor/sector y muestra el nombre del mapa local. La coordenada exacta del jugador dentro de esa imagen todavía no se extrae de RAM.
-- Flawe no expone una entrada directa documentada a su mapa; la app abre START y camina ↑/↓ hasta la pestaña Mapa (por defecto desde Ítems: ↓↓ → ×). No escribe el índice del widget.
+- Flawe no expone una entrada directa documentada a su mapa; la app abre START, ancla la lista en Ítems con ↑↑↑↑ y baja a Mapa con ↓↓ ×. No escribe el índice del widget. Si el destino está en el otro servidor, pulsa □. Amaterasu no tiene códigos ASKMAP en el IPS.
 - En Flawe 2.0 la lista prueba `0x8000C000` y, si difiere, busca una copia reubicada referenciada por el overlay. Fuerza el icono interno solo durante × y lo restaura antes de salir con △△. Si no hay una firma activa única, vuelve a la cruceta.
 - El objetivo en inglés depende de Flawe: punteros en `0x8000B200`, texto ASCII en scratch/overlay, o un barrido al abrir START. En español el panel muestra pistas propias (sin etiqueta extra sobre Flawe).
 - La detección automática de Batalla/Gestión usa firmas del mod combinado. La imagen original continúa funcionando, pero puede requerir firmas adicionales.
@@ -93,7 +93,8 @@ La aplicación conserva permiso de lectura del archivo mediante Storage Access F
 - La división automática considera pantalla amplia a partir de 600 dp. En la pantalla exterior estrecha de un Fold se prioriza el juego a pantalla completa.
 - La velocidad 2× depende del margen térmico y de rendimiento del dispositivo; puede ser menor bajo carga sostenida.
 - Las técnicas activas muestran MP y poder cuando el catálogo los tiene. Las de apoyo (cura, campos, Double Power/Guard) dejan el poder en `—`.
-- El sprite de pesca está integrado y puede previsualizarse tocando el panel del Tamer en un punto de pesca conocido. ddw3 no publica un overlay de pesca; sin un dump de RAM mientras se pesca, `isFishing` permanece en falso.
+- El sprite de pesca está integrado y puede previsualizarse tocando el panel del Tamer en un punto de pesca conocido. ddw3 no publica un overlay de pesca; sigue haciendo falta un dump de RAM de pie vs. pescando para activar `isFishing`.
+- Si la app se cierra de forma inesperada, ⚙ APP → **Ver último crash** muestra `last-crash.log` (traza Java/Kotlin, no abortos nativos del núcleo).
 - Los nombres del equipo corresponden al catálogo inglés de referencia; parámetros y bonificaciones sí se muestran con abreviaturas españolas.
 
 ## Compilación

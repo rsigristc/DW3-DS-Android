@@ -6,5 +6,7 @@ data class DashboardActions(
     val onFastTravel: (Int) -> Unit = {},
     val onOpenGameMap: () -> Unit = {},
     val onPartyMove: (fromIndex: Int, toIndex: Int) -> Unit = { _, _ -> },
-    val onCheatToggle: (id: String, enabled: Boolean) -> Unit = { _, _ -> }
+    val onCheatToggle: (id: String, enabled: Boolean) -> Unit = { _, _ -> },
+    val onAddCustomCheat: () -> Unit = {},
+    val onRemoveCustomCheat: (String) -> Unit = {}
 )

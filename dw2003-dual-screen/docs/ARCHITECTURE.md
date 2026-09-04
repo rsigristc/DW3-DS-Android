@@ -77,6 +77,8 @@ En 0.7.14, AUTO lee `0x8005CCA8` (fuera de la ventana principal) y solo aplica i
 
 En 0.7.15, `WalkthroughCatalog` deja de añadir la nota de Flawe al objetivo español. Gestión muestra `RAM + bonificaciones de equipo` y colorea por signo. `TechniquePower` completa MP/poder de las técnicas activas. La pesca automática no cambia: FIELDSTG no tiene overlay de pesca en ddw3.
 
+En 0.7.16, Gestión lee hasta 44 registros de digievolución (`base+0x50`, stride `0x14`) y antepone la Rookie con el nivel del partner. Mods guarda códigos PAL del usuario. `CrashLogStore` instala un handler de excepciones no capturadas. El viaje rápido ancla START en Ítems antes de abrir Mapa y espera el dispatcher de Flawe; Amaterasu solo cambia de servidor con □.
+
 ## BIOS aportado por el usuario
 
 `BiosManager` acepta únicamente una imagen europea de PlayStation de 512 KiB con firma y marcador regional compatibles con la detección de PCSX-ReARMed. Se instala en el directorio privado del sistema como `scph5502.bin`. Sin ese archivo, el núcleo conserva su alternativa HLE.

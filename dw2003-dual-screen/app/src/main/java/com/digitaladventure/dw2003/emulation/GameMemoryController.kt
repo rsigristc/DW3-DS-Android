@@ -36,6 +36,15 @@ class GameMemoryController(private val view: GLRetroView) {
         return GameStateReader.u32(bytes, 0)
     }
 
+    fun hasPreferredFlaweDispatcher(): Boolean {
+        val preferred = view.readMemory(
+            LibretroDroid.MEMORY_SYSTEM_RAM,
+            FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
+            FlaweDirectWarpPatch.WINDOW_SIZE
+        )
+        return FlaweDirectWarpPatch.matchesPreferred(preferred)
+    }
+
     fun beginDirectFlaweWarp(areaId: Int): FlaweDirectWarpToken? {
         val preferred = view.readMemory(
             LibretroDroid.MEMORY_SYSTEM_RAM,

@@ -67,7 +67,16 @@ data class GameSnapshot(
             storyStage = 12,
             objective = "Explora Central Park y localiza la entrada al Bosque Alambre.",
             party = listOf(
-                DigimonState(5, "Guilmon", 28, 18420, 12, 1280, 1280, 680, 680, 119, 91, 104, 87, 96, 72, listOf(20, 8, 4, 12, 16, 5, 9), listOf(148, 0, 238, 0, 331, 0)),
+                DigimonState(
+                    5, "Guilmon", 28, 18420, 12, 1280, 1280, 680, 680, 119, 91, 104, 87, 96, 72,
+                    listOf(20, 8, 4, 12, 16, 5, 9), listOf(148, 0, 238, 0, 331, 0),
+                    activeDigievolutionId = 367,
+                    activeDigievolutionLevel = 25,
+                    unlockedForms = listOf(
+                        DigievolutionForm(0, "Guilmon", 28, false),
+                        DigievolutionForm(367, "Growlmon", 25, true)
+                    )
+                ),
                 DigimonState(6, "Renamon", 27, 16940, 9, 1420, 1420, 540, 540, 93, 88, 126, 118, 121, 80, listOf(8, 11, 13, 16, 12, 7, 10), listOf(162, 0, 245, 0, 332, 0)),
                 DigimonState(3, "Agumon", 26, 15120, 7, 1180, 1180, 620, 620, 125, 98, 82, 75, 89, 76, listOf(18, 6, 5, 8, 10, 7, 4), listOf(134, 0, 240, 0, 330, 0))
             ),

@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 4 de septiembre de 2026 (0.7.15-poc).
+Fecha de compilación: 4 de septiembre de 2026 (0.7.16-poc).
 
 ## Entorno
 
@@ -19,11 +19,11 @@ Fecha de compilación: 4 de septiembre de 2026 (0.7.15-poc).
 ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-Resultado: `BUILD SUCCESSFUL` (77 pruebas unitarias, 0 fallos). Android Lint: 0 errores; 3 avisos `GradleDependency` preexistentes (no introducidos en 0.7.15).
+Resultado: pendiente de esta revisión (0.7.16-poc). Android Lint: 0 errores esperados; 3 avisos `GradleDependency` preexistentes.
 
 ## Pruebas unitarias
 
-- `GameStateReaderTest`: verifica área/mapa, Tamer, región, formación, que MP infinito no oculte al primer compañero y que `isFishing` siga en falso sin dump de pesca.
+- `GameStateReaderTest`: verifica área/mapa, Tamer, región, formación, lista Monmon NV 5 + Hookmon NV 1, que MP infinito no oculte al primer compañero y que `isFishing` siga en falso sin dump de pesca.
 - `DwTextDecoderTest`: verifica caracteres latinos, espacios, salto de línea y dígitos del formato de texto europeo.
 - `AppFileRulesTest`: verifica tamaños, cabeceras de Memory Card y firma regional del BIOS europeo.
 - `PanePolicyTest`: verifica juego completo en una pantalla exterior estrecha, panel dual al desplegar y juego completo cuando existe display secundario.
@@ -36,7 +36,8 @@ Resultado: `BUILD SUCCESSFUL` (77 pruebas unitarias, 0 fallos). Android Lint: 0 
 - `PalLanguageTest`: verifica `0x8005CCA8` → inglés (2) / español (6) y que francés o un 0 no cambian AUTO.
 - `AreaCatalogTest`: verifica IDs reales no consecutivos, salas SSTNAME de 0.7.14 y puntos de pesca confirmados.
 - `EquipmentCatalogTest`: verifica nombre, tipo, parser de bonificaciones (`FUE`, `-VEL`, `FUEGO`, `MÁQ`, `OSC`) y la carga de Evil Fang + Iron Helmet + Glasses.
-- `DigimonStateTest`: verifica totales RAM+equipo del demo Guilmon y MP/poder Rookie de Monmon.
+- `DigimonStateTest`: verifica totales RAM+equipo del demo Guilmon, lista Guilmon/Growlmon y MP/poder Rookie de Monmon.
+- `CheatCodeParserTest`: verifica pares PAL `800XXXXX YYYY` y el rechazo de texto vacío.
 - `AppFileRulesTest`: añade validación de la tarjeta formateada generada automáticamente.
 - `MapRegionCatalogTest`: verifica servidor/sector para Asuka, Amaterasu y menús externos al mundo.
 - `DigievolutionCatalogTest`: verifica nombre, nivel mínimo, MP y poder (`Picking Claw` = 60; Double Power/Guard sin poder).
@@ -44,7 +45,7 @@ Resultado: `BUILD SUCCESSFUL` (77 pruebas unitarias, 0 fallos). Android Lint: 0 
 - `LocationResolverTest`: verifica interiores, puente y Central Park ↔ Entrada del Bosque usando el destino de `MAP_ID`.
 - `FastTravelCatalogTest`: verifica que el puente no es un icono, que laboratorio visita cuenta como Ciudad Asuka, que Park y la Entrada del Bosque son iconos distintos, y que el norte se desbloquea al visitarlo.
 - `FlaweFastTravelTableTest`: verifica los 46 códigos ASKMAP del IPS y que Amaterasu no inventa iconos.
-- `FastTravelNavigatorTest`: verifica `stepsToMapTab` (Ítems ↓↓, Estado ↑↑, Mapa solo ×) y × + △△.
+- `FastTravelNavigatorTest`: verifica anclaje ↑↑↑↑ + ↓↓ ×, `stepsToMapTab` cuando se conoce la pestaña, □ de servidor y × + △△.
 - `FlaweDirectWarpPatchTest`: verifica firmas, reubicación por referencia `j/jal`, IDs internos de ASKMAP y rechazo seguro de versiones desconocidas.
 - `CheatCatalogTest`: verifica códigos PAL de calidad de vida.
 - `GameMemoryControllerTest`: verifica el empaquetado little-endian de la formación.
@@ -70,4 +71,4 @@ Las rutas de importación/exportación usan Android Storage Access Framework y e
 
 La distribución compacta de tres líneas HP/MP/EXP elimina las coordenadas rígidas que recortaban la última barra de Exploración. La validación final de densidad y legibilidad debe realizarse con las mismas posturas del Fold mostradas en las capturas del usuario.
 
-Gestión 0.7.15 (columna partida, colores azul/rojo y habilidades con MP/poder) no puede verificarse en dispositivo en este entorno: no hay ROM ni emulador Android. Las pruebas unitarias cubren totales, parser de equipo y catálogo de técnicas.
+Gestión 0.7.16 (lista de formas, mods personalizados, crash log y anclaje de mapa) no puede verificarse en dispositivo en este entorno: no hay ROM ni emulador Android. Las pruebas unitarias cubren el parser de formas, códigos PAL y la secuencia de pad.

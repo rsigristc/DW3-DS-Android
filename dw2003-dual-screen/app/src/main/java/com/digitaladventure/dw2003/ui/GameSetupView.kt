@@ -34,7 +34,9 @@ class GameSetupView(
     allowDemo: Boolean = onClose == null,
     hasBackup: Boolean = false,
     onRestoreBackup: (() -> Unit)? = null,
-    onReturnToStart: (() -> Unit)? = null
+    onReturnToStart: (() -> Unit)? = null,
+    hasCrashLog: Boolean = false,
+    onViewCrashLog: (() -> Unit)? = null
 ) : ScrollView(context) {
     private val content = LinearLayout(context)
 
@@ -174,6 +176,29 @@ class GameSetupView(
                 onReturnToStart,
                 outlined = true
             ))
+        }
+        if (onViewCrashLog != null) {
+            content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
+            content.addView(actionButton(
+                pick(
+                    language,
+                    if (hasCrashLog) "Ver último crash" else "Registro de crash (vacío)",
+                    if (hasCrashLog) "View last crash" else "Crash log (empty)"
+                ),
+                onViewCrashLog,
+                outlined = true,
+                enabled = hasCrashLog
+            ))
+            content.addView(label(
+                pick(
+                    language,
+                    "Si la app se cierra, guarda un registro con hilo, traza y la última acción del panel.",
+                    "If the app crashes, it keeps a log with the thread, stack and the last companion action."
+                ),
+                11f,
+                MUTED,
+                false
+            ).apply { setPadding(0, dp(8), 0, 0) })
         }
         if (onClose != null) {
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(16)))
