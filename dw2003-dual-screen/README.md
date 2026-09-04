@@ -112,6 +112,10 @@ Requisitos:
 
 El APK se genera en `app/build/outputs/apk/debug/app-debug.apk` y solo empaqueta bibliotecas `arm64-v8a`.
 
+## Publicación
+
+Cada versión generada se fusiona en `main` y se etiqueta `vX.Y.Z-poc`. El workflow `.github/workflows/release.yml` publica el GitHub Release con el APK de depuración y `SHA256SUMS.txt`. No se dejan cortes en ramas laterales: `companion-fixes`, `companion-i18n`, `companion-gestion` y `companion-forms` ya están en esa línea histórica.
+
 ## Estructura
 
 - `app/`: actividad, distribución adaptable, panel Digivice y lectores de RAM.
