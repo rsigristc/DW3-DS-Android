@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.12-poc
+
+- El panel complementario puede mostrarse en español o inglés. ⚙ APP añade **Idioma del panel**: automático, español o English.
+- En automático, la guía de Flawe detectada en RAM decide el idioma. La extracción acepta el texto compacto europeo y una copia ASCII, recorre todos los punteros de `0x8000B200` y, al abrir START, busca en el overlay y en los 2 MiB.
+- Flawe no publica walkthrough en el menú español. El panel ofrece pistas propias por mapa/etapa y traduce las frases inglesas conocidas, con una nota que lo deja explícito.
+
 ## 0.7.11-poc
 
 - Si Flawe no instala su dispatcher en `0x8000C000`, busca la firma en los 2 MiB de RAM y selecciona únicamente la copia referenciada por un salto `j/jal` del overlay.

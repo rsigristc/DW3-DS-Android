@@ -69,14 +69,15 @@ La POC permite continuar con otra imagen, pero desactiva cualquier garantía sob
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v0.7.11-poc-debug.apk` (release `v0.7.11-poc`) en un dispositivo Android ARM64.
+1. Instala `DW2003-Dual-Screen-v0.7.12-poc-debug.apk` (release `v0.7.12-poc`) en un dispositivo Android ARM64.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada o la imagen original europea.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.
 5. En un Fold desplegado, el juego y el panel se reparten según la bisagra; si Android no reporta una bisagra separadora, se aplica una división lógica.
-6. Abre una vez el menú del juego para que el mod actualice los punteros del walkthrough.
-7. Usa la barra superior del juego para guardar/cargar estado, activar 2× o silenciar. Pulsa **⚙ APP** —o Atrás de Android cuando solo se vea el juego— para volver a la configuración inicial, activar Mods, cambiar BIN o gestionar BIOS y Memory Card.
-8. Para guardar partidas dentro del juego, importa un BIOS europeo. El BIOS HLE de PCSX-ReARMed puede quedarse en «Comprobando la Tarjeta de Memoria».
+6. Abre una vez el menú del juego para que el mod actualice los punteros del walkthrough. En inglés Flawe muestra la guía en START; el panel la copia cuando esos punteros o el texto ASCII están en RAM.
+7. En español, Flawe no pinta la guía in-game. El panel usa pistas propias y puedes forzar el idioma en ⚙ APP → **Idioma del panel**.
+8. Usa la barra superior del juego para guardar/cargar estado, activar 2× o silenciar. Pulsa **⚙ APP** —o Atrás de Android cuando solo se vea el juego— para volver a la configuración inicial, activar Mods, cambiar BIN o gestionar BIOS y Memory Card.
+9. Para guardar partidas dentro del juego, importa un BIOS europeo. El BIOS HLE de PCSX-ReARMed puede quedarse en «Comprobando la Tarjeta de Memoria».
 
 La aplicación conserva permiso de lectura del archivo mediante Storage Access Framework; no copia la imagen de aproximadamente 700 MB al almacenamiento interno.
 
@@ -85,7 +86,7 @@ La aplicación conserva permiso de lectura del archivo mediante Storage Access F
 - El radar selecciona una imagen regional real según servidor/sector y muestra el nombre del mapa local. La coordenada exacta del jugador dentro de esa imagen todavía no se extrae de RAM.
 - Flawe no expone una entrada directa documentada a su mapa; la app acelera la ruta START → ↓↓ → ×.
 - En Flawe 2.0 la lista prueba `0x8000C000` y, si difiere, busca una copia reubicada referenciada por el overlay. Fuerza el icono interno solo durante × y lo restaura antes de salir con △△. Si no hay una firma activa única, vuelve a la cruceta.
-- El objetivo depende de los punteros del walkthrough de Flawe's Mod 2.0 y puede aparecer solo después de abrir el menú.
+- El objetivo en inglés depende de Flawe: punteros en `0x8000B200`, texto ASCII en scratch/overlay, o un barrido al abrir START. En español no hay guía del mod; el panel muestra pistas propias.
 - La detección automática de Batalla/Gestión usa firmas del mod combinado. La imagen original continúa funcionando, pero puede requerir firmas adicionales.
 - La POC abre una imagen BIN individual. El soporte formal para CUE multitrack y CHD queda para una fase posterior.
 - El núcleo puede usar su BIOS HLE. Si el usuario importa su propio BIOS europeo, la aplicación lo valida y lo guarda de forma privada como `scph5502.bin`; nunca se distribuye uno.

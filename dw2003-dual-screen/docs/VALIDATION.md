@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 3 de septiembre de 2026 (0.7.11-poc).
+Fecha de compilación: 4 de septiembre de 2026 (0.7.12-poc).
 
 ## Entorno
 
@@ -44,6 +44,9 @@ Resultado: `BUILD SUCCESSFUL`.
 - `FlaweDirectWarpPatchTest`: verifica firmas, reubicación por referencia `j/jal`, IDs internos y rechazo seguro de versiones desconocidas.
 - `CheatCatalogTest`: verifica códigos PAL de calidad de vida.
 - `GameMemoryControllerTest`: verifica el empaquetado little-endian de la formación.
+- `WalkthroughTextFinderTest`: verifica guía DW y ASCII, idioma y rechazo de ruido de menú.
+- `WalkthroughCatalogTest`: verifica traducción inglesa conocida, aviso español y prompts de sincronización.
+- `CompanionUiTextTest`: verifica nombres de mapa, cheats, distribución e idioma del panel.
 
 Resultado: las pruebas unitarias de aplicación deben ejecutarse con `./gradlew :app:testDebugUnitTest`.
 

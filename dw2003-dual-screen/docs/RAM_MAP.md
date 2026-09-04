@@ -60,7 +60,7 @@ El bloque temporal se consulta desde `0x8000B200`. Los candidatos de puntero est
 - `0x8000B20C`
 - `0x8000B210`
 
-Cada puntero se valida contra los 2 MiB de RAM y se decodifican hasta 256 bytes con la tabla europea de DW2003. Se selecciona el texto legible más largo. Si no existe, la UI solicita abrir el menú para que el mod actualice sus punteros.
+Cada palabra alineada del bloque se trata como puntero candidato (`0x80000000`…`0x801FFFFF`). El texto se decodifica con la tabla europea de DW2003 y también como cadena ASCII. Si START carga `STSTATUS` y todavía no hay objetivo, se busca el mismo patrón en el overlay `0x80080000` y, si hace falta, en los 2 MiB. Flawe publica la guía solo en el idioma inglés del juego; el español del panel usa pistas propias cuando esos punteros no aparecen.
 
 ## Escrituras controladas (0.7)
 

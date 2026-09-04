@@ -28,9 +28,13 @@ import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatCatalog
+import com.digitaladventure.dw2003.data.CompanionLanguage
+import com.digitaladventure.dw2003.data.CompanionLanguageResolver
+import com.digitaladventure.dw2003.data.CompanionLanguageSetting
 import com.digitaladventure.dw2003.data.FastTravelCatalog
 import com.digitaladventure.dw2003.data.GameStateRepository
 import com.digitaladventure.dw2003.model.GameMode
+import com.digitaladventure.dw2003.ui.CompanionUiText
 import com.digitaladventure.dw2003.emulation.BiosManager
 import com.digitaladventure.dw2003.emulation.FastTravelNavigator
 import com.digitaladventure.dw2003.emulation.GameMemoryController
@@ -88,6 +92,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private var visitedMaps = linkedSetOf<Int>()
     private var wasOnSaveScreen = false
     private var travelJob: Job? = null
+    private var languageSetting = CompanionLanguageSetting.AUTO
+    private var detectedLanguage: CompanionLanguage? = null
 
     private val openRom = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(::acceptRom)
@@ -127,6 +133,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             ?.mapNotNull { it.toIntOrNull(16) }
             ?.toCollection(LinkedHashSet())
             ?: linkedSetOf()
+        languageSetting = CompanionLanguageSetting.fromPreference(
+            getPreferences(MODE_PRIVATE).getString(PREF_LANGUAGE, null)
+        )
         windowInfoAdapter = WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(this))
         displayManager.registerDisplayListener(this, null)
 
@@ -209,31 +218,34 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     private fun acceptBios(uri: Uri) {
-        Toast.makeText(this, "Importando BIOS…", Toast.LENGTH_SHORT).show()
+        toast("Importando BIOS…", "Importing BIOS…", Toast.LENGTH_SHORT)
         lifecycleScope.launch {
             val result = runCatching {
                 withContext(Dispatchers.IO) { biosManager.importBios(contentResolver, uri) }
             }.getOrElse {
-                Toast.makeText(this@MainActivity, "BIOS rechazado: ${it.message}", Toast.LENGTH_LONG).show()
+                toast("BIOS rechazado: ${it.message}", "BIOS rejected: ${it.message}")
                 return@launch
             }
-            Toast.makeText(this@MainActivity, "BIOS europeo instalado · SHA-1 ${result.sha1.take(10)}…", Toast.LENGTH_LONG).show()
+            toast(
+                "BIOS europeo instalado · SHA-1 ${result.sha1.take(10)}…",
+                "European BIOS installed · SHA-1 ${result.sha1.take(10)}…"
+            )
             recreate()
         }
     }
 
     private fun acceptMemoryCard(uri: Uri) {
         retroView?.let(saveManager::save)
-        Toast.makeText(this, "Importando Memory Card…", Toast.LENGTH_SHORT).show()
+        toast("Importando Memory Card…", "Importing Memory Card…", Toast.LENGTH_SHORT)
         lifecycleScope.launch {
             val size = runCatching {
                 withContext(Dispatchers.IO) { saveManager.importCard(contentResolver, uri) }
             }.getOrElse {
-                Toast.makeText(this@MainActivity, "Memory Card rechazada: ${it.message}", Toast.LENGTH_LONG).show()
+                toast("Memory Card rechazada: ${it.message}", "Memory Card rejected: ${it.message}")
                 return@launch
             }
             skipNextAutoSave = true
-            Toast.makeText(this@MainActivity, "Memory Card importada (${size / 1024} KiB)", Toast.LENGTH_LONG).show()
+            toast("Memory Card importada (${size / 1024} KiB)", "Memory Card imported (${size / 1024} KiB)")
             recreate()
         }
     }
@@ -241,7 +253,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun requestMemoryCardExport() {
         retroView?.let(saveManager::save)
         if (!saveManager.hasSave) {
-            Toast.makeText(this, "Todavía no existe una Memory Card para exportar", Toast.LENGTH_LONG).show()
+            toast("Todavía no existe una Memory Card para exportar", "There is no Memory Card to export yet")
             return
         }
         createMemoryCard.launch("DW2003-memory-card.srm")
@@ -252,10 +264,10 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             val size = runCatching {
                 withContext(Dispatchers.IO) { saveManager.exportCard(contentResolver, uri) }
             }.getOrElse {
-                Toast.makeText(this@MainActivity, "No se pudo exportar: ${it.message}", Toast.LENGTH_LONG).show()
+                toast("No se pudo exportar: ${it.message}", "Could not export: ${it.message}")
                 return@launch
             }
-            Toast.makeText(this@MainActivity, "Memory Card exportada (${size / 1024} KiB)", Toast.LENGTH_LONG).show()
+            toast("Memory Card exportada (${size / 1024} KiB)", "Memory Card exported (${size / 1024} KiB)")
         }
     }
 
@@ -272,8 +284,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         hasSave = saveManager.hasSave,
         modsEnabled = modsEnabled,
         onModsChanged = ::setModsEnabled,
-        paneArrangementLabel = paneArrangement().label,
+        paneArrangementLabel = CompanionUiText.paneArrangement(resolvedLanguage(), paneArrangement()),
         onPaneArrangement = ::showPaneArrangementMenu,
+        language = resolvedLanguage(),
+        languageLabel = CompanionUiText.languageSetting(resolvedLanguage(), languageSetting),
+        onLanguage = ::showLanguageMenu,
         onClose = onClose,
         hasBackup = saveManager.hasBackup,
         onRestoreBackup = if (onClose != null) ::restoreAutomaticBackup else null,
@@ -297,10 +312,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun showPaneArrangementMenu() {
         val arrangements = PaneArrangement.entries
         val current = paneArrangement()
+        val language = resolvedLanguage()
         AlertDialog.Builder(this)
-            .setTitle("Distribución de pantallas")
+            .setTitle(CompanionUiText.pick(language, "Distribución de pantallas", "Screen layout"))
             .setSingleChoiceItems(
-                arrangements.map { it.label }.toTypedArray(),
+                arrangements.map { CompanionUiText.paneArrangement(language, it) }.toTypedArray(),
                 arrangements.indexOf(current)
             ) { dialog, index ->
                 val selected = arrangements[index]
@@ -309,10 +325,52 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                     .apply()
                 dualLayout?.setArrangement(selected)
                 dialog.dismiss()
-                Toast.makeText(this, selected.label, Toast.LENGTH_SHORT).show()
+                toast(
+                    CompanionUiText.paneArrangement(CompanionLanguage.SPANISH, selected),
+                    CompanionUiText.paneArrangement(CompanionLanguage.ENGLISH, selected),
+                    Toast.LENGTH_SHORT
+                )
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton(CompanionUiText.pick(language, "Cancelar", "Cancel"), null)
             .show()
+    }
+
+    private fun showLanguageMenu() {
+        val options = CompanionLanguageSetting.entries
+        val language = resolvedLanguage()
+        AlertDialog.Builder(this)
+            .setTitle(CompanionUiText.pick(language, "Idioma del panel", "Companion language"))
+            .setSingleChoiceItems(
+                options.map { CompanionUiText.languageSetting(language, it) }.toTypedArray(),
+                options.indexOf(languageSetting)
+            ) { dialog, index ->
+                languageSetting = options[index]
+                getPreferences(MODE_PRIVATE).edit()
+                    .putString(PREF_LANGUAGE, languageSetting.name)
+                    .apply()
+                applyCompanionLanguage()
+                dialog.dismiss()
+                if (settingsDialog != null) {
+                    showAppSettings()
+                } else if (!dualContentActive) {
+                    showSetup()
+                }
+            }
+            .setNegativeButton(CompanionUiText.pick(language, "Cancelar", "Cancel"), null)
+            .show()
+    }
+
+    private fun resolvedLanguage(): CompanionLanguage =
+        CompanionLanguageResolver.resolve(languageSetting, detectedLanguage)
+
+    private fun applyCompanionLanguage() {
+        val language = resolvedLanguage()
+        localDashboard?.language = language
+        presentation?.setLanguage(language)
+    }
+
+    private fun toast(spanish: String, english: String, duration: Int = Toast.LENGTH_LONG) {
+        Toast.makeText(this, CompanionUiText.pick(resolvedLanguage(), spanish, english), duration).show()
     }
 
     private fun paneArrangement(): PaneArrangement =
@@ -324,23 +382,32 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         runCatching {
             contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        Toast.makeText(this, "Verificando la imagen de disco…", Toast.LENGTH_LONG).show()
+        toast("Verificando la imagen de disco…", "Verifying the disc image…")
         lifecycleScope.launch {
             val result = runCatching {
                 withContext(Dispatchers.IO) { RomVerifier.verify(contentResolver, uri) }
             }.getOrElse {
-                Toast.makeText(this@MainActivity, "No se pudo leer el BIN: ${it.message}", Toast.LENGTH_LONG).show()
+                toast("No se pudo leer el BIN: ${it.message}", "Could not read the BIN: ${it.message}")
                 return@launch
             }
             if (result.variant == RomVerifier.Variant.UNKNOWN) {
+                val language = resolvedLanguage()
                 AlertDialog.Builder(this@MainActivity)
-                    .setTitle("ROM no verificada")
-                    .setMessage("SHA-1: ${result.sha1}\n\nLa lectura de RAM fue diseñada para SLES-03936 original y Flawe's Mod 2.0. Puedes continuar, pero los datos de la segunda pantalla podrían ser incorrectos.")
-                    .setNegativeButton("Cancelar", null)
-                    .setPositiveButton("Continuar") { _, _ -> rememberAndRestart(uri, result) }
+                    .setTitle(CompanionUiText.pick(language, "ROM no verificada", "Unverified ROM"))
+                    .setMessage(
+                        CompanionUiText.pick(
+                            language,
+                            "SHA-1: ${result.sha1}\n\nLa lectura de RAM fue diseñada para SLES-03936 original y Flawe's Mod 2.0. Puedes continuar, pero los datos de la segunda pantalla podrían ser incorrectos.",
+                            "SHA-1: ${result.sha1}\n\nRAM reading was designed for original SLES-03936 and Flawe's Mod 2.0. You can continue, but the second screen may be wrong."
+                        )
+                    )
+                    .setNegativeButton(CompanionUiText.pick(language, "Cancelar", "Cancel"), null)
+                    .setPositiveButton(CompanionUiText.pick(language, "Continuar", "Continue")) { _, _ ->
+                        rememberAndRestart(uri, result)
+                    }
                     .show()
             } else {
-                Toast.makeText(this@MainActivity, "Detectada: ${result.variant.label}", Toast.LENGTH_LONG).show()
+                toast("Detectada: ${result.variant.label}", "Detected: ${result.variant.label}")
                 rememberAndRestart(uri, result)
             }
         }
@@ -360,7 +427,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         val descriptor = runCatching { contentResolver.openFileDescriptor(uri, "r") }.getOrNull()
         if (descriptor == null) {
             getPreferences(MODE_PRIVATE).edit().remove(PREF_ROM_URI).apply()
-            Toast.makeText(this, "No se conserva acceso al BIN. Selecciónalo de nuevo.", Toast.LENGTH_LONG).show()
+            toast("No se conserva acceso al BIN. Selecciónalo de nuevo.", "BIN access was lost. Select it again.")
             showSetup()
             return
         }
@@ -396,11 +463,10 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         memoryController = GameMemoryController(view)
         if (enabledCheats.isNotEmpty()) applyEnabledCheats()
         if (!biosManager.isInstalled) {
-            Toast.makeText(
-                this,
+            toast(
                 "BIOS HLE activo: el guardado dentro del juego puede congelarse. Importa un BIOS europeo desde ⚙ APP.",
-                Toast.LENGTH_LONG
-            ).show()
+                "HLE BIOS is active: in-game saving can freeze. Import a European BIOS from ⚙ APP."
+            )
         }
         view.frameSpeed = if (fastForward) 2 else 1
         view.audioEnabled = !muted
@@ -426,7 +492,14 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
         attachDualContent(gameSurface)
 
-        memoryPoller = MemoryPoller(view, repository, lifecycleScope)
+        memoryPoller = MemoryPoller(view, repository, lifecycleScope) { detected ->
+            if (detectedLanguage != detected) {
+                detectedLanguage = detected
+                if (languageSetting == CompanionLanguageSetting.AUTO) {
+                    runOnUiThread { applyCompanionLanguage() }
+                }
+            }
+        }
         emulatorEventsJob?.cancel()
         emulatorEventsJob = lifecycleScope.launch {
             launch {
@@ -436,7 +509,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             }
             launch {
                 view.getGLRetroErrors().collect { code ->
-                    Toast.makeText(this@MainActivity, "Error del núcleo de emulación ($code)", Toast.LENGTH_LONG).show()
+                    toast("Error del núcleo de emulación ($code)", "Emulation core error ($code)")
                 }
             }
         }
@@ -448,10 +521,13 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             QuickAction.SAVE_STATE -> lifecycleScope.launch {
                 val snapshot = repository.snapshot.value
                 if (snapshot.areaId == 0x0C01 || snapshot.mapId == 0x0C01) {
-                    Toast.makeText(this@MainActivity, "Espera a que termine el guardado del juego antes de crear un estado rápido", Toast.LENGTH_LONG).show()
+                    toast(
+                        "Espera a que termine el guardado del juego antes de crear un estado rápido",
+                        "Wait for the in-game save to finish before creating a quick state"
+                    )
                     return@launch
                 }
-                Toast.makeText(this@MainActivity, "Guardando estado rápido…", Toast.LENGTH_SHORT).show()
+                toast("Guardando estado rápido…", "Saving quick state…", Toast.LENGTH_SHORT)
                 val result = runCatching {
                     withContext(Dispatchers.IO) {
                         val saved = quickStateManager?.save(view) ?: error("Gestor no disponible")
@@ -461,13 +537,17 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 }
                 result.onSuccess { saved ->
                     virtualController?.stateAvailable = true
-                    Toast.makeText(this@MainActivity, "Estado + Memory Card guardados (${saved.stateBytes / 1024} KiB)", Toast.LENGTH_SHORT).show()
+                    toast(
+                        "Estado + Memory Card guardados (${saved.stateBytes / 1024} KiB)",
+                        "State + Memory Card saved (${saved.stateBytes / 1024} KiB)",
+                        Toast.LENGTH_SHORT
+                    )
                 }.onFailure {
-                    Toast.makeText(this@MainActivity, "No se pudo guardar: ${it.message}", Toast.LENGTH_LONG).show()
+                    toast("No se pudo guardar: ${it.message}", "Could not save: ${it.message}")
                 }
             }
             QuickAction.LOAD_STATE -> lifecycleScope.launch {
-                Toast.makeText(this@MainActivity, "Cargando estado rápido…", Toast.LENGTH_SHORT).show()
+                toast("Cargando estado rápido…", "Loading quick state…", Toast.LENGTH_SHORT)
                 val result = runCatching {
                     withContext(Dispatchers.IO) {
                         quickStateManager?.load(view)?.also { saveManager.persistSnapshot(it.memoryCard) }
@@ -475,11 +555,13 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 }
                 val loaded = result.getOrNull()
                 if (loaded != null) {
-                    Toast.makeText(this@MainActivity, "Estado y Memory Card cargados", Toast.LENGTH_SHORT).show()
+                    toast("Estado y Memory Card cargados", "State and Memory Card loaded", Toast.LENGTH_SHORT)
                 } else {
-                    val message = result.exceptionOrNull()?.message
+                    val spanish = result.exceptionOrNull()?.message
                         ?: "No hay un estado compatible o no pudo cargarse"
-                    Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
+                    val english = result.exceptionOrNull()?.message
+                        ?: "No compatible state is available or it could not be loaded"
+                    toast(spanish, english)
                 }
             }
             QuickAction.TOGGLE_SPEED -> {
@@ -487,7 +569,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 view.frameSpeed = if (fastForward) 2 else 1
                 view.applyRuntimeOptions()
                 virtualController?.fastForward = fastForward
-                Toast.makeText(this, if (fastForward) "Velocidad 2×" else "Velocidad normal", Toast.LENGTH_SHORT).show()
+                toast(
+                    if (fastForward) "Velocidad 2×" else "Velocidad normal",
+                    if (fastForward) "Speed 2×" else "Normal speed",
+                    Toast.LENGTH_SHORT
+                )
             }
             QuickAction.TOGGLE_MUTE -> {
                 muted = !muted
@@ -495,7 +581,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 view.applyRuntimeOptions()
                 getPreferences(MODE_PRIVATE).edit().putBoolean(PREF_MUTED, muted).apply()
                 virtualController?.muted = muted
-                Toast.makeText(this, if (muted) "Sonido desactivado" else "Sonido activado", Toast.LENGTH_SHORT).show()
+                toast(
+                    if (muted) "Sonido desactivado" else "Sonido activado",
+                    if (muted) "Sound off" else "Sound on",
+                    Toast.LENGTH_SHORT
+                )
             }
         }
     }
@@ -617,6 +707,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         localDashboard?.modsEnabled = modsEnabled
         localDashboard?.enabledCheats = enabledCheats
         localDashboard?.visitedMaps = visitedMaps
+        applyCompanionLanguage()
         presentation?.setModsEnabled(modsEnabled)
         presentation?.setEnabledCheats(enabledCheats)
         presentation?.setVisitedMaps(visitedMaps)
@@ -625,7 +716,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun restoreAutomaticBackup() {
         if (saveManager.restoreBackup()) {
             skipNextAutoSave = true
-            Toast.makeText(this, "Respaldo restaurado", Toast.LENGTH_LONG).show()
+            toast("Respaldo restaurado", "Backup restored")
             recreate()
         }
     }
@@ -649,7 +740,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             memoryController?.applyCheats(emptyList())
         }
         syncDashboardExtras()
-        Toast.makeText(this, if (enabled) "Pestaña Mods visible" else "Pestaña Mods oculta", Toast.LENGTH_SHORT).show()
+        toast(
+            if (enabled) "Pestaña Mods visible" else "Pestaña Mods oculta",
+            if (enabled) "Mods tab visible" else "Mods tab hidden",
+            Toast.LENGTH_SHORT
+        )
     }
 
     private fun rememberVisited(areaId: Int, mapId: Int) {
@@ -679,12 +774,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun requestFastTravel(areaId: Int) {
         val snapshot = repository.snapshot.value
         if (!snapshot.canFastTravel) {
-            Toast.makeText(this, "Viaje rápido bloqueado durante batalla o eventos", Toast.LENGTH_LONG).show()
+            toast("Viaje rápido bloqueado durante batalla o eventos", "Fast travel is blocked during battle or events")
             return
         }
         val controller = memoryController
         if (controller == null || retroView == null) {
-            Toast.makeText(this, "El viaje rápido requiere una partida en emulación", Toast.LENGTH_LONG).show()
+            toast("El viaje rápido requiere una partida en emulación", "Fast travel needs an emulated game session")
             return
         }
         val currentIcon = FastTravelCatalog.iconId(snapshot.areaId, snapshot.mapId)
@@ -714,41 +809,44 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 playPadSteps(FastTravelNavigator.closeMenu())
                 waitUntil(900) { !menuIsOpen() }
             }
-            Toast.makeText(
-                this@MainActivity,
+            val destination = CompanionUiText.area(resolvedLanguage(), areaId)
+            toast(
                 if (directToken != null) {
-                    "Destino ${AreaCatalog.name(areaId)} enviado directamente a Flawe con su spawn original."
+                    "Destino ${CompanionUiText.area(CompanionLanguage.SPANISH, areaId)} enviado directamente a Flawe con su spawn original."
                 } else {
                     "Firma directa no disponible; destino elegido con la cruceta de Flawe."
                 },
-                Toast.LENGTH_LONG
-            ).show()
+                if (directToken != null) {
+                    "Destination $destination sent directly to Flawe with its original spawn."
+                } else {
+                    "Direct signature unavailable; destination chosen with Flawe's D-pad."
+                }
+            )
         }
     }
 
     private fun openInGameMap() {
         val snapshot = repository.snapshot.value
         if (!snapshot.gameStarted) {
-            Toast.makeText(this, "Inicia una partida para abrir el mapa", Toast.LENGTH_LONG).show()
+            toast("Inicia una partida para abrir el mapa", "Start a game to open the map")
             return
         }
         if (retroView == null) {
-            Toast.makeText(this, "El mapa del juego requiere una partida en emulación", Toast.LENGTH_LONG).show()
+            toast("El mapa del juego requiere una partida en emulación", "The in-game map needs an emulated session")
             return
         }
         runTravelSequence {
             openMapTab()
-            Toast.makeText(
-                this@MainActivity,
+            toast(
                 "Mapa de Flawe. La cruceta cambia de icono, □ cambia de servidor y × confirma; el warp carga al salir completamente.",
-                Toast.LENGTH_LONG
-            ).show()
+                "Flawe map. D-pad changes icons, □ changes server and × confirms; the warp loads after you fully exit."
+            )
         }
     }
 
     private fun runTravelSequence(block: suspend () -> Unit) {
         if (travelJob?.isActive == true) {
-            Toast.makeText(this, "Espera a que termine la secuencia del mapa", Toast.LENGTH_SHORT).show()
+            toast("Espera a que termine la secuencia del mapa", "Wait for the map sequence to finish", Toast.LENGTH_SHORT)
             return
         }
         travelJob = lifecycleScope.launch {
@@ -820,7 +918,10 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun movePartyMember(fromIndex: Int, toIndex: Int) {
         val snapshot = repository.snapshot.value
         if (!snapshot.canReorderParty) {
-            Toast.makeText(this, "El orden del equipo solo se cambia fuera de batalla o eventos", Toast.LENGTH_LONG).show()
+            toast(
+                "El orden del equipo solo se cambia fuera de batalla o eventos",
+                "Party order can only be changed outside battle or events"
+            )
             return
         }
         val party = snapshot.party.map { it.profileId }.toMutableList()
@@ -829,12 +930,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         party.add(toIndex, moved)
         val controller = memoryController
         if (controller == null) {
-            Toast.makeText(this, "Reordenar requiere una partida en emulación", Toast.LENGTH_LONG).show()
+            toast("Reordenar requiere una partida en emulación", "Reordering needs an emulated game session")
             return
         }
         runCatching { controller.reorderParty(party) }
-            .onSuccess { Toast.makeText(this, "Orden de salida actualizado", Toast.LENGTH_SHORT).show() }
-            .onFailure { Toast.makeText(this, "No se pudo reordenar: ${it.message}", Toast.LENGTH_LONG).show() }
+            .onSuccess { toast("Orden de salida actualizado", "Battle order updated", Toast.LENGTH_SHORT) }
+            .onFailure { toast("No se pudo reordenar: ${it.message}", "Could not reorder: ${it.message}") }
     }
 
     private fun toggleCheat(id: String, enabled: Boolean) {
@@ -855,7 +956,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         val controller = memoryController ?: return
         val selected = enabledCheats.mapNotNull(CheatCatalog::byId)
         runCatching { controller.applyCheats(selected) }
-            .onFailure { Toast.makeText(this, "No se pudieron aplicar los mods: ${it.message}", Toast.LENGTH_LONG).show() }
+            .onFailure { toast("No se pudieron aplicar los mods: ${it.message}", "Could not apply mods: ${it.message}") }
     }
 
     private fun toggleVirtualControls() {
@@ -864,7 +965,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         virtualController?.gamepadVisible = next
         localDashboard?.controlsVisible = next
         presentation?.setControlsVisible(next)
-        Toast.makeText(this, if (next) "Controles virtuales visibles" else "Controles virtuales ocultos", Toast.LENGTH_SHORT).show()
+        toast(
+            if (next) "Controles virtuales visibles" else "Controles virtuales ocultos",
+            if (next) "Virtual controls visible" else "Virtual controls hidden",
+            Toast.LENGTH_SHORT
+        )
     }
 
     companion object {
@@ -878,6 +983,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         private const val PREF_ENABLED_CHEATS = "enabled_cheats"
         private const val PREF_VISITED_MAPS = "visited_maps"
         private const val PREF_PANE_ARRANGEMENT = "pane_arrangement"
+        private const val PREF_LANGUAGE = "companion_language"
         private val GAME_KEYS = setOf(
             KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
             KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BUTTON_X, KeyEvent.KEYCODE_BUTTON_Y,

@@ -15,10 +15,12 @@ object DwTextDecoder {
         0x68 to "Á", 0x69 to "É", 0x6A to "Í", 0x6B to "Ó", 0x6C to "Ú"
     )
 
-    fun decode(bytes: ByteArray): String {
+    fun decode(bytes: ByteArray): String = decode(bytes, 0)
+
+    fun decode(bytes: ByteArray, start: Int, maxChars: Int = 240): String {
         val out = StringBuilder()
-        var index = 0
-        while (index < bytes.size && out.length < 240) {
+        var index = start.coerceAtLeast(0)
+        while (index < bytes.size && out.length < maxChars) {
             val value = bytes[index].toInt() and 0xFF
             when {
                 value == 0x00 -> break

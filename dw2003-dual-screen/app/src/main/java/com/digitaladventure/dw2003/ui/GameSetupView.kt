@@ -11,6 +11,7 @@ import android.widget.ScrollView
 import android.widget.Space
 import android.widget.TextView
 import com.digitaladventure.dw2003.R
+import com.digitaladventure.dw2003.data.CompanionLanguage
 
 @SuppressLint("ViewConstructor")
 class GameSetupView(
@@ -26,6 +27,9 @@ class GameSetupView(
     onModsChanged: ((Boolean) -> Unit)? = null,
     paneArrangementLabel: String = "Automático",
     onPaneArrangement: (() -> Unit)? = null,
+    language: CompanionLanguage = CompanionLanguage.SPANISH,
+    languageLabel: String = "Automático / Auto",
+    onLanguage: (() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
     allowDemo: Boolean = onClose == null,
     hasBackup: Boolean = false,
@@ -50,41 +54,60 @@ class GameSetupView(
             letterSpacing = .12f
         })
         content.addView(Space(context), LinearLayout.LayoutParams(1, dp(24)))
-        content.addView(label("POC NATIVO PARA AYN THOR + GALAXY Z FOLD", 12f, MUTED, true))
-        content.addView(label(context.getString(R.string.setup_legal), 13f, Color.rgb(189, 210, 219), false).apply {
+        content.addView(label(
+            pick(language, "POC NATIVO PARA AYN THOR + GALAXY Z FOLD", "NATIVE POC FOR AYN THOR + GALAXY Z FOLD"),
+            12f,
+            MUTED,
+            true
+        ))
+        content.addView(label(
+            pick(
+                language,
+                context.getString(R.string.setup_legal),
+                "Select your personal copy of Digimon World 2003 (Europe). The app does not include a ROM, BIOS, or game assets."
+            ),
+            13f,
+            Color.rgb(189, 210, 219),
+            false
+        ).apply {
             gravity = Gravity.CENTER
             maxWidth = dp(620)
             setPadding(0, dp(14), 0, dp(22))
         })
-        content.addView(actionButton(context.getString(R.string.select_rom), onSelectRom))
+        content.addView(actionButton(pick(language, context.getString(R.string.select_rom), "Select BIN"), onSelectRom))
         if (allowDemo) {
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(9)))
-            content.addView(actionButton(context.getString(R.string.demo_mode), onDemo, outlined = true))
+            content.addView(actionButton(pick(language, context.getString(R.string.demo_mode), "Explore interface"), onDemo, outlined = true))
         }
         content.addView(Space(context), LinearLayout.LayoutParams(1, dp(19)))
-        content.addView(label("ARCHIVOS DEL USUARIO", 10f, CYAN, true))
+        content.addView(label(pick(language, "ARCHIVOS DEL USUARIO", "USER FILES"), 10f, CYAN, true))
         content.addView(label(
-            "BIOS: ${if (biosInstalled) "INSTALADO" else "HLE / NO IMPORTADO"}  ·  MEMORY CARD: ${if (hasSave) "128 KiB" else "SIN PARTIDA"}",
+            "BIOS: ${if (biosInstalled) pick(language, "INSTALADO", "INSTALLED") else "HLE / ${pick(language, "NO IMPORTADO", "NOT IMPORTED")}"}  ·  MEMORY CARD: ${if (hasSave) "128 KiB" else pick(language, "SIN PARTIDA", "NO SAVE")}",
             11f,
             MUTED,
             false
         ).apply { setPadding(0, dp(7), 0, dp(10)) })
-        content.addView(actionButton(context.getString(R.string.import_bios), onImportBios, outlined = true))
+        content.addView(actionButton(pick(language, context.getString(R.string.import_bios), "Import European BIOS"), onImportBios, outlined = true))
         content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
-        content.addView(actionButton(context.getString(R.string.import_save), onImportSave, outlined = true))
+        content.addView(actionButton(pick(language, context.getString(R.string.import_save), "Import Memory Card"), onImportSave, outlined = true))
         content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
-        content.addView(actionButton(context.getString(R.string.export_save), onExportSave, outlined = true, enabled = hasSave))
+        content.addView(actionButton(pick(language, context.getString(R.string.export_save), "Export Memory Card"), onExportSave, outlined = true, enabled = hasSave))
         content.addView(Space(context), LinearLayout.LayoutParams(1, dp(19)))
-        content.addView(label("OPCIONES DE LA APP", 10f, CYAN, true))
+        content.addView(label(pick(language, "OPCIONES DE LA APP", "APP OPTIONS"), 10f, CYAN, true))
         var modsOn = modsEnabled
+        fun modsLabel(enabled: Boolean) = if (enabled) {
+            pick(language, "Pestaña de mods: activa", "Mods tab: on")
+        } else {
+            pick(language, "Pestaña de mods: oculta", "Mods tab: hidden")
+        }
         val modsButton = actionButton(
-            if (modsOn) "Pestaña de mods: activa" else "Pestaña de mods: oculta",
+            modsLabel(modsOn),
             {},
             outlined = !modsOn
         )
         modsButton.setOnClickListener {
             modsOn = !modsOn
-            modsButton.text = if (modsOn) "Pestaña de mods: activa" else "Pestaña de mods: oculta"
+            modsButton.text = modsLabel(modsOn)
             modsButton.background = GradientDrawable().apply {
                 cornerRadius = dp(8).toFloat()
                 setColor(if (modsOn) CYAN else Color.TRANSPARENT)
@@ -96,7 +119,11 @@ class GameSetupView(
         content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
         content.addView(modsButton)
         content.addView(label(
-            "Si la activas, la segunda pantalla muestra una pestaña Mods con códigos PAL opcionales.",
+            pick(
+                language,
+                "Si la activas, la segunda pantalla muestra una pestaña Mods con códigos PAL opcionales.",
+                "When enabled, the second screen shows a Mods tab with optional PAL codes."
+            ),
             11f,
             MUTED,
             false
@@ -105,29 +132,71 @@ class GameSetupView(
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
             content.addView(
                 actionButton(
-                    "Distribución de pantallas: $paneArrangementLabel",
+                    "${pick(language, "Distribución de pantallas", "Screen layout")}: $paneArrangementLabel",
                     onPaneArrangement,
                     outlined = true
                 )
             )
         }
+        if (onLanguage != null) {
+            content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
+            content.addView(
+                actionButton(
+                    "${pick(language, "Idioma del panel", "Companion language")}: $languageLabel",
+                    onLanguage,
+                    outlined = true
+                )
+            )
+            content.addView(label(
+                pick(
+                    language,
+                    "Automático sigue la guía de Flawe. En español, si el menú START no muestra walkthrough, el panel usa pistas propias.",
+                    "Automatic follows Flawe's walkthrough. Spanish uses companion hints when START has no in-game guide."
+                ),
+                11f,
+                MUTED,
+                false
+            ).apply { setPadding(0, dp(8), 0, 0) })
+        }
         if (onRestoreBackup != null) {
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
-            content.addView(actionButton("Restaurar respaldo automático", onRestoreBackup, outlined = true, enabled = hasBackup))
+            content.addView(actionButton(
+                pick(language, "Restaurar respaldo automático", "Restore automatic backup"),
+                onRestoreBackup,
+                outlined = true,
+                enabled = hasBackup
+            ))
         }
         if (onReturnToStart != null) {
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
-            content.addView(actionButton("Volver a la pantalla inicial", onReturnToStart, outlined = true))
+            content.addView(actionButton(
+                pick(language, "Volver a la pantalla inicial", "Return to the start screen"),
+                onReturnToStart,
+                outlined = true
+            ))
         }
         if (onClose != null) {
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(16)))
-            content.addView(actionButton("Volver al juego", onClose, outlined = true))
+            content.addView(actionButton(pick(language, "Volver al juego", "Return to the game"), onClose, outlined = true))
         }
         content.addView(Space(context), LinearLayout.LayoutParams(1, dp(20)))
-        content.addView(label("ROM compatibles verificadas: SLES-03936 original y Flawe's Mod 2.0 combinado", 11f, MUTED, false))
+        content.addView(label(
+            pick(
+                language,
+                "ROM compatibles verificadas: SLES-03936 original y Flawe's Mod 2.0 combinado",
+                "Verified compatible ROMs: original SLES-03936 and combined Flawe's Mod 2.0"
+            ),
+            11f,
+            MUTED,
+            false
+        ))
         if (!biosInstalled) {
             content.addView(label(
-                "Sin BIOS europeo el guardado dentro del juego puede quedarse en «Comprobando la Tarjeta de Memoria». Importa scph5502 o un BIOS PAL de 512 KiB.",
+                pick(
+                    language,
+                    "Sin BIOS europeo el guardado dentro del juego puede quedarse en «Comprobando la Tarjeta de Memoria». Importa scph5502 o un BIOS PAL de 512 KiB.",
+                    "Without a European BIOS, in-game saving can freeze on “Checking Memory Card”. Import scph5502 or a 512 KiB PAL BIOS."
+                ),
                 11f,
                 Color.rgb(244, 181, 61),
                 false
@@ -158,6 +227,9 @@ class GameSetupView(
         }
         setOnClickListener { action() }
     }
+
+    private fun pick(language: CompanionLanguage, spanish: String, english: String) =
+        CompanionUiText.pick(language, spanish, english)
 
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 

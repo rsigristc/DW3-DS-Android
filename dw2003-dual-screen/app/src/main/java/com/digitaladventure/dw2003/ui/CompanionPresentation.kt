@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.Display
 import android.view.WindowManager
+import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.model.GameSnapshot
 
 class CompanionPresentation(
@@ -25,4 +26,5 @@ class CompanionPresentation(
     fun setModsEnabled(enabled: Boolean) { dashboard.modsEnabled = enabled }
     fun setEnabledCheats(ids: Set<String>) { dashboard.enabledCheats = ids }
     fun setVisitedMaps(ids: Set<Int>) { dashboard.visitedMaps = ids }
+    fun setLanguage(value: CompanionLanguage) { dashboard.language = value }
 }

@@ -14,11 +14,13 @@ import android.view.View
 import com.digitaladventure.dw2003.R
 import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatCatalog
+import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.data.FastTravelCatalog
 import com.digitaladventure.dw2003.data.LocationResolver
 import com.digitaladventure.dw2003.data.MapRegionCatalog
 import com.digitaladventure.dw2003.data.ServerRegion
 import com.digitaladventure.dw2003.data.SectorRegion
+import com.digitaladventure.dw2003.data.WalkthroughCatalog
 import com.digitaladventure.dw2003.model.DigimonState
 import com.digitaladventure.dw2003.model.GameMode
 import com.digitaladventure.dw2003.model.GameSnapshot
@@ -33,7 +35,6 @@ class DigiviceDashboardView(
     private val actions: DashboardActions
 ) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val numberFormat = NumberFormat.getIntegerInstance(Locale("es", "MX"))
     private val hitTargets = mutableListOf<Pair<RectF, () -> Unit>>()
     private var snapshot = GameSnapshot.waiting()
     private val dashboardPreferences = context.getSharedPreferences("dw2003_dashboard", Context.MODE_PRIVATE)
@@ -62,6 +63,15 @@ class DigiviceDashboardView(
         set(value) { field = value; invalidate() }
     var visitedMaps: Set<Int> = emptySet()
         set(value) { field = value; invalidate() }
+    var language: CompanionLanguage = CompanionLanguage.SPANISH
+        set(value) {
+            field = value
+            contentDescription = tr(
+                "Panel complementario de Digimon World 2003",
+                "Digimon World 2003 companion panel"
+            )
+            invalidate()
+        }
     private val tamerIdle: Bitmap by lazy { transparentSprite(R.drawable.tamer_idle) }
     private val tamerFishing: Bitmap by lazy { transparentSprite(R.drawable.tamer_fishing) }
     private val digimonSprites: Map<Int, Bitmap> by lazy {
@@ -96,8 +106,19 @@ class DigiviceDashboardView(
     init {
         isClickable = true
         isFocusable = true
-        contentDescription = "Panel complementario de Digimon World 2003"
+        contentDescription = tr(
+            "Panel complementario de Digimon World 2003",
+            "Digimon World 2003 companion panel"
+        )
     }
+
+    private fun tr(spanish: String, english: String): String =
+        CompanionUiText.pick(language, spanish, english)
+
+    private val numberFormat: NumberFormat
+        get() = NumberFormat.getIntegerInstance(
+            if (language == CompanionLanguage.ENGLISH) Locale.US else Locale("es", "MX")
+        )
 
     fun submitSnapshot(value: GameSnapshot) {
         val selectedProfile = snapshot.party.getOrNull(selectedPartyIndex)?.profileId
@@ -138,11 +159,20 @@ class DigiviceDashboardView(
     }
 
     private fun drawHeader(canvas: Canvas, margin: Float, bottom: Float) {
-        drawText(canvas, snapshot.locationTitle.uppercase(), margin, dp(27f), dp(17f), WHITE, true)
-        drawText(canvas, "${snapshot.locationDetail.uppercase()} · HISTORIA ${snapshot.storyStage}", margin, dp(49f), dp(9f), MUTED)
+        val title = CompanionUiText.locationTitle(language, snapshot.areaId, snapshot.mapId)
+        val detail = CompanionUiText.locationDetail(language, snapshot.areaId, snapshot.mapId)
+        drawText(canvas, title.uppercase(), margin, dp(27f), dp(17f), WHITE, true)
+        drawText(
+            canvas,
+            "${detail.uppercase()} · ${tr("HISTORIA", "STORY")} ${snapshot.storyStage}",
+            margin,
+            dp(49f),
+            dp(9f),
+            MUTED
+        )
         val status = when {
-            !snapshot.gameStarted -> "○ ESPERANDO PARTIDA"
-            snapshot.isLive -> "● RAM EN VIVO"
+            !snapshot.gameStarted -> tr("○ ESPERANDO PARTIDA", "○ WAITING FOR GAME")
+            snapshot.isLive -> tr("● RAM EN VIVO", "● LIVE RAM")
             else -> "◇ DEMO"
         }
         val appButton = RectF(width - margin - dp(58f), dp(8f), width - margin, dp(35f))
@@ -156,18 +186,30 @@ class DigiviceDashboardView(
         hitTargets += padButton to actions.onToggleControls
         val statusColor = if (snapshot.gameStarted && snapshot.isLive) GREEN else AMBER
         drawText(canvas, status, padButton.left - dp(8f), dp(27f), dp(10f), statusColor, true, Paint.Align.RIGHT)
-        val tabLabel = if (selectedTab == TAB_MODS) "Mods" else selectedMode.label
+        val tabLabel = if (selectedTab == TAB_MODS) "Mods" else CompanionUiText.mode(language, selectedMode)
         drawText(canvas, tabLabel.uppercase(), width - margin, dp(49f), dp(10f), CYAN, true, Paint.Align.RIGHT)
         paint.color = CYAN_DARK
         canvas.drawRect(margin, bottom - dp(2f), width - margin, bottom, paint)
     }
 
     private fun drawWaitingForGame(canvas: Canvas, bounds: RectF) {
-        drawPanel(canvas, bounds, "SESIÓN DE JUEGO")
-        drawText(canvas, "PARTIDA AÚN NO INICIADA", bounds.centerX(), bounds.centerY() - dp(16f), dp(18f), WHITE, true, Paint.Align.CENTER)
+        drawPanel(canvas, bounds, tr("SESIÓN DE JUEGO", "GAME SESSION"))
+        drawText(
+            canvas,
+            tr("PARTIDA AÚN NO INICIADA", "GAME NOT STARTED YET"),
+            bounds.centerX(),
+            bounds.centerY() - dp(16f),
+            dp(18f),
+            WHITE,
+            true,
+            Paint.Align.CENTER
+        )
         drawWrapped(
             canvas,
-            "Completa la introducción o carga una partida. El área, el objetivo y la formación aparecerán cuando la RAM contenga una sesión válida.",
+            tr(
+                "Completa la introducción o carga una partida. El área, el objetivo y la formación aparecerán cuando la RAM contenga una sesión válida.",
+                "Finish the intro or load a save. Area, objective and party appear once RAM holds a valid session."
+            ),
             bounds.left + dp(24f),
             bounds.centerY() + dp(15f),
             bounds.width() - dp(48f),
@@ -195,7 +237,8 @@ class DigiviceDashboardView(
         val location = LocationResolver.resolve(snapshot.areaId, snapshot.mapId)
         val mapRegion = MapRegionCatalog.resolve(location.publicMapId)
         val region = if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(snapshot.areaId) else mapRegion
-        drawPanel(canvas, bounds, "RADAR REGIONAL · ${snapshot.serverName.uppercase()}")
+        val server = CompanionUiText.server(language, region.server)
+        drawPanel(canvas, bounds, "${tr("RADAR REGIONAL", "REGIONAL RADAR")} · ${server.uppercase()}")
         val map = RectF(bounds.left + dp(13f), bounds.top + dp(31f), bounds.right - dp(13f), bounds.bottom - dp(25f))
         val radar = radarBitmaps[region.server to region.sector]
             ?: radarBitmaps[region.server to SectorRegion.UNKNOWN]
@@ -212,9 +255,27 @@ class DigiviceDashboardView(
         canvas.drawLine(map.centerX() - dp(12f), map.centerY(), map.centerX() + dp(12f), map.centerY(), paint)
         canvas.drawLine(map.centerX(), map.centerY() - dp(12f), map.centerX(), map.centerY() + dp(12f), paint)
         paint.style = Paint.Style.FILL
-        drawText(canvas, snapshot.radarLabel.uppercase(), bounds.centerX(), bounds.bottom - dp(8f), dp(7.5f), MUTED, true, Paint.Align.CENTER)
+        drawText(
+            canvas,
+            CompanionUiText.locationRadar(language, snapshot.areaId, snapshot.mapId).uppercase(),
+            bounds.centerX(),
+            bounds.bottom - dp(8f),
+            dp(7.5f),
+            MUTED,
+            true,
+            Paint.Align.CENTER
+        )
         if (snapshot.gameStarted) {
-            drawText(canvas, "TOCA EL MAPA PARA VIAJE RÁPIDO", bounds.centerX(), bounds.top + dp(28f), dp(7f), CYAN, true, Paint.Align.CENTER)
+            drawText(
+                canvas,
+                tr("TOCA EL MAPA PARA VIAJE RÁPIDO", "TAP THE MAP FOR FAST TRAVEL"),
+                bounds.centerX(),
+                bounds.top + dp(28f),
+                dp(7f),
+                CYAN,
+                true,
+                Paint.Align.CENTER
+            )
             hitTargets += map to {
                 travelMenuOpen = true
                 travelScroll = 0f
@@ -226,11 +287,25 @@ class DigiviceDashboardView(
     private fun drawObjectiveAndTamer(canvas: Canvas, bounds: RectF) {
         val objectiveHeight = min(bounds.height() * .38f, dp(118f))
         val objective = RectF(bounds.left, bounds.top, bounds.right, bounds.top + objectiveHeight)
-        drawPanel(canvas, objective, "OBJETIVO ACTUAL")
-        drawWrapped(canvas, snapshot.objective, objective.left + dp(12f), objective.top + dp(38f), objective.width() - dp(24f), dp(11f), WHITE, 5)
+        drawPanel(canvas, objective, tr("OBJETIVO ACTUAL", "CURRENT OBJECTIVE"))
+        drawWrapped(
+            canvas,
+            WalkthroughCatalog.localized(
+                snapshot.objective,
+                snapshot.storyStage,
+                language,
+                snapshot.mapId.takeIf { it != 0 } ?: snapshot.areaId
+            ),
+            objective.left + dp(12f),
+            objective.top + dp(38f),
+            objective.width() - dp(24f),
+            dp(11f),
+            WHITE,
+            5
+        )
 
         val tamerBounds = RectF(bounds.left, objective.bottom + dp(7f), bounds.right, bounds.bottom)
-        drawPanel(canvas, tamerBounds, "ESTADO DEL TAMER")
+        drawPanel(canvas, tamerBounds, tr("ESTADO DEL TAMER", "TAMER STATUS"))
         val showFishing = snapshot.isFishing || fishingPreview
         val sprite = if (showFishing) tamerFishing else tamerIdle
         val spriteBounds = RectF(
@@ -243,14 +318,18 @@ class DigiviceDashboardView(
         val textX = max(spriteBounds.right + dp(13f), tamerBounds.left + tamerBounds.width() * .43f)
         drawText(canvas, "TAMER · ${snapshot.tamerName.uppercase()}", textX, tamerBounds.top + dp(47f), dp(14f), WHITE, true)
         val activity = when {
-            snapshot.isFishing -> "PESCANDO"
-            fishingPreview -> "VISTA DE PESCA"
-            else -> "EXPLORANDO"
+            snapshot.isFishing -> tr("PESCANDO", "FISHING")
+            fishingPreview -> tr("VISTA DE PESCA", "FISHING PREVIEW")
+            else -> tr("EXPLORANDO", "EXPLORING")
         }
-        drawText(canvas, "ACTIVIDAD  $activity", textX, tamerBounds.top + dp(69f), dp(9f), CYAN, true)
+        drawText(canvas, "${tr("ACTIVIDAD", "ACTIVITY")}  $activity", textX, tamerBounds.top + dp(69f), dp(9f), CYAN, true)
         drawText(canvas, "BITS", textX, tamerBounds.top + dp(96f), dp(8f), MUTED, true)
         drawText(canvas, formatNumber(snapshot.bits), textX, tamerBounds.top + dp(119f), dp(18f), AMBER, true)
-        val fishingText = if (snapshot.fishingAvailable) "PESCA DISPONIBLE · TOCA PARA PREVISUALIZAR" else "SIN PUNTO DE PESCA EN ESTA ÁREA"
+        val fishingText = if (snapshot.fishingAvailable) {
+            tr("PESCA DISPONIBLE · TOCA PARA PREVISUALIZAR", "FISHING AVAILABLE · TAP TO PREVIEW")
+        } else {
+            tr("SIN PUNTO DE PESCA EN ESTA ÁREA", "NO FISHING SPOT IN THIS AREA")
+        }
         drawWrapped(canvas, fishingText, textX, tamerBounds.top + dp(143f), tamerBounds.right - textX - dp(12f), dp(7.5f), MUTED, 2)
         if (snapshot.fishingAvailable) {
             hitTargets += tamerBounds to {
@@ -261,7 +340,7 @@ class DigiviceDashboardView(
     }
 
     private fun drawBattle(canvas: Canvas, bounds: RectF) {
-        drawPanel(canvas, bounds, "TELEMETRÍA DE BATALLA")
+        drawPanel(canvas, bounds, tr("TELEMETRÍA DE BATALLA", "BATTLE TELEMETRY"))
         val party = snapshot.party.take(3)
         val horizontal = bounds.width() > dp(560f)
         party.forEachIndexed { index, digimon ->
@@ -276,9 +355,9 @@ class DigiviceDashboardView(
             drawDigimonCard(canvas, card, digimon, compact = !horizontal, partyIndex = index)
         }
         val note = if (snapshot.canReorderParty) {
-            "TOCA ▲▼ PARA CAMBIAR EL ORDEN DE SALIDA"
+            tr("TOCA ▲▼ PARA CAMBIAR EL ORDEN DE SALIDA", "TAP ▲▼ TO CHANGE BATTLE ORDER")
         } else {
-            "REORDENAR SOLO FUERA DE BATALLA O EVENTOS"
+            tr("REORDENAR SOLO FUERA DE BATALLA O EVENTOS", "REORDER ONLY OUTSIDE BATTLE OR EVENTS")
         }
         drawText(canvas, note, bounds.centerX(), bounds.bottom - dp(12f), dp(7.5f), if (snapshot.canReorderParty) CYAN else MUTED, true, Paint.Align.CENTER)
     }
@@ -330,7 +409,11 @@ class DigiviceDashboardView(
         drawMetricLine(canvas, "HP ${digimon.currentHp}/${digimon.maxHp}", left, y + dp(25f), barX, barW, digimon.hpFraction, GREEN)
         drawMetricLine(canvas, "MP ${digimon.currentMp}/${digimon.maxMp}", left, y + dp(37f), barX, barW, digimon.mpFraction, BLUE)
         val next = digimon.nextLevelExperience
-        val expLabel = if (next == null) "EXP ${digimon.experience} · MÁX." else "EXP ${digimon.experience}/$next"
+        val expLabel = if (next == null) {
+            "EXP ${digimon.experience} · ${tr("MÁX.", "MAX")}"
+        } else {
+            "EXP ${digimon.experience}/$next"
+        }
         drawMetricLine(canvas, expLabel, left, y + dp(49f), barX, barW, digimon.experienceFraction, AMBER)
     }
 
@@ -368,16 +451,20 @@ class DigiviceDashboardView(
         if (bounds.height() > dp(145f)) {
             drawBar(canvas, x, bounds.top + dp(121f), w, dp(7f), digimon.experienceFraction, AMBER)
             val next = digimon.nextLevelExperience
-            val exp = if (next == null) "EXP ${digimon.experience} · NIVEL MÁX." else "EXP ${digimon.experience} / $next · FALTAN ${digimon.experienceRemaining}"
+            val exp = if (next == null) {
+                "EXP ${digimon.experience} · ${tr("NIVEL MÁX.", "MAX LEVEL")}"
+            } else {
+                "EXP ${digimon.experience} / $next · ${tr("FALTAN", "LEFT")} ${digimon.experienceRemaining}"
+            }
             drawText(canvas, exp, x, bounds.top + dp(143f), dp(8f), WHITE)
         }
         if (bounds.height() > dp(165f)) {
-            drawText(canvas, "DIGIEVOLUCIÓN · ${digimon.activeDigievolutionName.uppercase()}", x, bounds.top + dp(161f), dp(7.5f), CYAN, true)
+            drawText(canvas, "${tr("DIGIEVOLUCIÓN", "DIGIVOLUTION")} · ${digimon.activeDigievolutionName.uppercase()}", x, bounds.top + dp(161f), dp(7.5f), CYAN, true)
         }
     }
 
     private fun drawIdentity(canvas: Canvas, bounds: RectF, digimon: DigimonState, vertical: Boolean) {
-        drawPanel(canvas, bounds, "PARTNER / ESTADO  ·  ${selectedPartyIndex + 1}/${snapshot.party.size}")
+        drawPanel(canvas, bounds, "${tr("PARTNER / ESTADO", "PARTNER / STATUS")}  ·  ${selectedPartyIndex + 1}/${snapshot.party.size}")
         val arrowSize = dp(34f)
         val arrowY = bounds.top + dp(29f)
         val leftArrow = RectF(bounds.left + dp(8f), arrowY, bounds.left + dp(8f) + arrowSize, arrowY + arrowSize)
@@ -392,20 +479,31 @@ class DigiviceDashboardView(
         val portrait = RectF(bounds.centerX() - dp(18f), bounds.top + dp(28f), bounds.centerX() + dp(18f), bounds.top + dp(64f))
         digimonSprites[digimon.profileId]?.let { drawPixelBitmap(canvas, it, portrait, dp(34f)) }
         drawText(canvas, digimon.name.uppercase(), bounds.centerX(), bounds.top + dp(80f), if (vertical) dp(15f) else dp(17f), WHITE, true, Paint.Align.CENTER)
-        drawText(canvas, "NIVEL ${digimon.level}  ·  TP ${digimon.trainingPoints}", bounds.centerX(), bounds.top + dp(96f), dp(8f), CYAN, true, Paint.Align.CENTER)
+        drawText(canvas, "${tr("NIVEL", "LEVEL")} ${digimon.level}  ·  TP ${digimon.trainingPoints}", bounds.centerX(), bounds.top + dp(96f), dp(8f), CYAN, true, Paint.Align.CENTER)
         val x = bounds.left + dp(12f)
         val w = bounds.width() - dp(24f)
         drawLabeledBar(canvas, "HP ${digimon.currentHp}/${digimon.maxHp}", x, bounds.top + dp(107f), w, digimon.hpFraction, GREEN)
         drawLabeledBar(canvas, "MP ${digimon.currentMp}/${digimon.maxMp}", x, bounds.top + dp(129f), w, digimon.mpFraction, BLUE)
         val next = digimon.nextLevelExperience
-        val exp = if (next == null) "EXP ${digimon.experience} · NIVEL MÁX." else "EXP ${digimon.experience}/$next · FALTAN ${digimon.experienceRemaining}"
+        val exp = if (next == null) {
+            "EXP ${digimon.experience} · ${tr("NIVEL MÁX.", "MAX LEVEL")}"
+        } else {
+            "EXP ${digimon.experience}/$next · ${tr("FALTAN", "LEFT")} ${digimon.experienceRemaining}"
+        }
         drawLabeledBar(canvas, exp, x, bounds.top + dp(151f), w, digimon.experienceFraction, AMBER)
-        drawText(canvas, "DIGIEVOLUCIÓN · ${digimon.activeDigievolutionName.uppercase()}  NV ${digimon.activeDigievolutionLevel}", x, bounds.top + dp(181f), dp(7.5f), CYAN, true)
+        drawText(canvas, "${tr("DIGIEVOLUCIÓN", "DIGIVOLUTION")} · ${digimon.activeDigievolutionName.uppercase()}  LV ${digimon.activeDigievolutionLevel}", x, bounds.top + dp(181f), dp(7.5f), CYAN, true)
     }
 
     private fun drawParameters(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
-        drawPanel(canvas, bounds, "PARÁMETROS EN RAM")
-        val values = listOf("FUERZA" to digimon.strength, "DEFENSA" to digimon.defense, "ESPÍRITU" to digimon.spirit, "SABIDURÍA" to digimon.wisdom, "VELOCIDAD" to digimon.speed, "CARISMA" to digimon.charisma)
+        drawPanel(canvas, bounds, tr("PARÁMETROS EN RAM", "RAM PARAMETERS"))
+        val values = listOf(
+            tr("FUERZA", "STRENGTH") to digimon.strength,
+            tr("DEFENSA", "DEFENSE") to digimon.defense,
+            tr("ESPÍRITU", "SPIRIT") to digimon.spirit,
+            tr("SABIDURÍA", "WISDOM") to digimon.wisdom,
+            tr("VELOCIDAD", "SPEED") to digimon.speed,
+            tr("CARISMA", "CHARISMA") to digimon.charisma
+        )
         val columns = if (bounds.width() > dp(300f)) 3 else 2
         val rows = (values.size + columns - 1) / columns
         val cellW = (bounds.width() - dp(20f)) / columns
@@ -419,8 +517,16 @@ class DigiviceDashboardView(
     }
 
     private fun drawElementsAndSkills(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
-        drawPanel(canvas, bounds, "RESISTENCIAS ELEMENTALES")
-        val names = listOf("FUEGO", "AGUA", "HIELO", "VIENTO", "RAYO", "MÁQUINA", "OSCURIDAD")
+        drawPanel(canvas, bounds, tr("RESISTENCIAS ELEMENTALES", "ELEMENTAL RESISTS"))
+        val names = listOf(
+            tr("FUEGO", "FIRE"),
+            tr("AGUA", "WATER"),
+            tr("HIELO", "ICE"),
+            tr("VIENTO", "WIND"),
+            tr("RAYO", "THUNDER"),
+            tr("MÁQUINA", "MACHINE"),
+            tr("OSCURIDAD", "DARKNESS")
+        )
         val values = names.zip(digimon.tolerances + List(max(0, names.size - digimon.tolerances.size)) { 0 })
         val columns = if (bounds.width() > dp(310f)) 4 else 2
         val rows = (values.size + columns - 1) / columns
@@ -437,17 +543,26 @@ class DigiviceDashboardView(
         val skillTop = bounds.bottom - skillHeight
         paint.color = CYAN_DARK
         canvas.drawRect(bounds.left + dp(10f), skillTop, bounds.right - dp(10f), skillTop + dp(1f), paint)
-        drawText(canvas, "HABILIDADES · ${digimon.activeDigievolutionName.uppercase()}", bounds.left + dp(10f), skillTop + dp(18f), dp(7.5f), CYAN, true)
+        drawText(canvas, "${tr("HABILIDADES", "SKILLS")} · ${digimon.activeDigievolutionName.uppercase()}", bounds.left + dp(10f), skillTop + dp(18f), dp(7.5f), CYAN, true)
         val skills = digimon.activeSkills
-        val text = if (skills.isEmpty()) "Sin técnicas identificadas" else skills.joinToString("  ·  ") { skill ->
+        val text = if (skills.isEmpty()) {
+            tr("Sin técnicas identificadas", "No techniques identified")
+        } else skills.joinToString("  ·  ") { skill ->
             "${skill.name} · MP ${skill.mp?.toString() ?: "—"}"
         }
         drawWrapped(canvas, text, bounds.left + dp(10f), skillTop + dp(39f), bounds.width() - dp(20f), dp(8f), WHITE, 2)
     }
 
     private fun drawEquipment(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
-        drawPanel(canvas, bounds, "EQUIPO Y BONIFICACIONES")
-        val slots = listOf("CABEZA", "CUERPO", "MANO DER.", "MANO IZQ.", "ACCESORIO 1", "ACCESORIO 2")
+        drawPanel(canvas, bounds, tr("EQUIPO Y BONIFICACIONES", "EQUIPMENT AND BONUSES"))
+        val slots = listOf(
+            tr("CABEZA", "HEAD"),
+            tr("CUERPO", "BODY"),
+            tr("MANO DER.", "RIGHT HAND"),
+            tr("MANO IZQ.", "LEFT HAND"),
+            tr("ACCESORIO 1", "ACCESSORY 1"),
+            tr("ACCESORIO 2", "ACCESSORY 2")
+        )
         val rowHeight = (bounds.height() - dp(30f)) / slots.size
         slots.forEachIndexed { index, slot ->
             val top = bounds.top + dp(27f) + index * rowHeight
@@ -457,10 +572,14 @@ class DigiviceDashboardView(
                 canvas.drawRect(bounds.left + dp(9f), top - dp(2f), bounds.right - dp(9f), top - dp(1f), paint)
             }
             drawText(canvas, slot, bounds.left + dp(10f), top + dp(9f), dp(6.5f), MUTED, true)
-            val name = info?.name ?: "— VACÍO —"
+            val name = info?.name ?: tr("— VACÍO —", "— EMPTY —")
             drawText(canvas, name, bounds.left + dp(10f), top + dp(21f), dp(8f), WHITE, true)
             if (info != null && rowHeight > dp(31f)) {
-                drawText(canvas, info.stats, bounds.left + dp(10f), top + dp(32f), dp(6.5f), CYAN)
+                val stats = listOfNotNull(
+                    CompanionUiText.equipmentType(language, info.type).takeIf { it.isNotBlank() },
+                    CompanionUiText.equipmentStats(language, info.stats)
+                ).joinToString(" · ")
+                drawText(canvas, stats, bounds.left + dp(10f), top + dp(32f), dp(6.5f), CYAN)
             }
         }
     }
@@ -508,17 +627,17 @@ class DigiviceDashboardView(
     }
 
     private fun visibleTabs(): List<Pair<String, String>> {
-        val tabs = GameMode.entries.map { it.name to it.label }.toMutableList()
+        val tabs = GameMode.entries.map { it.name to CompanionUiText.mode(language, it) }.toMutableList()
         if (modsEnabled) tabs += TAB_MODS to "Mods"
         return tabs
     }
 
     private fun drawFastTravelMenu(canvas: Canvas, bounds: RectF) {
-        drawPanel(canvas, bounds, "VIAJE RÁPIDO · DESTINOS VISITADOS")
+        drawPanel(canvas, bounds, tr("VIAJE RÁPIDO · DESTINOS VISITADOS", "FAST TRAVEL · VISITED DESTINATIONS"))
         val close = RectF(bounds.right - dp(78f), bounds.top + dp(6f), bounds.right - dp(10f), bounds.top + dp(28f))
         paint.color = PANEL_INNER
         canvas.drawRoundRect(close, dp(5f), dp(5f), paint)
-        drawText(canvas, "CERRAR", close.centerX(), close.centerY() + dp(4f), dp(8f), WHITE, true, Paint.Align.CENTER)
+        drawText(canvas, tr("CERRAR", "CLOSE"), close.centerX(), close.centerY() + dp(4f), dp(8f), WHITE, true, Paint.Align.CENTER)
         hitTargets += close to {
             travelMenuOpen = false
             invalidate()
@@ -526,7 +645,7 @@ class DigiviceDashboardView(
         val openMap = RectF(bounds.left + dp(10f), bounds.top + dp(34f), bounds.right - dp(10f), bounds.top + dp(66f))
         paint.color = CYAN_DARK
         canvas.drawRoundRect(openMap, dp(5f), dp(5f), paint)
-            drawText(canvas, "ABRIR PESTAÑA MAPA", openMap.centerX(), openMap.centerY() + dp(4f), dp(10f), WHITE, true, Paint.Align.CENTER)
+            drawText(canvas, tr("ABRIR PESTAÑA MAPA", "OPEN MAP TAB"), openMap.centerX(), openMap.centerY() + dp(4f), dp(10f), WHITE, true, Paint.Align.CENTER)
         hitTargets += openMap to {
             travelMenuOpen = false
             actions.onOpenGameMap()
@@ -543,7 +662,10 @@ class DigiviceDashboardView(
         if (!snapshot.canFastTravel) {
             drawWrapped(
                 canvas,
-                "El traslado desde esta lista solo está disponible fuera de batalla. Abrir pestaña Mapa usa START, cruceta y × para entrar al mapa de Flawe.",
+                tr(
+                    "El traslado desde esta lista solo está disponible fuera de batalla. Abrir pestaña Mapa usa START, cruceta y × para entrar al mapa de Flawe.",
+                    "Warps from this list are only available outside battle. Open Map Tab uses START, D-pad and × to enter Flawe's map."
+                ),
                 bounds.left + dp(16f),
                 listTop + dp(4f),
                 bounds.width() - dp(32f),
@@ -554,7 +676,10 @@ class DigiviceDashboardView(
         } else if (groups.isEmpty()) {
             drawWrapped(
                 canvas,
-                "Todavía no hay destinos visitados. Explora el campo para añadir localidades, o abre el mapa del juego para el viaje de Flawe's Mod.",
+                tr(
+                    "Todavía no hay destinos visitados. Explora el campo para añadir localidades, o abre el mapa del juego para el viaje de Flawe's Mod.",
+                    "No visited destinations yet. Explore the field to add locations, or open the in-game map for Flawe's Mod travel."
+                ),
                 bounds.left + dp(16f),
                 listTop + dp(4f),
                 bounds.width() - dp(32f),
@@ -574,7 +699,7 @@ class DigiviceDashboardView(
             if (y >= listTop && y < bounds.bottom - dp(8f)) {
                 drawText(
                     canvas,
-                    "${group.server.label.uppercase()} · ${group.sector.label.uppercase()}",
+                    "${CompanionUiText.server(language, group.server).uppercase()} · ${CompanionUiText.sector(language, group.sector).uppercase()}",
                     bounds.left + dp(12f),
                     y + dp(16f),
                     dp(8f),
@@ -588,7 +713,7 @@ class DigiviceDashboardView(
                 if (row.top >= listTop && row.top < bounds.bottom - dp(8f)) {
                     paint.color = if (destination.areaId == currentIcon) CYAN_DARK else PANEL_INNER
                     canvas.drawRoundRect(row, dp(5f), dp(5f), paint)
-                    drawText(canvas, destination.name.uppercase(), row.left + dp(10f), row.centerY() + dp(4f), dp(10f), WHITE, true)
+                    drawText(canvas, CompanionUiText.area(language, destination.areaId).uppercase(), row.left + dp(10f), row.centerY() + dp(4f), dp(10f), WHITE, true)
                     drawText(canvas, "0x${AreaCatalog.hex(destination.areaId)}", row.right - dp(10f), row.centerY() + dp(4f), dp(8f), MUTED, true, Paint.Align.RIGHT)
                     if (snapshot.canFastTravel && destination.areaId != currentIcon) {
                         hitTargets += row to {
@@ -606,10 +731,13 @@ class DigiviceDashboardView(
     }
 
     private fun drawMods(canvas: Canvas, bounds: RectF) {
-        drawPanel(canvas, bounds, "MODS Y CÓDIGOS PAL")
+        drawPanel(canvas, bounds, tr("MODS Y CÓDIGOS PAL", "MODS AND PAL CODES"))
         drawWrapped(
             canvas,
-            "Los códigos se aplican sobre la RAM emulada de SLES-03936 / Flawe's Mod. Úsalos fuera de secuencias críticas.",
+            tr(
+                "Los códigos se aplican sobre la RAM emulada de SLES-03936 / Flawe's Mod. Úsalos fuera de secuencias críticas.",
+                "Codes are applied to the emulated SLES-03936 / Flawe's Mod RAM. Use them outside critical sequences."
+            ),
             bounds.left + dp(12f),
             bounds.top + dp(34f),
             bounds.width() - dp(24f),
@@ -628,8 +756,8 @@ class DigiviceDashboardView(
                 paint.color = if (enabled) CYAN else CYAN_DARK
                 canvas.drawRoundRect(toggle, dp(5f), dp(5f), paint)
                 drawText(canvas, if (enabled) "ON" else "OFF", toggle.centerX(), toggle.centerY() + dp(4f), dp(10f), if (enabled) Color.rgb(2, 16, 22) else WHITE, true, Paint.Align.CENTER)
-                drawText(canvas, cheat.label.uppercase(), row.left + dp(10f), row.top + dp(18f), dp(11f), WHITE, true)
-                drawText(canvas, cheat.detail, row.left + dp(10f), row.top + dp(36f), dp(8f), MUTED)
+                drawText(canvas, CompanionUiText.cheatLabel(language, cheat).uppercase(), row.left + dp(10f), row.top + dp(18f), dp(11f), WHITE, true)
+                drawText(canvas, CompanionUiText.cheatDetail(language, cheat), row.left + dp(10f), row.top + dp(36f), dp(8f), MUTED)
                 hitTargets += toggle to { actions.onCheatToggle(cheat.id, !enabled) }
             }
             y += dp(58f)

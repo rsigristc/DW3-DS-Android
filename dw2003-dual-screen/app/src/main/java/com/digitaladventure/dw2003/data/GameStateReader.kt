@@ -49,10 +49,9 @@ class GameStateReader {
             tamerName = if (gameStarted) parseTamerName(main) else "—",
             storyStage = story,
             objective = if (!gameStarted) {
-                "Inicia o carga una partida para activar el panel complementario."
+                WalkthroughCatalog.START_PROMPT_ES
             } else {
-                objective?.takeIf { it.length >= 4 }
-                    ?: "Abre el menú del juego para sincronizar la guía integrada."
+                objective?.takeIf { it.length >= 4 } ?: WalkthroughCatalog.SYNC_PROMPT_ES
             },
             party = party,
             bits = u32(main, BITS - MAIN_BASE),

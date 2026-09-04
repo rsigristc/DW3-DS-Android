@@ -69,6 +69,8 @@ En 0.7.10, `FlaweDirectWarpPatch` valida el dispatcher que Flawe copia a `0x8000
 
 En 0.7.11, si esa dirección fija no coincide, se recorren los 2 MiB de RAM buscando el prólogo, la rama `bne v1,t0,*` y la lectura de icono. Para excluir la copia fuente que el cargador no ejecuta, solo se acepta una firma cuyo destino aparezca en una instrucción `j` o `jal` activa.
 
+En 0.7.12 el panel es bilingüe. `CompanionLanguageSetting` (automático / español / inglés) se guarda en preferencias. Automático usa el idioma detectado en la guía de Flawe. `WalkthroughTextFinder` lee punteros de `0x8000B200`, acepta texto DW y ASCII, y al abrir START barre overlay y RAM. Flawe no expone walkthrough en el menú español; `WalkthroughCatalog` entonces ofrece pistas del panel y traduce frases inglesas conocidas.
+
 ## BIOS aportado por el usuario
 
 `BiosManager` acepta únicamente una imagen europea de PlayStation de 512 KiB con firma y marcador regional compatibles con la detección de PCSX-ReARMed. Se instala en el directorio privado del sistema como `scph5502.bin`. Sin ese archivo, el núcleo conserva su alternativa HLE.
