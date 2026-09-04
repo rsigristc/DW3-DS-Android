@@ -18,7 +18,31 @@ class FastTravelNavigatorTest {
             listOf(RetroPadButton.DPAD_DOWN, RetroPadButton.DPAD_DOWN, RetroPadButton.CROSS),
             FastTravelNavigator.selectMapFromItems().map { it.button }
         )
+        assertEquals(
+            FastTravelNavigator.selectMapFromItems(),
+            FastTravelNavigator.stepsToMapTab(FastTravelNavigator.TAB_ITEMS)
+        )
         assertTrue(FastTravelNavigator.selectMapFromItems().sumOf { it.afterMs + it.holdMs } < 600)
+    }
+
+    @Test
+    fun walksToMapTabWithoutWrappingPastStatus() {
+        assertEquals(
+            listOf(RetroPadButton.CROSS),
+            FastTravelNavigator.stepsToMapTab(FastTravelNavigator.TAB_MAP).map { it.button }
+        )
+        assertEquals(
+            listOf(RetroPadButton.DPAD_DOWN, RetroPadButton.CROSS),
+            FastTravelNavigator.stepsToMapTab(FastTravelNavigator.TAB_SORT).map { it.button }
+        )
+        assertEquals(
+            listOf(RetroPadButton.DPAD_UP, RetroPadButton.DPAD_UP, RetroPadButton.CROSS),
+            FastTravelNavigator.stepsToMapTab(FastTravelNavigator.TAB_STATUS).map { it.button }
+        )
+        assertEquals(
+            listOf(RetroPadButton.DPAD_UP, RetroPadButton.CROSS),
+            FastTravelNavigator.stepsToMapTab(FastTravelNavigator.TAB_TECHNIQUES).map { it.button }
+        )
     }
 
     @Test

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.14-poc
+
+- AUTO lee el índice de idioma PAL en `0x8005CCA8` (ddw3 / parche japonés): 2 inglés europeo, 6 español. Ese byte manda sobre la guía inglesa de Flawe, que ya no fuerza el panel a inglés en una partida española.
+- La pestaña Mapa de START se recorre con `stepsToMapTab` (Ítems=0 … Mapa=2 … Estado=4). La lista no envuelve, así que Estado usa ↑↑, no ↓. No se escribe el índice en overlay: la base del widget no es un global estable.
+- Catálogo de salas confirmadas por SSTNAME e interpolación entre IDs conocidos: Estadio Digimon, Torre de Prisión, Cuartel A.o.A, Laberinto de Bichos, Sala de Bombeo, mazmorras Kulon, Cámara (`0x026D` en la tabla de posadas) y Magasta/Gunslinger (`0x02DA`–`0x02DF`).
+- Amaterasu sigue sin códigos ASKMAP inventados: el IPS solo escribe MAP_ID de Asuka. Esos hubs usan la cruceta.
+
 ## 0.7.13-poc
 
 - El dispatcher de Flawe ya no se limita a Ciudad Asuka y Central Park: los 46 iconos de ASKMAP del IPS público (`dmw_2003_patcher`, SLES `0x095500`) se fuerzan con el ID interno real y el spawn del mod.

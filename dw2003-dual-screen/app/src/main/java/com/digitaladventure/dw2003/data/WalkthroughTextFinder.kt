@@ -273,7 +273,7 @@ object WalkthroughCatalog {
                 "Explora Ciudad Byakko y el desierto del sector oeste.",
                 "Explore Byakko City and the west-sector desert."
             )
-            in 0x0261..0x02D9 -> pair(
+            in 0x0261..0x02DF -> pair(
                 language,
                 "Sube el Sector Norte: Montaña de Bota, nieve, Mina Kulon y Ciudad Genbu.",
                 "Climb the North Sector: Boot Mountain, snow, Kulon Mine and Genbu City."

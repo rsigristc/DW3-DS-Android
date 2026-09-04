@@ -49,6 +49,15 @@ class FastTravelCatalogTest {
     }
 
     @Test
+    fun treatsConfirmedNorthInteriorsAsNearbyFlaweIcons() {
+        assertEquals(0x026F, FastTravelCatalog.iconId(0x026D))
+        assertEquals(0x0268, FastTravelCatalog.iconId(0x0269))
+        assertEquals(0x026F, FastTravelCatalog.iconId(0x02DA))
+        val groups = FastTravelCatalog.groups(99, setOf(0x026D), 0x026D)
+        assertTrue(groups.any { group -> group.destinations.any { it.areaId == 0x026F } })
+    }
+
+    @Test
     fun unlocksNorthSectorAskmapIconsAfterVisitingThem() {
         val groups = FastTravelCatalog.groups(99, setOf(0x0261, 0x026F), 0x0261)
         assertTrue(groups.any { group -> group.destinations.any { it.areaId == 0x0261 } })

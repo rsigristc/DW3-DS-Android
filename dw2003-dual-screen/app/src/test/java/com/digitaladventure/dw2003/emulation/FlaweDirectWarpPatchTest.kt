@@ -66,6 +66,7 @@ class FlaweDirectWarpPatchTest {
     fun refusesUnknownVersionsAndDestinations() {
         assertNull(FlaweDirectWarpPatch.prepare(ByteArray(FlaweDirectWarpPatch.WINDOW_SIZE), 0x0200))
         assertNull(FlaweDirectWarpPatch.prepare(dispatcherWindow(), 0x0202))
+        assertNull(FlaweDirectWarpPatch.prepare(dispatcherWindow(), 0x0780))
     }
 
     private fun dispatcherWindow(

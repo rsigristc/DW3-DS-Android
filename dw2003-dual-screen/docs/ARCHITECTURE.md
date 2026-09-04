@@ -73,6 +73,8 @@ En 0.7.12 el panel es bilingüe. `CompanionLanguageSetting` (automático / espa�
 
 En 0.7.13, `FlaweFastTravelTable` incorpora los 46 destinos ASKMAP del IPS de fast travel y los nombres de [ddw3](https://github.com/markisha64/ddw3). El parche directo fuerza cualquier icono visitado de ese mapa; el Sector Norte (`0x0261`–`0x026F`) deja de clasificarse como oeste.
 
+En 0.7.14, AUTO lee `0x8005CCA8` (fuera de la ventana principal) y solo aplica inglés (1/2) o español (6). La guía de Flawe ya no pisa ese byte. `FastTravelNavigator.stepsToMapTab` calcula ↑/↓ hasta la pestaña 2 sin escribir `widget+0x178`. El catálogo rellena salas SSTNAME entre IDs confirmados; Amaterasu no recibe códigos ASKMAP que el IPS no escribe.
+
 ## BIOS aportado por el usuario
 
 `BiosManager` acepta únicamente una imagen europea de PlayStation de 512 KiB con firma y marcador regional compatibles con la detección de PCSX-ReARMed. Se instala en el directorio privado del sistema como `scph5502.bin`. Sin ese archivo, el núcleo conserva su alternativa HLE.

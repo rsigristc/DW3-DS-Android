@@ -1,6 +1,6 @@
 # Validación de POC 0.7
 
-Fecha de compilación: 4 de septiembre de 2026 (0.7.13-poc).
+Fecha de compilación: 4 de septiembre de 2026 (0.7.14-poc).
 
 ## Entorno
 
@@ -32,7 +32,8 @@ Resultado: `BUILD SUCCESSFUL`.
 - `QuickStateManagerTest`: verifica que cada clave de ROM produzca un nombre de estado privado, seguro y acotado.
 - `ExperienceTableTest`: verifica umbral acumulado, progreso dentro del nivel y tratamiento de nivel 99.
 - `TechniqueCatalogTest`: verifica las técnicas características Rookie y el rechazo de perfiles desconocidos.
-- `AreaCatalogTest`: verifica IDs reales no consecutivos y puntos de pesca confirmados.
+- `PalLanguageTest`: verifica `0x8005CCA8` → inglés (2) / español (6) y que francés o un 0 no cambian AUTO.
+- `AreaCatalogTest`: verifica IDs reales no consecutivos, salas SSTNAME de 0.7.14 y puntos de pesca confirmados.
 - `EquipmentCatalogTest`: verifica nombre, tipo y bonificaciones de equipo.
 - `AppFileRulesTest`: añade validación de la tarjeta formateada generada automáticamente.
 - `MapRegionCatalogTest`: verifica servidor/sector para Asuka, Amaterasu y menús externos al mundo.
@@ -40,8 +41,8 @@ Resultado: `BUILD SUCCESSFUL`.
 - `TransparencyMaskTest`: verifica que solo el blanco conectado al borde se vuelva transparente.
 - `LocationResolverTest`: verifica interiores, puente y Central Park ↔ Entrada del Bosque usando el destino de `MAP_ID`.
 - `FastTravelCatalogTest`: verifica que el puente no es un icono, que laboratorio visita cuenta como Ciudad Asuka, que Park y la Entrada del Bosque son iconos distintos, y que el norte se desbloquea al visitarlo.
-- `FlaweFastTravelTableTest`: verifica los 46 códigos ASKMAP del IPS (Asuka `0x14`, Parque `0x1E`, Bota `0x0A`, Genbu `0x06`).
-- `FastTravelNavigatorTest`: verifica START → ↓↓ → ×, cruceta entre Ciudad Asuka/Central Park y × + △△.
+- `FlaweFastTravelTableTest`: verifica los 46 códigos ASKMAP del IPS y que Amaterasu no inventa iconos.
+- `FastTravelNavigatorTest`: verifica `stepsToMapTab` (Ítems ↓↓, Estado ↑↑, Mapa solo ×) y × + △△.
 - `FlaweDirectWarpPatchTest`: verifica firmas, reubicación por referencia `j/jal`, IDs internos de ASKMAP y rechazo seguro de versiones desconocidas.
 - `CheatCatalogTest`: verifica códigos PAL de calidad de vida.
 - `GameMemoryControllerTest`: verifica el empaquetado little-endian de la formación.

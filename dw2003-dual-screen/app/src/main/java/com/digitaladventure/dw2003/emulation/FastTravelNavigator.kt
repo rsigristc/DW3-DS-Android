@@ -4,8 +4,13 @@ import com.digitaladventure.dw2003.data.GameStateReader
 
 /**
  * START opens a vertical list (Items, Sort, Map, Techniques, Status)
- * moved with the D-pad, not L1/R1. Cross on Map opens Flawe's world map,
- * where the D-pad selects icons and Cross + Triangle confirm the warp.
+ * moved with the D-pad, not L1/R1. The STSTATUS pad handler stores the
+ * 0–4 tab index at widget+0x178 (MAP = 2). That widget base is not a
+ * stable global, so this helper never writes overlay RAM: it walks with
+ * UP/DOWN. The list does not wrap; Status+Down clamps at 4.
+ *
+ * Cross on Map opens Flawe's world map, where the D-pad selects icons
+ * and Cross + Triangle confirm the warp.
  */
 enum class RetroPadButton { START, L1, R1, CROSS, TRIANGLE, DPAD_UP, DPAD_DOWN }
 
@@ -14,16 +19,32 @@ data class PadStep(val button: RetroPadButton, val afterMs: Long, val holdMs: Lo
 object FastTravelNavigator {
     const val MENU_OVERLAY = 0x1000
     const val MENU_SETTLE_MS = 100L
+    const val TAB_ITEMS = 0
+    const val TAB_SORT = 1
+    const val TAB_MAP = 2
+    const val TAB_TECHNIQUES = 3
+    const val TAB_STATUS = 4
 
     fun dismissMenu(): List<PadStep> = listOf(PadStep(RetroPadButton.TRIANGLE, 220))
 
     fun pressStart(): List<PadStep> = listOf(PadStep(RetroPadButton.START, 50, 100))
 
-    fun selectMapFromItems(): List<PadStep> = listOf(
-        PadStep(RetroPadButton.DPAD_DOWN, 50),
-        PadStep(RetroPadButton.DPAD_DOWN, 50),
-        PadStep(RetroPadButton.CROSS, 220, 90)
-    )
+    fun stepsToMapTab(fromTab: Int = TAB_ITEMS): List<PadStep> {
+        val from = fromTab.coerceIn(TAB_ITEMS, TAB_STATUS)
+        val button = when {
+            from < TAB_MAP -> RetroPadButton.DPAD_DOWN
+            from > TAB_MAP -> RetroPadButton.DPAD_UP
+            else -> null
+        }
+        val moves = if (button == null) {
+            emptyList()
+        } else {
+            List(kotlin.math.abs(TAB_MAP - from)) { PadStep(button, 50) }
+        }
+        return moves + PadStep(RetroPadButton.CROSS, 220, 90)
+    }
+
+    fun selectMapFromItems(): List<PadStep> = stepsToMapTab(TAB_ITEMS)
 
     fun selectMapDestination(): List<PadStep> =
         listOf(PadStep(RetroPadButton.CROSS, 400, 120))

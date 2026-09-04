@@ -17,7 +17,13 @@ class FlaweFastTravelTableTest {
         assertEquals(0x01, FlaweFastTravelTable.iconCode(0x0267))
         assertEquals(0x06, FlaweFastTravelTable.iconCode(0x026F))
         assertNull(FlaweFastTravelTable.iconCode(0x0202))
-        assertNull(FlaweFastTravelTable.iconCode(0x0780))
         assertTrue(FlaweFastTravelTable.asukaIcons.map { it.iconCode }.toSet() == (1..46).toSet())
+    }
+
+    @Test
+    fun doesNotInventAmaterasuAskmapCodes() {
+        listOf(0x0780, 0x0810, 0x0825, 0x0845, 0x0855).forEach { mapId ->
+            assertNull(FlaweFastTravelTable.iconCode(mapId))
+        }
     }
 }

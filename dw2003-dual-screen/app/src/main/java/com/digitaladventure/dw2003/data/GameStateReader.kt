@@ -128,6 +128,7 @@ class GameStateReader {
         const val STATS = 0x4949C
         const val STORY_STAGE = 0x4B370
         const val MAP_ID = 0x4B3F8
+        const val PAL_LANGUAGE = PalLanguage.ADDRESS
         const val PROFILE_STRIDE = 0x3DC
         const val DIGIEVOLUTION_OFFSET = 0x50
         const val DIGIEVOLUTION_STRIDE = 0x14

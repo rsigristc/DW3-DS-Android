@@ -4,6 +4,7 @@ import android.util.Log
 import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.data.GameStateReader
 import com.digitaladventure.dw2003.data.GameStateRepository
+import com.digitaladventure.dw2003.data.PalLanguage
 import com.digitaladventure.dw2003.data.WalkthroughTextFinder
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.LibretroDroid
@@ -39,8 +40,15 @@ class MemoryPoller(
                         main,
                         GameStateReader.STORY_STAGE - GameStateReader.MAIN_BASE
                     )
+                    val palLanguage = PalLanguage.companionLanguage(
+                        GameStateReader.u32(
+                            read(GameStateReader.PAL_LANGUAGE and RAM_MASK, 4),
+                            0
+                        ).toInt()
+                    )
+                    palLanguage?.let(onLanguageDetected)
                     repository.publish(
-                        reader.parse(main, signature, readObjective(signature, storyStage))
+                        reader.parse(main, signature, readObjective(signature, storyStage, palLanguage))
                     )
                 } catch (error: Exception) {
                     Log.d(TAG, "RAM not ready yet", error)
@@ -58,7 +66,7 @@ class MemoryPoller(
     private fun read(offset: Int, length: Int): ByteArray =
         view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM, offset, length)
 
-    private fun readObjective(signature: Long, storyStage: Int): String? {
+    private fun readObjective(signature: Long, storyStage: Int, palLanguage: CompanionLanguage?): String? {
         if (storyStage != cachedStoryStage) {
             cachedStoryStage = storyStage
             cachedObjective = null
@@ -69,30 +77,33 @@ class MemoryPoller(
         statusMenuOpen = inStatusMenu
 
         val scratch = read(GameStateReader.SCRATCH_BASE, GameStateReader.SCRATCH_LENGTH)
-        WalkthroughTextFinder.decodeWindow(scratch)?.let(::cacheObjective)
+        WalkthroughTextFinder.decodeWindow(scratch)?.let { cacheObjective(it, palLanguage) }
         val pointerText = WalkthroughTextFinder.best(
             WalkthroughTextFinder.pointers(scratch).mapNotNull { pointer ->
                 WalkthroughTextFinder.decodeWindow(
-                    read((pointer and 0x1FFFFF).toInt(), POINTER_WINDOW)
+                    read((pointer and RAM_MASK).toInt(), POINTER_WINDOW)
                 )
             }
         )
-        if (pointerText != null) cacheObjective(pointerText)
+        if (pointerText != null) cacheObjective(pointerText, palLanguage)
 
         if (inStatusMenu && cachedObjective == null && fullScanAttempts < MAX_FULL_SCAN_ATTEMPTS) {
             fullScanAttempts++
             WalkthroughTextFinder.find(read(OVERLAY_SCAN_BASE, OVERLAY_SCAN_LENGTH))
-                ?.let(::cacheObjective)
+                ?.let { cacheObjective(it, palLanguage) }
             if (cachedObjective == null) {
-                WalkthroughTextFinder.find(read(0, SYSTEM_RAM_SIZE))?.let(::cacheObjective)
+                WalkthroughTextFinder.find(read(0, SYSTEM_RAM_SIZE))
+                    ?.let { cacheObjective(it, palLanguage) }
             }
         }
         return cachedObjective
     }
 
-    private fun cacheObjective(value: String) {
+    private fun cacheObjective(value: String, palLanguage: CompanionLanguage?) {
         cachedObjective = value
-        WalkthroughTextFinder.language(value)?.let(onLanguageDetected)
+        if (palLanguage == null) {
+            WalkthroughTextFinder.language(value)?.let(onLanguageDetected)
+        }
     }
 
     companion object {
@@ -103,5 +114,6 @@ class MemoryPoller(
         private const val OVERLAY_SCAN_LENGTH = 0x40000
         private const val POINTER_WINDOW = 256
         private const val MAX_FULL_SCAN_ATTEMPTS = 3
+        private const val RAM_MASK = 0x1FFFFF
     }
 }

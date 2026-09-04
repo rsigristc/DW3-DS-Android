@@ -14,6 +14,7 @@ Las direcciones son virtuales de PS1. Para `RETRO_MEMORY_SYSTEM_RAM`, la aplicac
 | `0x80048DAC` | `u32` | Perfil activo 3 |
 | `0x8004B370` | `u16` | Etapa de historia |
 | `0x8004B3F8` | `u16` | ID del mapa lógico actual |
+| `0x8005CCA8` | `u32` | Idioma PAL: 0 japonés, 1 inglés US, 2 inglés europeo, 3 francés, 4 italiano, 5 alemán, 6 español |
 | `0x80080000` | `u32` | Firma inicial del overlay cargado |
 
 Firmas observadas en Flawe's Mod 2.0 combinado:
@@ -50,6 +51,8 @@ Orden de perfiles: Kotemon, Kumamon, Monmon, Agumon, Veemon, Guilmon, Renamon y 
 
 Los IDs de área se presentan como hexadecimales (`0x0200`, `0x0206`, `0x0261`, `0x02D8`, etc.). No deben usarse como índices de una lista consecutiva. El catálogo incluye el Sector Norte confirmado por el IPS de Flawe (`0x0261` Montaña de Bota … `0x026F` Ciudad Genbu) y conserva el ID hexadecimal cuando todavía no existe un nombre confirmado.
 
+Los IDs de sala añadidos en 0.7.14 salen de `esstname` / `ssstname` interpolando solo huecos entre IDs ya confirmados (p. ej. `0x0214` → `0x0217` da `0x0215` Escaleras del sótano y `0x0216` Torre de Prisión). `0x026D` aparece en la tabla de posadas `0x8003EDCC`. `0x02DE` / `0x02DF` aparecen en la tabla de transiciones de ddw3.
+
 El umbral acumulado de EXP para el siguiente nivel no está almacenado junto al perfil. La interfaz lo obtiene de una tabla por compañero y nivel; la barra usa el intervalo entre el umbral actual y el siguiente. En nivel 99 se muestra “Nivel máx.”.
 
 ## Walkthrough del mod
@@ -60,7 +63,7 @@ El bloque temporal se consulta desde `0x8000B200`. Los candidatos de puntero est
 - `0x8000B20C`
 - `0x8000B210`
 
-Cada palabra alineada del bloque se trata como puntero candidato (`0x80000000`…`0x801FFFFF`). El texto se decodifica con la tabla europea de DW2003 y también como cadena ASCII. Si START carga `STSTATUS` y todavía no hay objetivo, se busca el mismo patrón en el overlay `0x80080000` y, si hace falta, en los 2 MiB. Flawe publica la guía solo en el idioma inglés del juego; el español del panel usa pistas propias cuando esos punteros no aparecen.
+Cada palabra alineada del bloque se trata como puntero candidato (`0x80000000`…`0x801FFFFF`). El texto se decodifica con la tabla europea de DW2003 y también como cadena ASCII. Si START carga `STSTATUS` y todavía no hay objetivo, se busca el mismo patrón en el overlay `0x80080000` y, si hace falta, en los 2 MiB. Flawe publica la guía solo en el idioma inglés del juego; el español del panel usa pistas propias cuando esos punteros no aparecen. En AUTO, `0x8005CCA8` decide el idioma del panel antes que ese texto, para que una partida española no se pinte en inglés solo porque Flawe dejó la guía en inglés.
 
 ## Escrituras controladas (0.7)
 
