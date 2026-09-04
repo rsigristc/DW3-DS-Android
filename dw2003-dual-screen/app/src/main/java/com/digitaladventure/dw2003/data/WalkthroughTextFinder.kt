@@ -31,7 +31,7 @@ object CompanionLanguageResolver {
  * plain ASCII copy in scratch or overlay RAM. Both encodings are accepted.
  */
 object WalkthroughTextFinder {
-    val pointerSlots: IntRange = 0 until 0x40 step 4
+    val pointerSlots: IntProgression = 0 until 0x40 step 4
 
     private val englishVerbs = setOf(
         "head", "go", "talk", "find", "defeat", "return", "reach",
