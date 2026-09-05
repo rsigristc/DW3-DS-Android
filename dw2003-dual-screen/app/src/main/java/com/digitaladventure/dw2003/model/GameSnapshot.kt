@@ -22,6 +22,8 @@ data class GameSnapshot(
     val gameStarted: Boolean,
     val canReorderParty: Boolean,
     val canFastTravel: Boolean,
+    val supportsWalkthrough: Boolean = true,
+    val supportsFastTravel: Boolean = true,
     val isLive: Boolean,
     val sampledAtMillis: Long = System.currentTimeMillis()
 ) {
@@ -48,6 +50,8 @@ data class GameSnapshot(
             gameStarted = false,
             canReorderParty = false,
             canFastTravel = false,
+            supportsWalkthrough = true,
+            supportsFastTravel = true,
             isLive = true
         )
 
@@ -86,6 +90,8 @@ data class GameSnapshot(
             gameStarted = true,
             canReorderParty = true,
             canFastTravel = true,
+            supportsWalkthrough = true,
+            supportsFastTravel = true,
             isLive = false
         )
     }

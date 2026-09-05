@@ -398,6 +398,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun resolvedLanguage(): CompanionLanguage =
         CompanionLanguageResolver.resolve(languageSetting, detectedLanguage)
 
+    private fun storedRomVariant(): RomVerifier.Variant =
+        RomVerifier.Variant.fromStored(
+            getPreferences(MODE_PRIVATE).getString(PREF_ROM_VARIANT, null),
+            getPreferences(MODE_PRIVATE).getString(PREF_ROM_SHA1, null)
+        )
+
     private fun applyCompanionLanguage() {
         val language = resolvedLanguage()
         localDashboard?.language = language
@@ -425,15 +431,21 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 toast("No se pudo leer el BIN: ${it.message}", "Could not read the BIN: ${it.message}")
                 return@launch
             }
-            if (result.variant == RomVerifier.Variant.UNKNOWN) {
+            if (result.variant == RomVerifier.Variant.USA) {
+                toast(
+                    "Detectada: ${result.variant.label}. Viaje rápido y guía de Flawe desactivados.",
+                    "Detected: ${result.variant.label}. Fast travel and Flawe walkthrough are off."
+                )
+                rememberAndRestart(uri, result)
+            } else if (result.variant == RomVerifier.Variant.UNKNOWN) {
                 val language = resolvedLanguage()
                 AlertDialog.Builder(this@MainActivity)
                     .setTitle(CompanionUiText.pick(language, "ROM no verificada", "Unverified ROM"))
                     .setMessage(
                         CompanionUiText.pick(
                             language,
-                            "SHA-1: ${result.sha1}\n\nLa lectura de RAM fue diseñada para SLES-03936 original y Flawe's Mod 2.0. Puedes continuar, pero los datos de la segunda pantalla podrían ser incorrectos.",
-                            "SHA-1: ${result.sha1}\n\nRAM reading was designed for original SLES-03936 and Flawe's Mod 2.0. You can continue, but the second screen may be wrong."
+                            "SHA-1: ${result.sha1}\n\nLa lectura de RAM fue diseñada para SLES-03936, Flawe's Mod 2.0 y SLUS-01436 USA. Puedes continuar, pero los datos de la segunda pantalla podrían ser incorrectos.",
+                            "SHA-1: ${result.sha1}\n\nRAM reading was designed for SLES-03936, Flawe's Mod 2.0 and SLUS-01436 USA. You can continue, but the second screen may be wrong."
                         )
                     )
                     .setNegativeButton(CompanionUiText.pick(language, "Cancelar", "Cancel"), null)
@@ -452,7 +464,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         getPreferences(MODE_PRIVATE).edit()
             .putString(PREF_ROM_URI, uri.toString())
             .putString(PREF_ROM_NAME, displayName(uri))
-            .putString(PREF_ROM_VARIANT, result.variant.label)
+                            .putString(PREF_ROM_VARIANT, result.variant.name)
             .putString(PREF_ROM_SHA1, result.sha1)
             .apply()
         recreate()
@@ -480,7 +492,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             preferLowLatencyAudio = true
             skipDuplicateFrames = false
             variables = arrayOf(
-                Variable("pcsx_rearmed_region", "PAL"),
+                Variable("pcsx_rearmed_region", storedRomVariant().emulatorRegion),
                 Variable("pcsx_rearmed_bios", "auto"),
                 Variable("pcsx_rearmed_memcard1", "libretro"),
                 Variable("pcsx_rearmed_memcard2", "none"),
@@ -530,7 +542,16 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
         attachDualContent(gameSurface)
 
-        memoryPoller = MemoryPoller(view, repository, lifecycleScope) { detected ->
+        val romVariant = storedRomVariant()
+        if (romVariant == RomVerifier.Variant.USA) {
+            detectedLanguage = CompanionLanguage.ENGLISH
+        }
+        memoryPoller = MemoryPoller(
+            view,
+            repository,
+            lifecycleScope,
+            romVariant.features
+        ) { detected ->
             if (detectedLanguage != detected) {
                 detectedLanguage = detected
                 if (languageSetting == CompanionLanguageSetting.AUTO) {
@@ -826,6 +847,13 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     private fun requestFastTravel(areaId: Int) {
         val snapshot = repository.snapshot.value
+        if (!snapshot.supportsFastTravel) {
+            toast(
+                "El viaje rápido de Flawe no está disponible en Digimon World 3 USA.",
+                "Flawe fast travel is not available on Digimon World 3 USA."
+            )
+            return
+        }
         if (!snapshot.canFastTravel) {
             toast("Viaje rápido bloqueado durante batalla o eventos", "Fast travel is blocked during battle or events")
             return
@@ -917,6 +945,13 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     private fun openInGameMap() {
         val snapshot = repository.snapshot.value
+        if (!snapshot.supportsFastTravel) {
+            toast(
+                "El mapa de Flawe no está disponible en Digimon World 3 USA.",
+                "Flawe's map is not available on Digimon World 3 USA."
+            )
+            return
+        }
         if (!snapshot.gameStarted) {
             toast("Inicia una partida para abrir el mapa", "Start a game to open the map")
             return

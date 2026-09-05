@@ -6,7 +6,12 @@ import com.digitaladventure.dw2003.model.GameMode
 import com.digitaladventure.dw2003.model.GameSnapshot
 
 class GameStateReader {
-    fun parse(main: ByteArray, overlaySignature: Long, objective: String?): GameSnapshot {
+    fun parse(
+        main: ByteArray,
+        overlaySignature: Long,
+        objective: String?,
+        features: CompanionRomFeatures = CompanionRomFeatures.PAL
+    ): GameSnapshot {
         require(main.size >= MAIN_LENGTH) { "Incomplete DW2003 RAM window" }
 
         val areaId = u16(main, AREA - MAIN_BASE)
@@ -49,10 +54,10 @@ class GameStateReader {
             sectorName = region.sector.label,
             tamerName = if (gameStarted) parseTamerName(main) else "—",
             storyStage = story,
-            objective = if (!gameStarted) {
-                WalkthroughCatalog.START_PROMPT_ES
-            } else {
-                objective?.takeIf { it.length >= 4 } ?: WalkthroughCatalog.SYNC_PROMPT_ES
+            objective = when {
+                !gameStarted -> WalkthroughCatalog.START_PROMPT_ES
+                !features.supportsWalkthrough -> WalkthroughCatalog.UNAVAILABLE_ES
+                else -> objective?.takeIf { it.length >= 4 } ?: WalkthroughCatalog.SYNC_PROMPT_ES
             },
             party = party,
             bits = u32(main, BITS - MAIN_BASE),
@@ -64,7 +69,10 @@ class GameStateReader {
             isFishing = false,
             gameStarted = gameStarted,
             canReorderParty = LocationResolver.canReorderParty(areaId, mapId, mode, gameStarted),
-            canFastTravel = LocationResolver.canFastTravel(areaId, mapId, mode, gameStarted),
+            canFastTravel = features.supportsFastTravel &&
+                LocationResolver.canFastTravel(areaId, mapId, mode, gameStarted),
+            supportsWalkthrough = features.supportsWalkthrough,
+            supportsFastTravel = features.supportsFastTravel,
             isLive = true
         )
     }

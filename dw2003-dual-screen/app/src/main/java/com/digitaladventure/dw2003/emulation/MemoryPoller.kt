@@ -1,10 +1,12 @@
 package com.digitaladventure.dw2003.emulation
 
 import android.util.Log
+import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.data.GameStateReader
 import com.digitaladventure.dw2003.data.GameStateRepository
 import com.digitaladventure.dw2003.data.PalLanguage
+import com.digitaladventure.dw2003.data.CompanionRomFeatures
 import com.digitaladventure.dw2003.data.WalkthroughTextFinder
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.LibretroDroid
@@ -19,14 +21,18 @@ class MemoryPoller(
     private val view: GLRetroView,
     private val repository: GameStateRepository,
     private val scope: CoroutineScope,
+    private val features: CompanionRomFeatures = CompanionRomFeatures.PAL,
     private val onLanguageDetected: (CompanionLanguage) -> Unit = {}
 ) {
     private val reader = GameStateReader()
     private var job: Job? = null
     private var cachedObjective: String? = null
     private var cachedStoryStage = -1
-    private var statusMenuOpen = false
+    private var cachedMapId = -1
+    private var lastSignature = 0L
+    private var overlayScanAttempts = 0
     private var fullScanAttempts = 0
+    private var pollCount = 0
 
     fun start() {
         if (job != null) return
@@ -40,16 +46,25 @@ class MemoryPoller(
                         main,
                         GameStateReader.STORY_STAGE - GameStateReader.MAIN_BASE
                     )
-                    val palLanguage = PalLanguage.companionLanguage(
-                        GameStateReader.u32(
-                            read(GameStateReader.PAL_LANGUAGE and RAM_MASK, 4),
-                            0
-                        ).toInt()
-                    )
+                    val areaId = GameStateReader.u16(main, GameStateReader.AREA - GameStateReader.MAIN_BASE)
+                    val mapId = GameStateReader.u16(main, GameStateReader.MAP_ID - GameStateReader.MAIN_BASE)
+                    val palLanguage = if (features.detectPalLanguage) {
+                        PalLanguage.companionLanguage(
+                            GameStateReader.u32(
+                                read(GameStateReader.PAL_LANGUAGE and RAM_MASK, 4),
+                                0
+                            ).toInt()
+                        )
+                    } else {
+                        null
+                    }
                     palLanguage?.let(onLanguageDetected)
-                    repository.publish(
-                        reader.parse(main, signature, readObjective(signature, storyStage, palLanguage))
-                    )
+                    val objective = if (features.supportsWalkthrough) {
+                        readObjective(signature, storyStage, mapId, areaId, palLanguage)
+                    } else {
+                        null
+                    }
+                    repository.publish(reader.parse(main, signature, objective, features))
                 } catch (error: Exception) {
                     Log.d(TAG, "RAM not ready yet", error)
                 }
@@ -66,35 +81,63 @@ class MemoryPoller(
     private fun read(offset: Int, length: Int): ByteArray =
         view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM, offset, length)
 
-    private fun readObjective(signature: Long, storyStage: Int, palLanguage: CompanionLanguage?): String? {
-        if (storyStage != cachedStoryStage) {
+    private fun readObjective(
+        signature: Long,
+        storyStage: Int,
+        mapId: Int,
+        areaId: Int,
+        palLanguage: CompanionLanguage?
+    ): String? {
+        val inBattle = signature == GameStateReader.FIGHTST2_SIGNATURE
+        val menuOpen = signature == GameStateReader.STSTATUS_SIGNATURE
+        if (storyStage != cachedStoryStage || mapId != cachedMapId) {
             cachedStoryStage = storyStage
+            cachedMapId = mapId
             cachedObjective = null
+            overlayScanAttempts = 0
             fullScanAttempts = 0
         }
-        val inStatusMenu = signature == GameStateReader.STSTATUS_SIGNATURE
-        if (inStatusMenu && !statusMenuOpen) fullScanAttempts = 0
-        statusMenuOpen = inStatusMenu
+        if (signature != lastSignature) {
+            lastSignature = signature
+            overlayScanAttempts = 0
+            fullScanAttempts = 0
+        }
 
+        val locationWords = WalkthroughTextFinder.locationKeywords(
+            AreaCatalog.name(mapId),
+            AreaCatalog.name(areaId)
+        )
+        val candidates = mutableListOf<String>()
         val scratch = read(GameStateReader.SCRATCH_BASE, GameStateReader.SCRATCH_LENGTH)
-        WalkthroughTextFinder.decodeWindow(scratch)?.let { cacheObjective(it, palLanguage) }
-        val pointerText = WalkthroughTextFinder.best(
+        WalkthroughTextFinder.decodeWindow(scratch)?.let(candidates::add)
+        WalkthroughTextFinder.best(
             WalkthroughTextFinder.pointers(scratch).mapNotNull { pointer ->
                 WalkthroughTextFinder.decodeWindow(
                     read((pointer and RAM_MASK.toLong()).toInt(), POINTER_WINDOW)
                 )
             }
-        )
-        if (pointerText != null) cacheObjective(pointerText, palLanguage)
+        )?.let(candidates::add)
 
-        if (inStatusMenu && cachedObjective == null && fullScanAttempts < MAX_FULL_SCAN_ATTEMPTS) {
-            fullScanAttempts++
+        pollCount++
+        val refreshOverlay = !inBattle && (
+            menuOpen ||
+                overlayScanAttempts < 4 ||
+                pollCount % 4 == 0 ||
+                cachedObjective == null
+            )
+        if (refreshOverlay) {
+            if (!menuOpen && overlayScanAttempts < 4) overlayScanAttempts++
             WalkthroughTextFinder.find(read(OVERLAY_SCAN_BASE, OVERLAY_SCAN_LENGTH))
-                ?.let { cacheObjective(it, palLanguage) }
-            if (cachedObjective == null) {
-                WalkthroughTextFinder.find(read(0, SYSTEM_RAM_SIZE))
-                    ?.let { cacheObjective(it, palLanguage) }
-            }
+                ?.let(candidates::add)
+        }
+        if (menuOpen && candidates.isEmpty() && fullScanAttempts < MAX_FULL_SCAN_ATTEMPTS) {
+            fullScanAttempts++
+            WalkthroughTextFinder.find(read(0, SYSTEM_RAM_SIZE))?.let(candidates::add)
+        }
+
+        val best = candidates.maxByOrNull { WalkthroughTextFinder.score(it, false, locationWords) }
+        if (best != null && WalkthroughTextFinder.score(best, false, locationWords) > Int.MIN_VALUE) {
+            cacheObjective(best, palLanguage)
         }
         return cachedObjective
     }

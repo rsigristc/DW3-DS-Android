@@ -6,10 +6,11 @@ Prueba de concepto Android para ejecutar **Digimon World 2003 (Europa)** y aprov
 - Samsung Galaxy Z Fold y otros plegables compatibles con Jetpack WindowManager.
 - Tablets o pantallas grandes, con división lógica adaptable.
 
-La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.0.3** es la release actual; **1.0.0** fue la primera oficial firmada. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.0.4** es la release actual; **1.0.0** fue la primera oficial firmada. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
 
-## Estado 1.0.3
+## Estado 1.0.4
 
+- El objetivo sigue la guía de Flawe al cambiar de mapa. Digimon World 3 USA (`SLUS-01436`) arranca en NTSC sin viaje rápido ni walkthrough.
 - Al reabrir la app se reconstruye OpenGL si el Fold soltó el contexto en segundo plano.
 - El listado con scroll se usa cuando el panel va a un lado. Si el juego y el panel están arriba/abajo, se mantiene el diseño de columnas. El radar conserva su proporción.
 
@@ -67,14 +68,15 @@ La compilación, las pruebas unitarias y Android Lint pasan. Aún se requiere va
 |---|---|---:|
 | SLES-03936 Europa original | `457cb233349ba841e03b33d8060f8fbcadd45cb3` | 692,146,560 bytes |
 | Flawe's Mod 2.0 combinado | `5277dfd1b7b6b237ea93bfca2723c9b4baaa75d1` | 692,489,952 bytes |
+| SLUS-01436 USA | `f0b022f9be53cbce14640abd8f01beaadcb35208` | 647,526,768 bytes |
 
-La POC permite continuar con otra imagen, pero desactiva cualquier garantía sobre la interpretación de RAM. Para Flawe's Mod se recomienda el parche combinado, ya que contiene Fast Travel, Battle Speed-Up e In-game Walkthrough en los módulos esperados.
+La USA `SLUS-01436` se reconoce por SHA-1 o por el serial del disco y arranca en NTSC. El viaje rápido y la guía de Flawe se desactivan en esa versión. Otra imagen no verificada puede continuar, pero sin garantía sobre la interpretación de RAM. Para Flawe's Mod se recomienda el parche combinado.
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v1.0.3.apk` (release `v1.0.3`) en un dispositivo Android ARM64. Si tenías la POC debug, desinstálala antes. Si ya tienes 1.0.0–1.0.2, el actualizador de la app puede reemplazarla.
+1. Instala `DW2003-Dual-Screen-v1.0.4.apk` (release `v1.0.4`) en un dispositivo Android ARM64. Si tenías la POC debug, desinstálala antes. Si ya tienes 1.0.0–1.0.3, el actualizador de la app puede reemplazarla.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
-3. Elige tu copia personal ya parcheada o la imagen original europea.
+3. Elige tu copia personal ya parcheada, la imagen original europea o Digimon World 3 USA (`SLUS-01436`). En USA no hay viaje rápido ni guía de Flawe.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.
 5. En un Fold desplegado, el juego y el panel se reparten según la bisagra; si Android no reporta una bisagra separadora, se aplica una división lógica.
 6. Abre una vez el menú del juego para que el mod actualice los punteros del walkthrough. En inglés Flawe muestra la guía en START; el panel la copia cuando esos punteros o el texto ASCII están en RAM.

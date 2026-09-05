@@ -150,6 +150,23 @@ class GameStateReaderTest {
     }
 
     @Test
+    fun usaDiscDisablesFlaweWalkthroughAndFastTravel() {
+        val ram = ByteArray(GameStateReader.MAIN_LENGTH)
+        put16(ram, GameStateReader.AREA - GameStateReader.MAIN_BASE, 0x0200)
+        put16(ram, GameStateReader.MAP_ID - GameStateReader.MAIN_BASE, 0x0206)
+        put16(ram, GameStateReader.STORY_STAGE - GameStateReader.MAIN_BASE, 4)
+
+        val snapshot = GameStateReader().parse(ram, 0L, "Talk to Repeating Tom in Seiryu Tower.", CompanionRomFeatures.USA)
+
+        assertEquals("Laboratorio Digimon", snapshot.locationTitle)
+        assertEquals(WalkthroughCatalog.UNAVAILABLE_ES, snapshot.objective)
+        assertFalse(snapshot.canFastTravel)
+        assertFalse(snapshot.supportsFastTravel)
+        assertFalse(snapshot.supportsWalkthrough)
+        assertTrue(snapshot.canReorderParty)
+    }
+
+    @Test
     fun titleScreenDoesNotInventKotemonFormation() {
         val ram = ByteArray(GameStateReader.MAIN_LENGTH)
 

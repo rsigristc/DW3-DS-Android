@@ -56,6 +56,17 @@ class WalkthroughTextFinderTest {
     }
 
     @Test
+    fun prefersHintThatNamesTheCurrentMap() {
+        val location = WalkthroughTextFinder.locationKeywords("Torre Seiryu")
+        val stale = "Head east through Wire Forest to reach Seiryu City."
+        val live = "Talk to Repeating Tom in Seiryu Tower."
+        assertTrue(
+            WalkthroughTextFinder.score(live, false, location) >
+                WalkthroughTextFinder.score(stale, false, location)
+        )
+    }
+
+    @Test
     fun detectsSpanishHintLanguage() {
         assertEquals(
             CompanionLanguage.SPANISH,
@@ -104,6 +115,31 @@ class WalkthroughCatalogTest {
     }
 
     @Test
+    fun prefersCurrentMapOverCoarseStoryStageHint() {
+        val text = WalkthroughCatalog.localized(
+            WalkthroughCatalog.SYNC_PROMPT_ES,
+            4,
+            CompanionLanguage.ENGLISH,
+            0x0230
+        )
+        assertTrue(text.contains("Seiryu"))
+        assertTrue(!text.contains("Wire Forest"))
+    }
+
+    @Test
+    fun translatesRepeatingTomWhenCompanionIsSpanish() {
+        assertEquals(
+            "Habla con Repeating Tom en la Torre Seiryu.",
+            WalkthroughCatalog.localized(
+                "Talk to Repeating Tom in Seiryu Tower.",
+                4,
+                CompanionLanguage.SPANISH,
+                0x0230
+            )
+        )
+    }
+
+    @Test
     fun usesNorthSectorCompanionHintForBootMountain() {
         val text = WalkthroughCatalog.localized(
             WalkthroughCatalog.SYNC_PROMPT_ES,
@@ -113,6 +149,27 @@ class WalkthroughCatalogTest {
         )
         assertTrue(text.contains("Boot Mountain"))
         assertTrue(text.contains("Genbu City"))
+    }
+
+    @Test
+    fun keepsUsaWalkthroughDisabledWithoutMapHints() {
+        assertEquals(
+            WalkthroughCatalog.UNAVAILABLE_EN,
+            WalkthroughCatalog.localized(
+                WalkthroughCatalog.UNAVAILABLE_ES,
+                4,
+                CompanionLanguage.ENGLISH,
+                0x0230
+            )
+        )
+        assertTrue(
+            !WalkthroughCatalog.localized(
+                WalkthroughCatalog.UNAVAILABLE_ES,
+                4,
+                CompanionLanguage.SPANISH,
+                0x0230
+            ).contains("Seiryu")
+        )
     }
 
     @Test

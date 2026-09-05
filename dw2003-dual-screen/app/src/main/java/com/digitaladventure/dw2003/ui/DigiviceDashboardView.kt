@@ -317,7 +317,7 @@ class DigiviceDashboardView(
             true,
             Paint.Align.CENTER
         )
-        if (snapshot.gameStarted) {
+        if (snapshot.gameStarted && snapshot.supportsFastTravel) {
             drawText(
                 canvas,
                 tr("TOCA EL MAPA PARA VIAJE RÁPIDO", "TAP THE MAP FOR FAST TRAVEL"),
@@ -813,13 +813,15 @@ class DigiviceDashboardView(
             invalidate()
         }
         val openMap = RectF(bounds.left + dp(10f), bounds.top + dp(34f), bounds.right - dp(10f), bounds.top + dp(66f))
-        paint.color = CYAN_DARK
-        canvas.drawRoundRect(openMap, dp(5f), dp(5f), paint)
+        if (snapshot.supportsFastTravel) {
+            paint.color = CYAN_DARK
+            canvas.drawRoundRect(openMap, dp(5f), dp(5f), paint)
             drawText(canvas, tr("ABRIR PESTAÑA MAPA", "OPEN MAP TAB"), openMap.centerX(), openMap.centerY() + dp(4f), dp(10f), WHITE, true, Paint.Align.CENTER)
-        hitTargets += openMap to {
-            travelMenuOpen = false
-            actions.onOpenGameMap()
-            invalidate()
+            hitTargets += openMap to {
+                travelMenuOpen = false
+                actions.onOpenGameMap()
+                invalidate()
+            }
         }
         val currentIcon = FastTravelCatalog.iconId(snapshot.areaId, snapshot.mapId)
         val groups = FastTravelCatalog.groups(
@@ -841,7 +843,21 @@ class DigiviceDashboardView(
             )
         }
         val listTop = openMap.bottom + if (destinationCount > 0) dp(20f) else dp(6f)
-        if (!snapshot.canFastTravel) {
+        if (!snapshot.supportsFastTravel) {
+            drawWrapped(
+                canvas,
+                tr(
+                    "El viaje rápido de Flawe no está disponible en Digimon World 3 USA.",
+                    "Flawe fast travel is not available on Digimon World 3 USA."
+                ),
+                bounds.left + dp(16f),
+                listTop + dp(4f),
+                bounds.width() - dp(32f),
+                dp(10f),
+                AMBER,
+                3
+            )
+        } else if (!snapshot.canFastTravel) {
             drawWrapped(
                 canvas,
                 tr(

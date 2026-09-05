@@ -217,8 +217,8 @@ class GameSetupView(
         content.addView(label(
             pick(
                 language,
-                "ROM compatibles verificadas: SLES-03936 original y Flawe's Mod 2.0 combinado",
-                "Verified compatible ROMs: original SLES-03936 and combined Flawe's Mod 2.0"
+                "ROM compatibles: SLES-03936, Flawe's Mod 2.0 y SLUS-01436 USA (sin viaje rápido ni guía de Flawe)",
+                "Compatible ROMs: SLES-03936, Flawe's Mod 2.0 and SLUS-01436 USA (no Flawe fast travel or walkthrough)"
             ),
             11f,
             MUTED,

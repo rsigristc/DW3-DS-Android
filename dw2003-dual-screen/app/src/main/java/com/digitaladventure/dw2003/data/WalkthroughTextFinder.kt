@@ -52,7 +52,11 @@ object WalkthroughTextFinder {
     private val landmarks = setOf(
         "asuka", "seiryu", "suzaku", "byakko", "amaterasu", "park", "parque",
         "forest", "bosque", "wire", "alambre", "city", "ciudad", "beach",
-        "playa", "inn", "posada", "tamer", "digimon", "server", "servidor"
+        "playa",         "inn", "posada", "tamer", "digimon", "server", "servidor",
+        "tower", "torre", "tom"
+    )
+    private val GENERIC_PLACE_WORDS = setOf(
+        "seiryu", "suzaku", "byakko", "genbu", "asuka", "amaterasu", "digimon"
     )
 
     fun decodeWindow(bytes: ByteArray, start: Int = 0): String? {
@@ -115,14 +119,37 @@ object WalkthroughTextFinder {
         }
     }
 
-    fun score(text: String, requireHint: Boolean = true): Int {
+    fun keywords(text: String): Set<String> = words(text).toSet()
+
+    fun locationKeywords(vararg labels: String): Set<String> {
+        val words = labels.flatMap { keywords(it) }.toMutableSet()
+        if ("torre" in words) words += "tower"
+        if ("tower" in words) words += "torre"
+        if ("ciudad" in words) words += "city"
+        if ("city" in words) words += "ciudad"
+        if ("bosque" in words) words += "forest"
+        if ("forest" in words) words += "bosque"
+        if ("parque" in words) words += "park"
+        if ("park" in words) words += "parque"
+        return words
+    }
+
+    fun score(text: String, requireHint: Boolean = true, locationWords: Set<String> = emptySet()): Int {
         val words = words(text)
         val letterCount = text.count(Char::isLetter)
         if (letterCount < 8 || words.size < 3) return Int.MIN_VALUE
         val verbCount = words.count { it in englishVerbs || it in spanishVerbs }
         val landmarkCount = words.count { it in landmarks }
+        val locationCount = words.count { it in locationWords }
+        val distinctive = locationWords - GENERIC_PLACE_WORDS
+        val distinctiveHits = words.count { it in distinctive }
         if (requireHint && verbCount == 0 && landmarkCount == 0) return Int.MIN_VALUE
-        return verbCount * 1_000 + landmarkCount * 120 + letterCount + words.size * 4
+        return verbCount * 1_000 +
+            landmarkCount * 120 +
+            locationCount * 500 +
+            distinctiveHits * 800 +
+            letterCount +
+            words.size * 4
     }
 
     private fun decodeAscii(bytes: ByteArray, start: Int): String? {
@@ -155,6 +182,10 @@ object WalkthroughCatalog {
     const val SYNC_PROMPT_ES = "Abre el menú del juego para sincronizar la guía integrada."
     const val START_PROMPT_EN = "Start or load a game to activate the companion panel."
     const val SYNC_PROMPT_EN = "Open the game menu to sync Flawe's integrated walkthrough."
+    const val UNAVAILABLE_ES =
+        "Esta versión USA no incluye la guía de Flawe. El panel no muestra objetivos del mod."
+    const val UNAVAILABLE_EN =
+        "This USA version has no Flawe walkthrough. The companion does not show the mod's objectives."
 
     fun localized(
         raw: String,
@@ -162,6 +193,12 @@ object WalkthroughCatalog {
         language: CompanionLanguage,
         mapId: Int = 0
     ): String {
+        if (raw == UNAVAILABLE_ES || raw == UNAVAILABLE_EN) {
+            return when (language) {
+                CompanionLanguage.SPANISH -> UNAVAILABLE_ES
+                CompanionLanguage.ENGLISH -> UNAVAILABLE_EN
+            }
+        }
         val live = raw.takeUnless { it == START_PROMPT_ES || it == SYNC_PROMPT_ES || it == START_PROMPT_EN || it == SYNC_PROMPT_EN }
         if (live != null) {
             return translateKnown(live, language)
@@ -183,8 +220,8 @@ object WalkthroughCatalog {
         this != START_PROMPT_ES && this != START_PROMPT_EN
 
     private fun fallback(storyStage: Int, mapId: Int, language: CompanionLanguage): String? {
-        stageHint(storyStage, language)?.let { return it }
-        return mapHint(mapId, language)
+        mapHint(mapId, language)?.let { return it }
+        return stageHint(storyStage, language)
     }
 
     private fun stageHint(storyStage: Int, language: CompanionLanguage): String? =
@@ -308,6 +345,8 @@ object WalkthroughCatalog {
         "Termina los recados de Ciudad Asuka y sal hacia Central Park." to
             "Finish the errands in Asuka City and leave toward Central Park.",
         "Explora Central Park y localiza la entrada al Bosque Alambre." to
-            "Explore Central Park and find the Wire Forest Entrance."
+            "Explore Central Park and find the Wire Forest Entrance.",
+        "Habla con Repeating Tom en la Torre Seiryu." to
+            "Talk to Repeating Tom in Seiryu Tower."
     )
 }

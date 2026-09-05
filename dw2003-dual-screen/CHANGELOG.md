@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.4
+
+- El objetivo sigue la guía de Flawe al cambiar de mapa, no la pista fija de Historia 4. El overlay de START se relee y, si hay texto en vivo, se muestra también en español cuando hay traducción conocida.
+- Digimon World 3 USA (`SLUS-01436`) arranca en NTSC. El viaje rápido y la guía de Flawe quedan desactivados; el resto del panel sigue leyendo la partida.
+
 ## 1.0.3
 
 - Al reabrir la app, el núcleo vuelve a crear los recursos OpenGL si Samsung soltó el contexto en segundo plano. `create`/`destroy` ya no tocan un núcleo nulo.
