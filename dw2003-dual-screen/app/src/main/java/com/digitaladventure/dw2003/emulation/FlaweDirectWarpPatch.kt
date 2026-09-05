@@ -11,14 +11,31 @@ import com.digitaladventure.dw2003.data.GameStateReader
  * lets Flawe's own table write the destination and exact spawn.
  * Icon codes come from [FlaweFastTravelTable] (patcher IPS + ddw3 ASKMAP).
  *
- * Combined Flawe 2.0 packs do not always keep the public 80-byte window at
- * `0x8000C000` or a `j/jal` thunk. A unique matching prologue, or a unique
- * `lw *, 0x184(*)` plus a nearby `bne` of that register, is enough.
+ * Supports the older scratch dispatcher and the table-driven 2.0 function.
+ * A load of a map-widget field alone is not a warp signature: the normal
+ * map renderer uses those fields too. Only known function shapes qualify.
  */
 object FlaweDirectWarpPatch {
     const val DISPATCHER_RAM_OFFSET = 0x0C000
     const val WINDOW_SIZE = 0x50
     const val SYSTEM_RAM_SIZE = 0x200000
+    const val V2_RAM_OFFSET = 0x9BBE4
+    const val V2_WINDOW_SIZE = 0x3C
+
+    // Flawe 2.0 uses a table-driven function, not the older C000 dispatcher.
+    // Its two copies can coexist in RAM; the one referenced by JAL is active.
+    fun matchesV2(bytes: ByteArray, offset: Int = 0): Boolean {
+        if (offset < 0 || offset + V2_WINDOW_SIZE > bytes.size) return false
+        fun word(at: Int) = GameStateReader.u32(bytes, offset + at)
+        return word(0) == 0x8C820180L && word(4) == 0L &&
+            word(8) and 0xFFFF0000L == 0x10400000L && word(0xC) == 0L &&
+            word(0x10) == 0x3C028001L && word(0x14) == 0x8C42B214L &&
+            word(0x18) == 0x27BDFFD0L && word(0x28) in setOf(0x00808021L, 0x00808025L) &&
+            word(0x2C) == 0x38420002L && word(0x30) == 0x2C420001L &&
+            word(0x38) == 0x8E070184L
+    }
+
+    fun v2Site(offset: Int) = DispatcherSite(offset, 8, 0x38, V2_WINDOW_SIZE)
 
     private const val VALIDATION_BRANCH_OFFSET = 0x0C
     private const val ICON_LOAD_OFFSET = 0x4C
@@ -27,9 +44,7 @@ object FlaweDirectWarpPatch {
     private const val BRANCH_REGISTER_MASK = 0xFFFF0000L
     private const val EXPECTED_ICON_LOAD = 0x8E230184L // lw v1, 0x184(s1)
     private const val LW_OPCODE = 0x23
-    private const val BNE_OPCODE = 5
     private const val ICON_IMMEDIATE = 0x184
-    private const val LOOKBACK = 0x70
     private const val NOP = 0L
     private const val ORI_OPCODE_PREFIX = 0x34000000L
 
@@ -52,8 +67,7 @@ object FlaweDirectWarpPatch {
         bytes.size == WINDOW_SIZE && matchesDispatcher(bytes, 0)
 
     fun matchesNearby(bytes: ByteArray): Boolean =
-        findLooseSites(bytes, 0).isNotEmpty() ||
-            (0..bytes.size - WINDOW_SIZE step 4).any { matchesDispatcher(bytes, it) }
+        findExactSites(bytes).isNotEmpty()
 
     fun prepare(original: ByteArray, areaId: Int): ByteArray? {
         val iconCode = iconCode(areaId) ?: return null
@@ -76,8 +90,9 @@ object FlaweDirectWarpPatch {
         val load = GameStateReader.u32(window, site.iconLoadOffset)
         if (!isLwImmediate(load, ICON_IMMEDIATE)) return null
         val destReg = rt(load)
-        val branch = GameStateReader.u32(window, site.branchOffset)
-        if (!isBneInvolving(branch, destReg)) return null
+        val isV2 = site.branchOffset == 8 && site.iconLoadOffset == 0x38 && matchesV2(window)
+        if (!isV2 && !(site.branchOffset == VALIDATION_BRANCH_OFFSET &&
+                site.iconLoadOffset == ICON_LOAD_OFFSET && matchesPreferred(window))) return null
 
         return window.copyOf().also { patched ->
             GameMemoryController.writeU32(patched, site.branchOffset, NOP)
@@ -92,61 +107,20 @@ object FlaweDirectWarpPatch {
         if (referencedExact.isNotEmpty()) return referencedExact
         if (exact.size == 1) return exact
 
-        val loose = findLooseSites(ram, 0)
-        val referencedLoose = loose.filter { isJumpReferenced(it.ramOffset, jumpTargets) }
-        if (referencedLoose.isNotEmpty()) return referencedLoose
-        if (loose.size == 1) return loose
-        val preferredLoose = loose.filter { site ->
-            site.ramOffset in DISPATCHER_RAM_OFFSET until (DISPATCHER_RAM_OFFSET + 0x100)
-        }
-        return if (preferredLoose.size == 1) preferredLoose else emptyList()
+        return emptyList()
     }
 
     private fun findExactSites(ram: ByteArray): List<DispatcherSite> {
-        if (ram.size < WINDOW_SIZE) return emptyList()
-        return (0..ram.size - WINDOW_SIZE step 4).mapNotNull { offset ->
-            if (matchesDispatcher(ram, offset)) {
+        if (ram.size < V2_WINDOW_SIZE) return emptyList()
+        return (0..ram.size - V2_WINDOW_SIZE step 4).mapNotNull { offset ->
+            if (matchesV2(ram, offset)) {
+                v2Site(offset)
+            } else if (matchesDispatcher(ram, offset)) {
                 DispatcherSite(offset, VALIDATION_BRANCH_OFFSET, ICON_LOAD_OFFSET, WINDOW_SIZE)
             } else {
                 null
             }
         }
-    }
-
-    private fun findLooseSites(bytes: ByteArray, baseOffset: Int): List<DispatcherSite> {
-        if (bytes.size < 8) return emptyList()
-        val sites = mutableListOf<DispatcherSite>()
-        for (loadAt in 0..bytes.size - 4 step 4) {
-            val load = GameStateReader.u32(bytes, loadAt)
-            if (!isLwImmediate(load, ICON_IMMEDIATE)) continue
-            val destReg = rt(load)
-            val searchFrom = (loadAt - LOOKBACK).coerceAtLeast(0)
-            var branchAt = -1
-            var walk = loadAt - 4
-            while (walk >= searchFrom) {
-                val word = GameStateReader.u32(bytes, walk)
-                if (isBneInvolving(word, destReg)) {
-                    branchAt = walk
-                    break
-                }
-                walk -= 4
-            }
-            if (branchAt < 0) continue
-            val windowStart = preferredWindowStart(bytes, branchAt, loadAt)
-            sites += DispatcherSite(
-                ramOffset = baseOffset + windowStart,
-                branchOffset = branchAt - windowStart,
-                iconLoadOffset = loadAt - windowStart,
-                windowSize = loadAt + 4 - windowStart
-            )
-        }
-        return sites
-    }
-
-    private fun preferredWindowStart(bytes: ByteArray, branchAt: Int, loadAt: Int): Int {
-        val classicStart = loadAt - ICON_LOAD_OFFSET
-        if (classicStart >= 0 && matchesDispatcher(bytes, classicStart)) return classicStart
-        return minOf(branchAt, loadAt)
     }
 
     private fun matchesDispatcher(bytes: ByteArray, offset: Int): Boolean {
@@ -181,14 +155,6 @@ object FlaweDirectWarpPatch {
         val imm = (word and 0xFFFF).toInt()
         return opcode == LW_OPCODE && imm == immediate
     }
-
-    private fun isBneInvolving(word: Long, register: Int): Boolean {
-        val opcode = (word ushr 26).toInt()
-        if (opcode != BNE_OPCODE) return false
-        return rs(word) == register || rt(word) == register
-    }
-
-    private fun rs(word: Long): Int = ((word ushr 21) and 0x1F).toInt()
 
     private fun rt(word: Long): Int = ((word ushr 16) and 0x1F).toInt()
 

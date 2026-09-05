@@ -6,13 +6,13 @@ Prueba de concepto Android para ejecutar **Digimon World 2003 (Europa)** y aprov
 - Samsung Galaxy Z Fold y otros plegables compatibles con Jetpack WindowManager.
 - Tablets o pantallas grandes, con división lógica adaptable.
 
-La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.0.4** es la release actual; **1.0.0** fue la primera oficial firmada. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.0.6** es la release actual; **1.0.0** fue la primera oficial firmada. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
 
-## Estado 1.0.4
+## Estado 1.0.6
 
-- El objetivo sigue la guía de Flawe al cambiar de mapa. Digimon World 3 USA (`SLUS-01436`) arranca en NTSC sin viaje rápido ni walkthrough.
-- Al reabrir la app se reconstruye OpenGL si el Fold soltó el contexto en segundo plano.
-- El listado con scroll se usa cuando el panel va a un lado. Si el juego y el panel están arriba/abajo, se mantiene el diseño de columnas. El radar conserva su proporción.
+- La guía offline de Flawe cubre inglés, español, francés, alemán e italiano y sigue las condiciones de misión, no solo la etapa de historia.
+- Tocar el radar abre destinos visitados; el viaje automático de Asuka y «Abrir pestaña Mapa» están corregidos. El marcador sigue el sector actual.
+- Menos búsquedas periódicas en RAM y el sondeo se detiene en segundo plano. USA (`SLUS-01436`) arranca en NTSC; viaje rápido y guía de Flawe siguen siendo PAL.
 
 Implementado y compilado:
 
@@ -41,7 +41,7 @@ Implementado y compilado:
 - Cada estado rápido guarda y restaura su propia Memory Card de 128 KiB; los estados 0.5 sin tarjeta emparejada se rechazan para evitar incoherencias.
 - Pestaña seleccionada persistente: la telemetría ya no vuelve automáticamente a Exploración.
 - Lectura del nombre del Tamer, ID/nombre de área y mapa lógico desde RAM.
-- Radar regional con mapas Asuka/Amaterasu y selección por servidor y sector; el marcador central no pretende ser una coordenada exacta.
+- Radar regional con mapas Asuka/Amaterasu y selección por servidor y sector; el marcador sigue el sector, no la coordenada exacta del personaje.
 - Lectura de la digievolución activa, su nivel de habilidad y hasta tres técnicas aprendidas con su coste de MP conocido.
 - Máscara de transparencia por borde para limpiar el fondo blanco del Tamer y de los compañeros sin eliminar detalles blancos interiores del pixel art.
 - Título de ubicación sincronizado con `MAP_ID`, que cambia al destino antes que `AREA` durante las transiciones.
@@ -74,13 +74,13 @@ La USA `SLUS-01436` se reconoce por SHA-1 o por el serial del disco y arranca en
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v1.0.4.apk` (release `v1.0.4`) en un dispositivo Android ARM64. Si tenías la POC debug, desinstálala antes. Si ya tienes 1.0.0–1.0.3, el actualizador de la app puede reemplazarla.
+1. Instala `DW2003-Dual-Screen-v1.0.6.apk` (release `v1.0.6`) en un dispositivo Android ARM64. Si tenías la POC debug, desinstálala antes. Si ya tienes 1.0.0–1.0.4, el actualizador de la app puede reemplazarla.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada, la imagen original europea o Digimon World 3 USA (`SLUS-01436`). En USA no hay viaje rápido ni guía de Flawe.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.
 5. En un Fold desplegado, el juego y el panel se reparten según la bisagra; si Android no reporta una bisagra separadora, se aplica una división lógica.
-6. Abre una vez el menú del juego para que el mod actualice los punteros del walkthrough. En inglés Flawe muestra la guía en START; el panel la copia cuando esos punteros o el texto ASCII están en RAM.
-7. En español, AUTO lee el idioma PAL en `0x8005CCA8` (6 = español) para no copiar el inglés de Flawe. El panel muestra la pista en español sin una nota extra sobre el menú del mod. Puedes forzar el idioma en ⚙ APP → **Idioma del panel**.
+6. El panel usa la guía offline de Flawe (cinco idiomas). Abrir START sigue ayudando a copiar texto en vivo cuando el menú localizado lo muestra.
+7. AUTO lee el idioma PAL en `0x8005CCA8` (6 = español). Puedes forzar el idioma del panel en ⚙ APP → **Idioma del panel**.
 8. Usa la barra superior del juego para guardar/cargar estado, activar 2× o silenciar. Pulsa **⚙ APP** —o Atrás de Android cuando solo se vea el juego— para volver a la configuración inicial, activar Mods, cambiar BIN o gestionar BIOS y Memory Card.
 9. Para guardar partidas dentro del juego, importa un BIOS europeo. El BIOS HLE de PCSX-ReARMed puede quedarse en «Comprobando la Tarjeta de Memoria».
 
@@ -91,7 +91,7 @@ La aplicación conserva permiso de lectura del archivo mediante Storage Access F
 - El radar selecciona una imagen regional real según servidor/sector y muestra el nombre del mapa local. La coordenada exacta del jugador dentro de esa imagen todavía no se extrae de RAM.
 - Flawe no expone una entrada directa documentada a su mapa; la app abre START, ancla la lista en Ítems con ↑↑↑↑ y baja a Mapa con ↓↓ ×. No escribe el índice del widget. Si el destino está en el otro servidor, pulsa □. Amaterasu no tiene códigos ASKMAP en el IPS.
 - En Flawe 2.0 la lista prueba `0x8000C000` y, si difiere, busca una copia reubicada referenciada por el overlay. Fuerza el icono interno solo durante × y lo restaura antes de salir con △△. Si no hay una firma activa única, vuelve a la cruceta.
-- El objetivo en inglés depende de Flawe: punteros en `0x8000B200`, texto ASCII en scratch/overlay, o un barrido al abrir START. En español el panel muestra pistas propias (sin etiqueta extra sobre Flawe).
+- El objetivo usa el selector y el catálogo empaquetados de Flawe. El texto en vivo de START se muestra cuando el menú localizado lo tiene; si no, el panel sigue las condiciones de misión offline.
 - La detección automática de Batalla/Gestión usa firmas del mod combinado. La imagen original continúa funcionando, pero puede requerir firmas adicionales.
 - La POC abre una imagen BIN individual. El soporte formal para CUE multitrack y CHD queda para una fase posterior.
 - El núcleo puede usar su BIOS HLE. Si el usuario importa su propio BIOS europeo, la aplicación lo valida y lo guarda de forma privada como `scph5502.bin`; nunca se distribuye uno.

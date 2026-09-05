@@ -56,6 +56,8 @@ void Core::open(const std::string& soCorePath) {
     retro_unserialize = (bool (*)(const void*, size_t)) get_symbol(libHandle, "retro_unserialize");
     retro_get_memory_size = (size_t (*)(unsigned)) get_symbol(libHandle, "retro_get_memory_size");
     retro_get_memory_data = (void* (*)(unsigned)) get_symbol(libHandle, "retro_get_memory_data");
+    retro_notify_memory_write = reinterpret_cast<void (*)(unsigned, size_t, size_t)>(
+        dlsym(libHandle, "retro_notify_memory_write"));
     retro_load_game = (bool (*)(const struct retro_game_info*)) get_symbol(libHandle, "retro_load_game");
     retro_unload_game = (void (*)()) get_symbol(libHandle, "retro_unload_game");
     retro_set_video_refresh = (void (*)(retro_video_refresh_t)) get_symbol(libHandle, "retro_set_video_refresh");

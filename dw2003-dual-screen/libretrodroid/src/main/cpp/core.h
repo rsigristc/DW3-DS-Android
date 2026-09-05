@@ -41,6 +41,8 @@ public:
     bool (*retro_unserialize)(const void *data, size_t size);
     size_t (*retro_get_memory_size)(unsigned id);
     void* (*retro_get_memory_data)(unsigned id);
+    // Optional extension provided by our PCSX core. Other cores may omit it.
+    void (*retro_notify_memory_write)(unsigned id, size_t offset, size_t length) = nullptr;
     bool (*retro_load_game)(const struct retro_game_info *game);
     void (*retro_unload_game)(void);
     void (*retro_set_video_refresh)(retro_video_refresh_t);

@@ -90,21 +90,45 @@ class FlaweDirectWarpPatchTest {
     }
 
     @Test
-    fun patchesLooseIconLoadWhenPrologueOffsetsDiffer() {
+    fun refusesRendererLoadsWithoutAKnownWarpFunction() {
         val ram = ByteArray(0x4000)
         val branchAt = 0x1100
         val loadAt = 0x1130
         GameMemoryController.writeU32(ram, branchAt, 0x14680010L)
         GameMemoryController.writeU32(ram, loadAt, 0x8E230184L)
 
-        val site = FlaweDirectWarpPatch.selectActiveSite(ram)!!
-        assertEquals(branchAt, site.ramOffset)
-        val window = ram.copyOfRange(site.ramOffset, site.ramOffset + site.windowSize)
-        val patched = FlaweDirectWarpPatch.prepare(window, 0x0222, site.copy(ramOffset = 0))!!
-        assertEquals(0L, GameStateReader.u32(patched, site.branchOffset))
-        assertEquals(0x34030015L, GameStateReader.u32(patched, site.iconLoadOffset))
-        assertTrue(FlaweDirectWarpPatch.matchesNearby(ram.copyOfRange(0x1100, 0x1140)))
+        assertNull(FlaweDirectWarpPatch.selectActiveSite(ram))
+        assertTrue(!FlaweDirectWarpPatch.matchesNearby(ram.copyOfRange(0x1100, 0x1140)))
     }
+
+    @Test
+    fun supportsActualFlawe2FunctionCapturedFromDevice() {
+        val original = v2Window()
+        assertTrue(FlaweDirectWarpPatch.matchesV2(original))
+        val patched = FlaweDirectWarpPatch.prepare(original, 0x229, FlaweDirectWarpPatch.v2Site(0))!!
+        assertEquals(0L, GameStateReader.u32(patched, 8))
+        assertEquals(0x34070018L, GameStateReader.u32(patched, 0x38))
+        assertTrue(original.contentEquals(v2Window()))
+        // The server-availability check must remain intact.
+        assertEquals(GameStateReader.u32(original, 0x24), GameStateReader.u32(patched, 0x24))
+        original[0x14] = 0
+        assertNull(FlaweDirectWarpPatch.prepare(original, 0x229, FlaweDirectWarpPatch.v2Site(0)))
+    }
+
+    @Test
+    fun selectsReferencedV2CopyAndFindsShortWindowAtEndOfRam() {
+        val ram = ByteArray(0x4000 + FlaweDirectWarpPatch.V2_WINDOW_SIZE)
+        v2Window().copyInto(ram, 0x1000)
+        v2Window().copyInto(ram, 0x4000)
+        assertNull(FlaweDirectWarpPatch.selectActiveSite(ram))
+        GameMemoryController.writeU32(ram, 0, 0x0C001000L) // jal 0x80004000
+        assertEquals(0x4000, FlaweDirectWarpPatch.selectActiveSite(ram)!!.ramOffset)
+    }
+
+    private fun v2Window(): ByteArray =
+        ("8001828c000000004c004010000000000180023c14b2428cd0ffbd272800b0af" +
+            "2c00bfaf3c00401025808000020042380100422c0a80033c8401078e")
+            .chunked(2).map { it.toInt(16).toByte() }.toByteArray()
 
     @Test
     fun refusesAmbiguousLooseCopies() {

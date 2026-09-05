@@ -13,6 +13,7 @@ class RomVerifierTest {
         assertEquals("NTSC", RomVerifier.Variant.USA.emulatorRegion)
         assertFalse(RomVerifier.Variant.USA.features.supportsFastTravel)
         assertFalse(RomVerifier.Variant.USA.features.supportsWalkthrough)
+        assertEquals(0x484B4, RomVerifier.Variant.USA.features.ramBase)
     }
 
     @Test

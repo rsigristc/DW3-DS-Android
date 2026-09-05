@@ -25,6 +25,22 @@ cd DW3-DS-Android
 .\scripts\build.ps1
 ```
 
+If Windows `ndk-build` fails with `INTERNAL: readdir: No such file or
+directory`, shorten the checkout path with an unused drive letter. For example,
+from the repository root, with `W:` unused:
+
+```powershell
+subst W: $PWD.Path
+Push-Location W:\dw2003-dual-screen
+.\gradlew.bat :app:assembleRelease
+Pop-Location
+subst W: /D
+```
+
+The APK remains in the original checkout. Release builds require the signing
+configuration described below. The native makefile handles revision generation
+on Windows without requiring `sed`, `cp`, or `rm`.
+
 The default tasks are `:app:testDebugUnitTest`, `:app:lintDebug` and
 `:app:assembleDebug`. Extra Gradle tasks can be passed through:
 

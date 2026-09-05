@@ -16,4 +16,10 @@ class DwTextDecoderTest {
         )
         assertEquals("Digimon World\n2003", DwTextDecoder.decode(encoded))
     }
+
+    @Test
+    fun encodeRoundTripsWalkthroughStem() {
+        val text = "Talk to Repeating Tom in Seiryu Tower."
+        assertEquals(text, DwTextDecoder.decode(DwTextDecoder.encode(text)))
+    }
 }

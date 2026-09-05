@@ -227,6 +227,9 @@ void LibretroDroid::writeMemory(
     }
     if (length > 0) {
         memcpy(memory + offset, data, length);
+        if (core->retro_notify_memory_write != nullptr) {
+            core->retro_notify_memory_write(memoryId, offset, length);
+        }
     }
 }
 

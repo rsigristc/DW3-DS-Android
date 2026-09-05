@@ -48,19 +48,13 @@ jobs:
           sha256sum "$dest" > dw2003-dual-screen/app/build/outputs/apk/release/SHA256SUMS.txt
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$dest" \
             > dw2003-dual-screen/app/build/outputs/apk/release/CERT.txt
+          python3 scripts/release-notes.py "$GITHUB_REF_NAME" > "$RUNNER_TEMP/release-notes.md"
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
           name: DW2003 Dual Screen ${{ github.ref_name }}
-          generate_release_notes: true
-          body: |
-            Official signed release (`com.digitaladventure.dw2003`).
-
-            Source, license and build entry point are in this repository (`scripts/build.sh`).
-            The APK does not include a ROM, BIOS or game patch.
-
-            If you still have a 0.7.x debug POC (`com.digitaladventure.dw2003.debug`), uninstall it once, then install this APK. Later official updates can replace this package in place.
+          body_path: ${{ runner.temp }}/release-notes.md
           files: |
             dw2003-dual-screen/app/build/outputs/apk/release/DW2003-Dual-Screen-${{ github.ref_name }}.apk
             dw2003-dual-screen/app/build/outputs/apk/release/SHA256SUMS.txt

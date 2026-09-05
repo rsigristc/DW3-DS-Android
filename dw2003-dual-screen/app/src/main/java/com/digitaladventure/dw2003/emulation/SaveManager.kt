@@ -20,9 +20,6 @@ class SaveManager(context: Context) {
     val hasSave: Boolean
         get() = memoryCard.isFile && AppFileRules.isValidMemoryCardSize(memoryCard.length())
 
-    val hasBackup: Boolean
-        get() = backupCard.isFile && AppFileRules.isValidMemoryCardSize(backupCard.length())
-
     val sizeBytes: Long
         get() = memoryCard.takeIf(File::isFile)?.length() ?: 0L
 
@@ -113,17 +110,6 @@ class SaveManager(context: Context) {
             memoryCard.inputStream().use { it.copyTo(output) }
         }
         return memoryCard.length()
-    }
-
-    @Synchronized
-    fun restoreBackup(): Boolean {
-        if (!hasBackup) return false
-        if (memoryCard.isFile) {
-            val current = File(saveDirectory, "dw2003-memory-card.before-restore.srm")
-            memoryCard.copyTo(current, overwrite = true)
-        }
-        backupCard.copyTo(memoryCard, overwrite = true)
-        return true
     }
 
     companion object {

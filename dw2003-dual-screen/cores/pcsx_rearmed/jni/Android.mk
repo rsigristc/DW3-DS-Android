@@ -1,9 +1,18 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
+ifeq ($(OS),Windows_NT)
+# ndk-build uses cmd.exe on Windows; generate the header without POSIX tools.
+CORE_REVISION := $(shell git -C "$(LOCAL_PATH)" describe --always 2>NUL)
+ifeq ($(strip $(CORE_REVISION)),)
+CORE_REVISION := unknown
+endif
+$(file >$(LOCAL_PATH)/../include/revision.h,#define REV "$(CORE_REVISION)")
+else
 $(shell cd "$(LOCAL_PATH)" && ((git describe --always 2>/dev/null || echo unknown) | sed -e 's/.*/#define REV "\0"/' > ../include/revision.h_))
 $(shell cd "$(LOCAL_PATH)" && (diff -q ../include/revision.h_ ../include/revision.h > /dev/null 2>&1 || cp ../include/revision.h_ ../include/revision.h))
 $(shell cd "$(LOCAL_PATH)" && (rm ../include/revision.h_))
+endif
 
 USE_LIBRETRO_VFS ?= 1
 USE_ASYNC_CDROM ?= 1
@@ -258,7 +267,11 @@ SOURCES_C += \
 COREFLAGS += -DHAVE_RTHREADS
 endif
 
+ifeq ($(OS),Windows_NT)
+GIT_VERSION := " $(CORE_REVISION)"
+else
 GIT_VERSION := " $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+endif
 ifneq ($(GIT_VERSION)," unknown")
   COREFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
 endif

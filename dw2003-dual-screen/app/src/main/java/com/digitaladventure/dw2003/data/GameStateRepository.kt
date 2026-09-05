@@ -11,6 +11,11 @@ class GameStateRepository {
     val snapshot: StateFlow<GameSnapshot> = mutableSnapshot.asStateFlow()
 
     fun publish(snapshot: GameSnapshot) {
+        val previous = mutableSnapshot.value
+        if (!snapshot.gameStarted && previous.gameStarted && previous.isLive) {
+            return
+        }
+        if (snapshot.copy(sampledAtMillis = previous.sampledAtMillis) == previous) return
         mutableSnapshot.value = snapshot
     }
 

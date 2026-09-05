@@ -46,4 +46,36 @@ object DwTextDecoder {
         }
         return out.toString().replace(Regex("[ \\t]+"), " ").trim()
     }
+
+    fun encode(text: String): ByteArray {
+        val out = ArrayList<Byte>(text.length + 8)
+        text.forEach { character ->
+            when (character) {
+                in 'A'..'Z' -> out += (0x0E + character.code - 'A'.code).toByte()
+                in 'a'..'z' -> out += (0x28 + character.code - 'a'.code).toByte()
+                in '0'..'9' -> out += (0x04 + character.code - '0'.code).toByte()
+                ' ' -> {
+                    out += 0x01
+                    out += 0x01
+                }
+                ',' -> {
+                    out += 0x01
+                    out += 0x02
+                }
+                '.' -> {
+                    out += 0x01
+                    out += 0x03
+                }
+                '\'' -> {
+                    out += 0x01
+                    out += 0x13
+                }
+                '"' -> {
+                    out += 0x01
+                    out += 0x14
+                }
+            }
+        }
+        return out.toByteArray()
+    }
 }

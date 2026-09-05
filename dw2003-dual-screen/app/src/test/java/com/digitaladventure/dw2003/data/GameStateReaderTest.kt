@@ -164,6 +164,23 @@ class GameStateReaderTest {
         assertFalse(snapshot.supportsFastTravel)
         assertFalse(snapshot.supportsWalkthrough)
         assertTrue(snapshot.canReorderParty)
+        assertEquals(CompanionRomFeatures.USA_RAM_BASE, CompanionRomFeatures.USA.ramBase)
+        assertEquals(0x48D00 - 0x84C, CompanionRomFeatures.USA.ramBase)
+    }
+
+    @Test
+    fun rejectsUsaGarbageReadAtPalOffsets() {
+        val ram = ByteArray(GameStateReader.MAIN_LENGTH)
+        put16(ram, GameStateReader.AREA - GameStateReader.MAIN_BASE, 0x06FA)
+        put16(ram, GameStateReader.MAP_ID - GameStateReader.MAIN_BASE, 0x06FA)
+        put16(ram, GameStateReader.STORY_STAGE - GameStateReader.MAIN_BASE, 34068)
+
+        val snapshot = GameStateReader().parse(ram, 0L, null, CompanionRomFeatures.USA)
+
+        assertTrue(!snapshot.gameStarted)
+        assertEquals(0, snapshot.areaId)
+        assertEquals(0, snapshot.storyStage)
+        assertTrue(snapshot.party.isEmpty())
     }
 
     @Test
@@ -177,6 +194,20 @@ class GameStateReaderTest {
         assertTrue(snapshot.party.isEmpty())
         assertTrue(!snapshot.gameStarted)
         assertEquals("Inicia o carga una partida para activar el panel complementario.", snapshot.objective)
+    }
+
+    @Test
+    fun ignoresOverlayNameBeforeTheSessionIsValid() {
+        val ram = ByteArray(GameStateReader.MAIN_LENGTH)
+        put16(ram, GameStateReader.AREA - GameStateReader.MAIN_BASE, 0x06FA)
+        put16(ram, GameStateReader.MAP_ID - GameStateReader.MAIN_BASE, 0x06FA)
+        put16(ram, GameStateReader.STORY_STAGE - GameStateReader.MAIN_BASE, 34068)
+
+        val snapshot = GameStateReader().parse(ram, 0L, null, CompanionRomFeatures.PAL, 0x020C)
+
+        assertTrue(!snapshot.gameStarted)
+        assertEquals(0, snapshot.publicMapId)
+        assertEquals(0, snapshot.areaId)
     }
 
     private fun put16(target: ByteArray, offset: Int, value: Int) {

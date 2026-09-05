@@ -4,10 +4,9 @@ import com.digitaladventure.dw2003.data.GameStateReader
 
 /**
  * START opens a vertical list (Items, Sort, Map, Techniques, Status)
- * moved with the D-pad, not L1/R1. The STSTATUS pad handler stores the
- * 0–4 tab index at widget+0x178 (MAP = 2). That widget base is not a
- * stable global, so this helper never writes overlay RAM: it walks with
- * UP/DOWN. The list does not wrap; Status+Down clamps at 4.
+ * moved with the D-pad, not L1/R1. No verified entry point bypasses the
+ * menu lifecycle. Drive normal inputs rather than treating the map widget's
+ * pan/scroll fields (+0x178 / +0x17c) as a menu-tab index.
  *
  * Cross on Map opens Flawe's world map, where the D-pad selects icons
  * and Cross + Triangle confirm the warp.

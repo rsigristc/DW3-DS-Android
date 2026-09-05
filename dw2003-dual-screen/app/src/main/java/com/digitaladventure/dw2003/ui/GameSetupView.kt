@@ -32,8 +32,6 @@ class GameSetupView(
     onLanguage: (() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
     allowDemo: Boolean = onClose == null,
-    hasBackup: Boolean = false,
-    onRestoreBackup: (() -> Unit)? = null,
     onReturnToStart: (() -> Unit)? = null,
     hasCrashLog: Boolean = false,
     onViewCrashLog: (() -> Unit)? = null,
@@ -52,13 +50,19 @@ class GameSetupView(
         content.setPadding(dp(28), dp(28), dp(28), dp(28))
         addView(content, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
 
+        val versionName = installedVersionName()
         content.addView(label(context.getString(R.string.setup_title), 26f, Color.WHITE, true))
-        content.addView(label(context.getString(R.string.setup_subtitle), 15f, CYAN, true).apply {
+        content.addView(label(
+            context.getString(R.string.setup_subtitle, versionName),
+            15f,
+            CYAN,
+            true
+        ).apply {
             letterSpacing = .12f
         })
         content.addView(Space(context), LinearLayout.LayoutParams(1, dp(24)))
         content.addView(label(
-            pick(language, "POC NATIVO PARA AYN THOR + GALAXY Z FOLD", "NATIVE POC FOR AYN THOR + GALAXY Z FOLD"),
+            pick(language, "COMPANION NATIVO PARA AYN THOR + GALAXY Z FOLD", "NATIVE COMPANION FOR AYN THOR + GALAXY Z FOLD"),
             12f,
             MUTED,
             true
@@ -97,6 +101,12 @@ class GameSetupView(
         content.addView(actionButton(pick(language, context.getString(R.string.export_save), "Export Memory Card"), onExportSave, outlined = true, enabled = hasSave))
         content.addView(Space(context), LinearLayout.LayoutParams(1, dp(19)))
         content.addView(label(pick(language, "OPCIONES DE LA APP", "APP OPTIONS"), 10f, CYAN, true))
+        content.addView(label(
+            pick(language, "Versión $versionName", "Version $versionName"),
+            11f,
+            MUTED,
+            true
+        ).apply { setPadding(0, dp(7), 0, dp(4)) })
         var modsOn = modsEnabled
         fun modsLabel(enabled: Boolean) = if (enabled) {
             pick(language, "Pestaña de mods: activa", "Mods tab: on")
@@ -153,22 +163,13 @@ class GameSetupView(
             content.addView(label(
                 pick(
                     language,
-                    "Automático sigue la guía de Flawe. En español, si el menú START no muestra walkthrough, el panel usa pistas propias.",
-                    "Automatic follows Flawe's walkthrough. Spanish uses companion hints when START has no in-game guide."
+                    "Automático copia el texto de la guía de Flawe en START. Si no hay texto en vivo, pide abrir START; no inventa objetivos por mapa.",
+                    "Automatic copies Flawe's START walkthrough. If that text is missing, it asks you to open START and does not invent map objectives."
                 ),
                 11f,
                 MUTED,
                 false
             ).apply { setPadding(0, dp(8), 0, 0) })
-        }
-        if (onRestoreBackup != null) {
-            content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
-            content.addView(actionButton(
-                pick(language, "Restaurar respaldo automático", "Restore automatic backup"),
-                onRestoreBackup,
-                outlined = true,
-                enabled = hasBackup
-            ))
         }
         if (onReturnToStart != null) {
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
@@ -261,6 +262,11 @@ class GameSetupView(
         }
         setOnClickListener { action() }
     }
+
+    private fun installedVersionName(): String =
+        runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull().orEmpty().ifBlank { "1.0.6" }
 
     private fun pick(language: CompanionLanguage, spanish: String, english: String) =
         CompanionUiText.pick(language, spanish, english)

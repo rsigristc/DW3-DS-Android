@@ -8,6 +8,13 @@ import org.junit.Test
 
 class LocationResolverTest {
     @Test
+    fun allowsTravelFromStartMenuButNotBattlesOrSaveEvents() {
+        assertTrue(LocationResolver.canFastTravel(0x230, 0x1000, GameMode.MANAGEMENT, true))
+        assertFalse(LocationResolver.canFastTravel(0x230, 0x1000, GameMode.BATTLE, true))
+        assertFalse(LocationResolver.canFastTravel(0x0C01, 0x1000, GameMode.MANAGEMENT, true))
+    }
+
+    @Test
     fun indoorRoomUsesCurrentMapIdNotStaleCityArea() {
         val location = LocationResolver.resolve(0x0200, 0x0206)
 
@@ -74,6 +81,39 @@ class LocationResolverTest {
 
         assertEquals("Central Park", location.title)
         assertEquals(null, location.roomName)
+    }
+
+    @Test
+    fun followsWhicheverStageWordChangedLast() {
+        val tracker = LocationTracker()
+        assertEquals(0x0202, tracker.follow(0x0202, 0x0202))
+        assertEquals(0x021D, tracker.follow(0x021D, 0x0202))
+        assertEquals(0x021E, tracker.follow(0x021D, 0x021E))
+        assertEquals(0x020A, tracker.follow(0x020A, 0x020A))
+        assertEquals(0x020A, tracker.follow(0x020A, 0x0C01))
+    }
+
+    @Test
+    fun keepsCityWhenWorldMapRewindsAreaToInn() {
+        val tracker = LocationTracker()
+        assertEquals(0x020A, tracker.follow(0x020A, 0x020A))
+        assertEquals(0x0200, tracker.follow(0x0200, 0x020A))
+        assertEquals(0x0200, tracker.follow(0x020A, 0x1000))
+    }
+
+    @Test
+    fun overlayBannerOverridesStaleCityId() {
+        val tracker = LocationTracker()
+        assertEquals(0x0200, tracker.follow(0x0200, 0x0200))
+        assertEquals(0x0202, tracker.follow(0x0200, 0x0200, 0x0202))
+        assertEquals(0x0202, tracker.follow(0x0200, 0x1000))
+    }
+
+    @Test
+    fun overlayShopNameDoesNotOverrideDistantField() {
+        val tracker = LocationTracker()
+        assertEquals(0x0226, tracker.follow(0x0226, 0x0226))
+        assertEquals(0x0226, tracker.follow(0x0226, 0x0226, 0x020E))
     }
 
     @Test

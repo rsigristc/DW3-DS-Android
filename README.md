@@ -1,6 +1,6 @@
 # DW2003 Dual Screen
 
-> v1.0.4 · Android companion for **Digimon World 2003** (PAL `SLES-03936`), Flawe's Mod 2.0 and USA `SLUS-01436`
+> v1.0.6 · Android companion for **Digimon World 2003** (PAL `SLES-03936`), Flawe's Mod 2.0 and USA `SLUS-01436`
 
 [![License: GPL v3 or later](https://img.shields.io/badge/License-GPL_v3_or_later-blue.svg)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/rsigristc/DW3-DS-Android)](https://github.com/rsigristc/DW3-DS-Android/releases)
@@ -33,7 +33,7 @@ assistance.
 ## Features
 
 - Dual-screen / fold / large-display layout with Explore, Battle and Management.
-- Live RAM read of Tamer, partners, story stage, equipment and walkthrough hints.
+- Live RAM read of Tamer, partners, story stage, equipment and an offline Flawe walkthrough (EN/ES/FR/DE/IT).
 - Flawe Fast Travel list of visited ASKMAP icons; signed in-app updates from GitHub Releases.
 - Optional quality-of-life cheats, crash log, bilingual companion panel.
 - Virtual pad, physical controllers, Memory Card import/export, optional European BIOS.

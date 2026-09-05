@@ -56,6 +56,170 @@ class WalkthroughTextFinderTest {
     }
 
     @Test
+    fun rejectsMenuPromptsAndNpcDialogue() {
+        assertTrue(!WalkthroughTextFinder.isWalkthroughHint("Open which booster?"))
+        assertTrue(
+            !WalkthroughTextFinder.isWalkthroughHint(
+                "GatomonWe go to the Administration Center a lot.But we've never seen other people."
+            )
+        )
+        assertTrue(WalkthroughTextFinder.isWalkthroughHint("Talk to Repeating Tom in Seiryu Tower."))
+        assertTrue(WalkthroughTextFinder.isStartBoxHint("Talk to Repeating Tom in Seiryu Tower."))
+        assertTrue(WalkthroughTextFinder.isStartBoxHint("Head North of 'East Wire Forest' to reach Protocol Ruins"))
+        assertTrue(!WalkthroughTextFinder.isStartBoxHint("Return to Seiryu Tower and defeat Seiryu Leader."))
+    }
+
+    @Test
+    fun displayedHintPrefersStartTitleOverLaterQuest() {
+        val ram = ByteArray(0x400)
+        val later = "Return to Seiryu Tower and defeat Seiryu Leader."
+        val current = "Head North of 'East Wire Forest' to reach Protocol Ruins"
+        later.toByteArray(Charsets.US_ASCII).copyInto(ram, 0x20)
+        "Protocol Ruins".toByteArray(Charsets.US_ASCII).copyInto(ram, 0x180)
+        current.toByteArray(Charsets.US_ASCII).copyInto(ram, 0x1A0)
+        assertEquals(current, WalkthroughTextFinder.displayedHint(ram))
+    }
+
+    @Test
+    fun displayedHintPrefersRepeatingTomOverGuilmonOnCurrentMap() {
+        val ram = ByteArray(0x400)
+        val stale = "Talk to Guilmon in Asuka Inn 2F."
+        val live = "Talk to Repeating Tom in Seiryu Tower."
+        stale.toByteArray(Charsets.US_ASCII).copyInto(ram, 0x20)
+        "Asuka Inn 2F".toByteArray(Charsets.US_ASCII).copyInto(ram, 0x80)
+        "Seiryu Tower".toByteArray(Charsets.US_ASCII).copyInto(ram, 0x180)
+        live.toByteArray(Charsets.US_ASCII).copyInto(ram, 0x1A0)
+        assertEquals(live, WalkthroughTextFinder.displayedHint(ram))
+    }
+
+    @Test
+    fun knownAsciiPrefersStandaloneRepeatingTomHeading() {
+        val ram = ByteArray(0x400) { 0x7F }
+        packTitleAndHint(ram, 0x10, "Protocol Ruins", "Head North of 'East Wire Forest' to reach Protocol Ruins")
+        for (index in 0x1C0 until 0x200) ram[index] = 0
+        packTitleAndHint(ram, 0x200, "Repeating Tom", "Talk to Repeating Tom in Seiryu Tower.")
+        assertEquals(
+            "Talk to Repeating Tom in Seiryu Tower.",
+            WalkthroughTextFinder.findKnownAscii(ram)
+        )
+    }
+
+    @Test
+    fun knownAsciiPrefersStandaloneProtocolHeading() {
+        val ram = ByteArray(0x400) { 0x7F }
+        packTitleAndHint(ram, 0x10, "Repeating Tom", "Talk to Repeating Tom in Seiryu Tower.")
+        for (index in 0x1C0 until 0x200) ram[index] = 0
+        packTitleAndHint(
+            ram,
+            0x200,
+            "Protocol Ruins",
+            "Head North of 'East Wire Forest' to reach Protocol Ruins"
+        )
+        assertEquals(
+            "Head North of 'East Wire Forest' to reach Protocol Ruins",
+            WalkthroughTextFinder.findKnownAscii(ram)
+        )
+    }
+
+    @Test
+    fun visibleAsciiHintMatchesDistantStartTitle() {
+        val ram = ByteArray(0x400) { 0x7F }
+        "Protocol Ruins".toByteArray(Charsets.US_ASCII).copyInto(ram, 0x10)
+        ram[0x10 + "Protocol Ruins".length] = 0
+        val live = "Head North of 'East Wire Forest' to reach Protocol Ruins"
+        live.toByteArray(Charsets.US_ASCII).copyInto(ram, 0x200)
+        ram[0x200 + live.length] = 0
+        assertEquals(live, WalkthroughTextFinder.displayedHint(ram))
+    }
+
+    @Test
+    fun displayedHintKeepsUniqueKnownStemWhenOtherQuestHasNoTitle() {
+        val ram = ByteArray(0x400)
+        val stale = "Talk to Guilmon in Asuka Inn 2F."
+        val live = "Talk to Repeating Tom in Seiryu Tower."
+        stale.toByteArray(Charsets.US_ASCII).copyInto(ram, 0x20)
+        live.toByteArray(Charsets.US_ASCII).copyInto(ram, 0x1A0)
+        assertEquals(live, WalkthroughTextFinder.displayedHint(ram))
+    }
+
+    @Test
+    fun knownDwFindsRepeatingTomWithStandaloneHeading() {
+        val ram = ByteArray(0x400) { 0x7F }
+        for (index in 0x1C0 until 0x200) ram[index] = 0
+        val title = DwTextDecoder.encode("Repeating Tom")
+        title.copyInto(ram, 0x200)
+        ram[0x200 + title.size] = 0
+        val body = DwTextDecoder.encode("Talk to Repeating Tom in Seiryu Tower.")
+        body.copyInto(ram, 0x200 + title.size + 1)
+        assertEquals(
+            "Talk to Repeating Tom in Seiryu Tower.",
+            WalkthroughTextFinder.findKnown(ram)
+        )
+    }
+
+    @Test
+    fun startBoxPrefersPaddedTomOverProtocolInTheScriptTable() {
+        val ram = ByteArray(0x400) { 0x7F }
+        packTitleAndHint(ram, 0x10, "Protocol Ruins", "Head North of 'East Wire Forest' to reach Protocol Ruins")
+        for (index in 0x1C0 until 0x200) ram[index] = 0
+        packTitleAndHint(ram, 0x200, "Seiryu Tower", "Talk to Repeating Tom in Seiryu Tower.")
+        assertEquals(
+            "Talk to Repeating Tom in Seiryu Tower.",
+            WalkthroughTextFinder.displayedHint(ram)
+        )
+    }
+
+    @Test
+    fun startBoxPrefersPaddedProtocolOverLeaderInTheScriptTable() {
+        val ram = ByteArray(0x400) { 0x7F }
+        packTitleAndHint(ram, 0x10, "Seiryu Tower", "Return to Seiryu Tower and defeat Seiryu Leader.")
+        for (index in 0x1C0 until 0x200) ram[index] = 0
+        packTitleAndHint(
+            ram,
+            0x200,
+            "Protocol Ruins",
+            "Head North of 'East Wire Forest' to reach Protocol Ruins"
+        )
+        assertEquals(
+            "Head North of 'East Wire Forest' to reach Protocol Ruins",
+            WalkthroughTextFinder.displayedHint(ram)
+        )
+    }
+
+    @Test
+    fun displayedHintIgnoresPackedScriptTable() {
+        val ram = ByteArray(0x200) { 0x7F }
+        val stale = "Talk to Repeating Tom in Seiryu Tower."
+        val later = "Head North of 'East Wire Forest' to reach Protocol Ruins"
+        stale.toByteArray(Charsets.US_ASCII).copyInto(ram, 0x10)
+        ram[0x10 + stale.length] = 0
+        later.toByteArray(Charsets.US_ASCII).copyInto(ram, 0x10 + stale.length + 1)
+        ram[0x10 + stale.length + 1 + later.length] = 0
+        assertNull(WalkthroughTextFinder.displayedHint(ram))
+    }
+
+    @Test
+    fun firstScratchPointerKeepsCurrentQuestOverLaterHint() {
+        assertEquals(
+            "Head North of 'East Wire Forest' to reach Protocol Ruins",
+            WalkthroughTextFinder.first(
+                listOf(
+                    "Head North of 'East Wire Forest' to reach Protocol Ruins",
+                    "Return to Seiryu Tower and defeat Seiryu Leader."
+                )
+            )
+        )
+    }
+
+    @Test
+    fun prefersNewFlaweHintOverStaleTowerObjective() {
+        val next = "Head North of 'East Wire Forest' to reach Protocol Ruins"
+        val stale = "Talk to Repeating Tom in Seiryu Tower."
+        assertTrue(WalkthroughTextFinder.isWalkthroughHint(next))
+        assertEquals(next, WalkthroughTextFinder.best(listOf(stale, next)))
+    }
+
+    @Test
     fun prefersHintThatNamesTheCurrentMap() {
         val location = WalkthroughTextFinder.locationKeywords("Torre Seiryu")
         val stale = "Head east through Wire Forest to reach Seiryu City."
@@ -103,27 +267,46 @@ class WalkthroughCatalogTest {
     }
 
     @Test
-    fun providesSpanishCompanionHintWithoutFlaweMenuNote() {
-        val text = WalkthroughCatalog.localized(
+    fun doesNotInventMapObjectivesWhenFlaweTextIsMissing() {
+        assertEquals(
             WalkthroughCatalog.SYNC_PROMPT_ES,
-            4,
-            CompanionLanguage.SPANISH,
-            0x021D
+            WalkthroughCatalog.localized(
+                WalkthroughCatalog.SYNC_PROMPT_ES,
+                4,
+                CompanionLanguage.SPANISH,
+                0x022E
+            )
         )
-        assertTrue(text.contains("Central Park") || text.contains("Bosque Alambre"))
-        assertTrue(!text.contains("Flawe", ignoreCase = true))
-    }
-
-    @Test
-    fun prefersCurrentMapOverCoarseStoryStageHint() {
+        assertEquals(
+            WalkthroughCatalog.SYNC_PROMPT_EN,
+            WalkthroughCatalog.localized(
+                WalkthroughCatalog.SYNC_PROMPT_ES,
+                4,
+                CompanionLanguage.ENGLISH,
+                0x0230
+            )
+        )
         val text = WalkthroughCatalog.localized(
             WalkthroughCatalog.SYNC_PROMPT_ES,
             4,
             CompanionLanguage.ENGLISH,
-            0x0230
+            0x022E
         )
-        assertTrue(text.contains("Seiryu"))
-        assertTrue(!text.contains("Wire Forest"))
+        assertTrue(!text.contains("Seiryu"))
+        assertTrue(!text.contains("Explore"))
+    }
+
+    @Test
+    fun translatesProtocolRuinsHintWhenCompanionIsSpanish() {
+        assertEquals(
+            "Ve al norte del Bosque Alambre Este para llegar a las Ruinas Protocolo.",
+            WalkthroughCatalog.localized(
+                "Head North of 'East Wire Forest' to reach Protocol Ruins",
+                4,
+                CompanionLanguage.SPANISH,
+                0x0230
+            )
+        )
     }
 
     @Test
@@ -137,18 +320,6 @@ class WalkthroughCatalogTest {
                 0x0230
             )
         )
-    }
-
-    @Test
-    fun usesNorthSectorCompanionHintForBootMountain() {
-        val text = WalkthroughCatalog.localized(
-            WalkthroughCatalog.SYNC_PROMPT_ES,
-            0,
-            CompanionLanguage.ENGLISH,
-            0x0261
-        )
-        assertTrue(text.contains("Boot Mountain"))
-        assertTrue(text.contains("Genbu City"))
     }
 
     @Test
@@ -209,6 +380,13 @@ private object GameMemoryWrite {
             target[offset + index] = (value ushr (index * 8)).toByte()
         }
     }
+}
+
+private fun packTitleAndHint(ram: ByteArray, offset: Int, title: String, hint: String) {
+    title.toByteArray(Charsets.US_ASCII).copyInto(ram, offset)
+    ram[offset + title.length] = 0
+    hint.toByteArray(Charsets.US_ASCII).copyInto(ram, offset + title.length + 1)
+    ram[offset + title.length + 1 + hint.length] = 0
 }
 
 private fun encodeDw(text: String): ByteArray {

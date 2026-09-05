@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.0.6
+
+Cambios principales desde la release 1.0.4 (incluye el trabajo de 1.0.5).
+
+- **Guía de Flawe en cinco idiomas:** «Objetivo actual» sigue las condiciones de misión de la guía inglesa y ofrece inglés, español, francés, alemán e italiano sin conexión. Funciona en el panel aunque el menú localizado del juego no muestre la guía; ya no depende solo de la etapa de historia. Los objetivos largos pueden desplazarse.
+- **Mapa y viaje rápido:** corregida la secuencia de «Abrir pestaña Mapa» y la detección de la función de Flawe 2.0. Tocar el radar muestra los destinos registrados como visitados; seleccionar un destino Asuka inicia el viaje y comprueba la llegada. Verificado en español: Torre Seiryu → Pradera del Viento.
+- **Menos trabajo periódico:** las búsquedas de nombres en RAM se limitan a cambios de ubicación; se omiten actualizaciones idénticas del panel y el sondeo se detiene en segundo plano. Esto aborda trabajo innecesario relacionado con el reporte de CPU; todavía no hay mediciones de consumo o ventilador en Ayn Thor.
+- **Radar y ubicaciones:** el marcador sigue el sector actual y se corrigen nombres de salas/mapas. Representa el sector, no coordenadas exactas del personaje dentro de una sala.
+- **Correcciones USA:** ajustada la lectura del bloque de partida de SLUS-01436 para mapa, Tamer, Bits y equipo. La guía y el viaje rápido de Flawe siguen siendo funciones PAL.
+- **Estabilidad:** las lecturas de RAM toleran el cierre/recreación de la actividad; los parches temporales de viaje invalidan el código recompilado afectado al aplicarse y restaurarse.
+- **Actualizaciones:** el aviso muestra las notas de la release antes de descargar el APK. El menú APP muestra la versión instalada y se retira la opción de restaurar el respaldo automático.
+- **Validación:** 150 pruebas unitarias, Android Lint y APK release compilado. Instalación y pruebas de guía española, apertura del mapa y viaje completo realizadas en Samsung SM-F971B.
+
+Limitaciones: Amaterasu conserva selección manual. La lista usa visitas registradas por la app, no importa el historial completo de partidas anteriores. Los otros cuatro idiomas tienen cobertura automatizada; su presentación no se ha probado en dispositivo. Se necesita una copia propia del juego y BIOS; las funciones de viaje requieren el mod compatible de Flawe.
+
+### English — highlights since 1.0.4
+
+- Offline companion walkthrough in English, Spanish, French, German and Italian, driven by Flawe's quest conditions. It works even when the localized in-game menu does not show the walkthrough. Long objectives can scroll.
+- Fixed automated map opening and Flawe 2.0 fast travel. Tap the radar, choose a recorded Asuka destination, and the app checks arrival. Spanish Seiryu Tower → Wind Prairie travel was tested on a Samsung SM-F971B.
+- Reduced repeated RAM searches and redundant UI updates; polling stops in the background. These changes address unnecessary work, but CPU/fan improvements have not yet been measured on an AYN Thor.
+- Radar marker follows the current sector; room/map labels and USA SLUS-01436 memory reads were corrected. Flawe walkthrough and fast travel remain PAL-only.
+- Improved activity lifecycle handling and temporary travel patch reliability. Update prompts now display release notes before downloading.
+- 150 unit tests pass, Android Lint passes, and the signed APK was installed and tested on device.
+
+Amaterasu still uses manual selection. Visited destinations are recorded by the app, not imported from an older save's full history. The marker indicates the sector, not exact room coordinates. ROM and BIOS are not included.
+
 ## 1.0.4
 
 - El objetivo sigue la guía de Flawe al cambiar de mapa, no la pista fija de Historia 4. El overlay de START se relee y, si hay texto en vivo, se muestra también en español cuando hay traducción conocida.

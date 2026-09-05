@@ -2243,6 +2243,22 @@ size_t retro_get_memory_size(unsigned id)
    return 0;
 }
 
+/* Frontend memory writes bypass psxMemWrite*. Invalidate just the touched
+ * instructions, on the emulation thread, including when a patch is restored.
+ * Clear uses word counts; round both ends for unaligned byte/halfword writes.
+ * This optional extension is local to the bundled core/frontend pair.
+ */
+RETRO_API void retro_notify_memory_write(unsigned id, size_t offset, size_t length)
+{
+   size_t first, end;
+   if (id != RETRO_MEMORY_SYSTEM_RAM || !psxCpu || !length ||
+       offset >= 0x200000 || length > 0x200000 - offset)
+      return;
+   first = offset & ~(size_t)3;
+   end = (offset + length + 3) & ~(size_t)3;
+   psxCpu->Clear(0x80000000u | (u32)first, (u32)((end - first) / 4));
+}
+
 void retro_reset(void)
 {
    //hack to prevent retroarch freezing when reseting in the menu but not while running with the hot key

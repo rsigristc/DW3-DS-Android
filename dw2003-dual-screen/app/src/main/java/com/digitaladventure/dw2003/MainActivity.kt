@@ -174,7 +174,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 repository.snapshot.collectLatest { snapshot ->
-                    rememberVisited(snapshot.areaId, snapshot.mapId)
+                    rememberVisited(snapshot.publicMapId, snapshot.publicMapId)
                     persistMemoryCardAfterSave(snapshot.areaId, snapshot.mapId)
                     localDashboard?.submitSnapshot(snapshot)
                     presentation?.submitSnapshot(snapshot)
@@ -203,12 +203,14 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     override fun onStop() {
         windowInfoConsumer?.let(windowInfoAdapter::removeWindowLayoutInfoListener)
         windowInfoConsumer = null
+        memoryPoller?.stop()
         super.onStop()
     }
 
     override fun onResume() {
         super.onResume()
         applyAudioAndSpeed()
+        memoryPoller?.start()
     }
 
     override fun onPause() {
@@ -322,8 +324,6 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         languageLabel = CompanionUiText.languageSetting(resolvedLanguage(), languageSetting),
         onLanguage = ::showLanguageMenu,
         onClose = onClose,
-        hasBackup = saveManager.hasBackup,
-        onRestoreBackup = if (onClose != null) ::restoreAutomaticBackup else null,
         onReturnToStart = if (onClose != null) ::returnToStartScreen else null,
         hasCrashLog = crashLog.hasLog(),
         onViewCrashLog = ::showCrashLog,
@@ -550,20 +550,33 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             view,
             repository,
             lifecycleScope,
-            romVariant.features
-        ) { detected ->
-            if (detectedLanguage != detected) {
-                detectedLanguage = detected
-                if (languageSetting == CompanionLanguageSetting.AUTO) {
-                    runOnUiThread { applyCompanionLanguage() }
+            romVariant.features,
+            objectiveLanguageOverride = {
+                when (languageSetting) {
+                    CompanionLanguageSetting.ENGLISH -> 2
+                    CompanionLanguageSetting.SPANISH -> 6
+                    CompanionLanguageSetting.AUTO -> null
+                }
+            },
+            onLanguageDetected = { detected ->
+                if (detectedLanguage != detected) {
+                    detectedLanguage = detected
+                    if (languageSetting == CompanionLanguageSetting.AUTO) {
+                        runOnUiThread { applyCompanionLanguage() }
+                    }
                 }
             }
-        }
+        )
+        memoryPoller?.start()
         emulatorEventsJob?.cancel()
         emulatorEventsJob = lifecycleScope.launch {
             launch {
                 view.getGLRetroEvents().collect { event ->
-                    if (event is GLRetroView.GLRetroEvents.FrameRendered) memoryPoller?.start()
+                    if (event is GLRetroView.GLRetroEvents.FrameRendered ||
+                        event is GLRetroView.GLRetroEvents.SurfaceCreated
+                    ) {
+                        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) memoryPoller?.start()
+                    }
                 }
             }
             launch {
@@ -787,14 +800,6 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         presentation?.setVisitedMaps(visitedMaps)
     }
 
-    private fun restoreAutomaticBackup() {
-        if (saveManager.restoreBackup()) {
-            skipNextAutoSave = true
-            toast("Respaldo restaurado", "Backup restored")
-            recreate()
-        }
-    }
-
     private fun returnToStartScreen() {
         getPreferences(MODE_PRIVATE).edit()
             .remove(PREF_ROM_URI)
@@ -863,18 +868,20 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             toast("El viaje rápido requiere una partida en emulación", "Fast travel needs an emulated game session")
             return
         }
-        val currentIcon = FastTravelCatalog.iconId(snapshot.areaId, snapshot.mapId)
+        val currentIcon = FastTravelCatalog.iconId(snapshot.publicMapId)
+        if (areaId !in FastTravelCatalog.rememberedIcons(visitedMaps, snapshot.publicMapId)) {
+            toast("Ese destino aún no está registrado como visitado", "That destination has not been recorded as visited")
+            return
+        }
+        if (areaId == currentIcon) return
         val destinationServer = MapRegionCatalog.resolve(areaId).server
         val currentServer = MapRegionCatalog.resolve(currentIcon).server
         crashLog.note("fast-travel dest=0x${areaId.toString(16)} from=0x${currentIcon.toString(16)}")
         runTravelSequence {
-            val mapAlreadyOpen = runCatching { controller.hasFlaweDispatcher() }.getOrDefault(false)
-            if (mapAlreadyOpen) {
-                delay(80)
-            } else {
-                openMapTab()
-                delay(500)
-            }
+            // Dispatcher code persists after the map closes; its presence is not
+            // evidence that the map UI is open. Establish a known menu state.
+            openMapTab()
+            delay(500)
             if (currentServer != ServerRegion.UNKNOWN &&
                 destinationServer != ServerRegion.UNKNOWN &&
                 currentServer != destinationServer
@@ -884,13 +891,13 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             }
             waitUntil(1800) { controller.hasFlaweDispatcher() }
             var directToken = if (destinationServer == ServerRegion.ASUKA) {
-                runCatching { controller.beginDirectFlaweWarp(areaId) }.getOrNull()
+                withContext(Dispatchers.Default) { controller.beginDirectFlaweWarp(areaId) }
             } else {
                 null
             }
             if (directToken == null && destinationServer == ServerRegion.ASUKA) {
                 waitUntil(1200) { controller.hasFlaweDispatcher() }
-                directToken = runCatching { controller.beginDirectFlaweWarp(areaId) }.getOrNull()
+                directToken = withContext(Dispatchers.Default) { controller.beginDirectFlaweWarp(areaId) }
             }
             if (directToken != null) {
                 try {
@@ -908,8 +915,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 if (walk.isEmpty()) {
                     crashLog.note("fast-travel left map open dest=0x${areaId.toString(16)}")
                     toast(
-                        "Mapa de Flawe abierto. La firma directa no está en esta ROM; mueve el hexágono con la cruceta hasta el destino y pulsa ×. No confirmo el icono actual.",
-                        "Flawe map is open. Direct signature is not in this ROM; move the hex to the destination with the D-pad and press ×. The current icon will not be confirmed."
+                        "El mapa está abierto, pero no se detectó una función compatible de viaje rápido. Comprueba que el mod de Flawe esté activo en el idioma del juego.",
+                        "The map is open, but no compatible fast-travel function was detected. Check that Flawe's mod is active in the game's language."
                     )
                     return@runTravelSequence
                 }
@@ -927,18 +934,15 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 playPadSteps(FastTravelNavigator.closeMenu())
                 waitUntil(900) { !menuIsOpen() }
             }
+            val arrived = waitUntil(6000) {
+                val latest = repository.snapshot.value
+                latest.mode == GameMode.EXPLORATION &&
+                    FastTravelCatalog.iconId(latest.publicMapId) == areaId
+            }
             val destination = CompanionUiText.area(resolvedLanguage(), areaId)
             toast(
-                if (directToken != null) {
-                    "Destino ${CompanionUiText.area(CompanionLanguage.SPANISH, areaId)} enviado directamente a Flawe con su spawn original."
-                } else {
-                    "Destino elegido con la cruceta de Flawe (Asuka Central)."
-                },
-                if (directToken != null) {
-                    "Destination $destination sent directly to Flawe with its original spawn."
-                } else {
-                    "Destination chosen with Flawe's D-pad (Asuka Central)."
-                }
+                if (arrived) "Llegaste a $destination" else "No se pudo confirmar el viaje a $destination. Revisa el mapa del juego.",
+                if (arrived) "Arrived at $destination" else "Could not confirm travel to $destination. Check the in-game map."
             )
         }
     }
@@ -952,8 +956,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             )
             return
         }
-        if (!snapshot.gameStarted) {
-            toast("Inicia una partida para abrir el mapa", "Start a game to open the map")
+        if (!snapshot.canFastTravel) {
+            toast("El mapa no está disponible durante batallas o eventos", "The map is unavailable during battles or events")
             return
         }
         if (retroView == null) {
@@ -962,21 +966,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
         crashLog.note("open-map area=0x${snapshot.areaId.toString(16)} map=0x${snapshot.mapId.toString(16)}")
         runTravelSequence {
-            val mapAlreadyOpen = runCatching {
-                memoryController?.hasFlaweDispatcher() == true
-            }.getOrDefault(false)
-            if (mapAlreadyOpen) {
-                toast(
-                    "El mapa de Flawe ya está abierto.",
-                    "Flawe's map is already open."
-                )
-                return@runTravelSequence
-            }
             openMapTab()
-            toast(
-                "Mapa de Flawe. START se ancla en Ítems (↑↑↑↑) y baja a Mapa. La cruceta cambia de icono, □ cambia de servidor y × confirma.",
-                "Flawe map. START is reset to Items (↑↑↑↑) then down to Map. D-pad changes icons, □ changes server and × confirms."
-            )
+            toast("Mapa abierto", "Map opened")
         }
     }
 
@@ -991,6 +982,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             view.applyRuntimeOptions()
             try {
                 block()
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                crashLog.note("fast-travel-failed ${error.javaClass.simpleName}: ${error.message}")
+                android.util.Log.e("DW2003Travel", "Map/travel sequence failed", error)
+                toast("No se pudo completar el viaje rápido", "Could not complete fast travel")
             } finally {
                 view.frameSpeed = if (fastForward) 2 else 1
                 view.applyRuntimeOptions()
@@ -999,24 +996,24 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     private suspend fun openMapTab() {
-        if (menuIsOpen()) {
+        // Neither the field START list nor its Map page loads STSTATUS.
+        // Cancel unwinds both pages and is a no-op in exploration. This also
+        // works when a localized ROM has no Flawe walkthrough widget to read.
+        repeat(3) {
             playPadSteps(FastTravelNavigator.dismissMenu())
-            waitUntil(900) { !menuIsOpen() }
-            delay(120)
         }
+        delay(350)
         playPadSteps(FastTravelNavigator.pressStart())
-        delay(FastTravelNavigator.MENU_SETTLE_MS + 80)
+        delay(800)
         playPadSteps(FastTravelNavigator.stepsToMapFromUnknown())
-        delay(360)
+        delay(800)
     }
 
     private fun menuIsOpen(): Boolean {
+        if (memoryController?.isFieldMenuVisible() == true) return true
         val overlay = memoryController?.readOverlaySignature() ?: 0L
-        val snapshot = repository.snapshot.value
-        if (FastTravelNavigator.isStatusMenu(overlay, snapshot.areaId, snapshot.mapId)) return true
-        val ram = memoryController?.readAreaMap() ?: return snapshot.mode == GameMode.MANAGEMENT
-        return FastTravelNavigator.isStatusMenu(overlay, ram.first, ram.second) ||
-            snapshot.mode == GameMode.MANAGEMENT
+        val ram = memoryController?.readAreaMap() ?: return false
+        return FastTravelNavigator.isStatusMenu(overlay, ram.first, ram.second)
     }
 
     private suspend fun waitUntil(timeoutMs: Long, condition: () -> Boolean): Boolean {
@@ -1033,8 +1030,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         steps.forEach { step ->
             val keyCode = retroPadKeyCode(step.button)
             view.sendKeyEvent(KeyEvent.ACTION_DOWN, keyCode, 0)
-            delay(step.holdMs)
-            view.sendKeyEvent(KeyEvent.ACTION_UP, keyCode, 0)
+            try {
+                delay(step.holdMs)
+            } finally {
+                view.sendKeyEvent(KeyEvent.ACTION_UP, keyCode, 0)
+            }
             delay(step.afterMs)
         }
     }
@@ -1161,7 +1161,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                                 resolvedLanguage(),
                                 "Hay ${release.tag} en GitHub. Esta instalación es $installed. ¿Descargar e instalar el APK?",
                                 "${release.tag} is on GitHub. This install is $installed. Download and install the APK?"
-                            )
+                            ) + "\n\n" + CompanionUiText.pick(resolvedLanguage(), "NOVEDADES", "WHAT'S NEW") +
+                                "\n\n" + release.changelog.ifBlank {
+                                    CompanionUiText.pick(resolvedLanguage(),
+                                        "Esta versión no incluye notas de cambios.",
+                                        "No release notes were provided for this version.")
+                                }
                         )
                         .setPositiveButton(CompanionUiText.pick(resolvedLanguage(), "Actualizar", "Update")) { _, _ ->
                             downloadAndInstall(release)

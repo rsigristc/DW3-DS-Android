@@ -2,6 +2,7 @@ package com.digitaladventure.dw2003.emulation
 
 import com.digitaladventure.dw2003.data.CheatSpec
 import com.digitaladventure.dw2003.data.GameStateReader
+import com.digitaladventure.dw2003.data.FlaweMenuStateReader
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.LibretroDroid
 
@@ -11,6 +12,10 @@ data class FlaweDirectWarpToken(
 )
 
 class GameMemoryController(private val view: GLRetroView) {
+    fun isFieldMenuVisible(): Boolean? = FlaweMenuStateReader.isFieldMenuVisible { offset, length ->
+        view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM, offset, length)
+    }
+
     fun reorderParty(profileIds: List<Int>) {
         require(profileIds.size in 1..3) { "La formación activa solo tiene tres ranuras" }
         require(profileIds.all { it in 0..7 }) { "Perfil de compañero fuera de rango" }
@@ -46,6 +51,10 @@ class GameMemoryController(private val view: GLRetroView) {
     }
 
     fun hasFlaweDispatcher(): Boolean {
+        if (FlaweDirectWarpPatch.matchesV2(view.readMemory(
+                LibretroDroid.MEMORY_SYSTEM_RAM, FlaweDirectWarpPatch.V2_RAM_OFFSET,
+                FlaweDirectWarpPatch.V2_WINDOW_SIZE
+            ))) return true
         if (hasPreferredFlaweDispatcher()) return true
         val nearby = view.readMemory(
             LibretroDroid.MEMORY_SYSTEM_RAM,
@@ -56,6 +65,13 @@ class GameMemoryController(private val view: GLRetroView) {
     }
 
     fun beginDirectFlaweWarp(areaId: Int): FlaweDirectWarpToken? {
+        val v2 = view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM,
+            FlaweDirectWarpPatch.V2_RAM_OFFSET, FlaweDirectWarpPatch.V2_WINDOW_SIZE)
+        if (FlaweDirectWarpPatch.matchesV2(v2)) {
+            val patched = FlaweDirectWarpPatch.prepare(v2, areaId, FlaweDirectWarpPatch.v2Site(0)) ?: return null
+            view.writeMemory(LibretroDroid.MEMORY_SYSTEM_RAM, FlaweDirectWarpPatch.V2_RAM_OFFSET, patched)
+            return FlaweDirectWarpToken(FlaweDirectWarpPatch.V2_RAM_OFFSET, v2)
+        }
         val preferred = view.readMemory(
             LibretroDroid.MEMORY_SYSTEM_RAM,
             FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,

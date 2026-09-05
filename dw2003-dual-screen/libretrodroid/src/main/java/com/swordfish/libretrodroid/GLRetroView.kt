@@ -122,6 +122,9 @@ class GLRetroView(
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() = catchExceptions {
+        isEmulationReady = false
+        isGameLoaded = false
+        isAborted = true
         LibretroDroid.destroy()
         lifecycle = null
     }
@@ -205,6 +208,7 @@ class GLRetroView(
         useEmulationThread: Boolean = true
     ): ByteArray {
         return runOnEmulationThread(useEmulationThread) {
+            requireCoreReady()
             LibretroDroid.readMemory(memoryId, offset, length)
         }
     }
@@ -216,6 +220,7 @@ class GLRetroView(
         useEmulationThread: Boolean = true
     ) {
         runOnEmulationThread(useEmulationThread) {
+            requireCoreReady()
             LibretroDroid.writeMemory(memoryId, offset, data)
         }
     }
@@ -429,6 +434,12 @@ class GLRetroView(
         }
     }
 
+    private fun requireCoreReady() {
+        if (isAborted || !isGameLoaded) {
+            throw IllegalStateException("Emulation memory is not available")
+        }
+    }
+
     private fun <T> runOnEmulationThread(useEmulationThread: Boolean, block: () -> T): T {
         if (!useEmulationThread || Thread.currentThread().name.startsWith("GLThread")) {
             return block()
@@ -436,13 +447,23 @@ class GLRetroView(
 
         val latch = CountDownLatch(1)
         var result: T? = null
+        var error: Throwable? = null
         queueEvent {
-            result = block()
-            latch.countDown()
+            try {
+                result = block()
+            } catch (throwable: Throwable) {
+                error = throwable
+            } finally {
+                latch.countDown()
+            }
         }
 
-        latch.awaitUninterruptibly()
-        return result!!
+        if (!latch.await(500, java.util.concurrent.TimeUnit.MILLISECONDS)) {
+            throw IllegalStateException("Emulation thread is not pumping frames")
+        }
+        error?.let { throw it }
+        @Suppress("UNCHECKED_CAST")
+        return result as T
     }
 
     private fun buildShader(config: ShaderConfig): GLRetroShader {

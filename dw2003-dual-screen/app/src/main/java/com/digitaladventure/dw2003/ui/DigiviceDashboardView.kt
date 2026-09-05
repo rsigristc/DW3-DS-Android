@@ -19,6 +19,7 @@ import com.digitaladventure.dw2003.data.CheatSpec
 import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.data.FastTravelCatalog
 import com.digitaladventure.dw2003.data.LocationResolver
+import com.digitaladventure.dw2003.data.RadarPosition
 import com.digitaladventure.dw2003.data.MapRegionCatalog
 import com.digitaladventure.dw2003.data.ServerRegion
 import com.digitaladventure.dw2003.data.SectorRegion
@@ -59,9 +60,10 @@ class DigiviceDashboardView(
     private var selectedTab = dashboardPreferences.getString("selected_tab", null)
         ?: GameMode.EXPLORATION.name
     var controlsVisible: Boolean = true
-        set(value) { field = value; invalidate() }
+        set(value) { if (field == value) return; field = value; invalidate() }
     var modsEnabled: Boolean = false
         set(value) {
+            if (field == value) return
             field = value
             if (!value && selectedTab == TAB_MODS) {
                 selectedTab = GameMode.EXPLORATION.name
@@ -72,13 +74,14 @@ class DigiviceDashboardView(
             invalidate()
         }
     var enabledCheats: Set<String> = emptySet()
-        set(value) { field = value; invalidate() }
+        set(value) { if (field == value) return; field = value.toSet(); invalidate() }
     var customCheats: List<CheatSpec> = emptyList()
-        set(value) { field = value; invalidate() }
+        set(value) { if (field == value) return; field = value; invalidate() }
     var visitedMaps: Set<Int> = emptySet()
-        set(value) { field = value; invalidate() }
+        set(value) { if (field == value) return; field = value.toSet(); invalidate() }
     var language: CompanionLanguage = CompanionLanguage.SPANISH
         set(value) {
+            if (field == value) return
             field = value
             contentDescription = tr(
                 "Panel complementario de Digimon World 2003",
@@ -178,8 +181,8 @@ class DigiviceDashboardView(
     }
 
     private fun drawHeader(canvas: Canvas, margin: Float, bottom: Float) {
-        val title = CompanionUiText.locationTitle(language, snapshot.areaId, snapshot.mapId)
-        val detail = CompanionUiText.locationDetail(language, snapshot.areaId, snapshot.mapId)
+        val title = CompanionUiText.area(language, snapshot.publicMapId)
+        val detail = CompanionUiText.locationDetail(language, snapshot.publicMapId, snapshot.publicMapId)
         drawText(canvas, title.uppercase(), margin, dp(27f), dp(17f), WHITE, true)
         drawText(
             canvas,
@@ -245,7 +248,9 @@ class DigiviceDashboardView(
             val left = RectF(bounds.left, bounds.top, bounds.left + bounds.width() * .48f, bounds.bottom)
             val right = RectF(left.right + dp(8f), bounds.top, bounds.right, bounds.bottom)
             drawRadar(canvas, left)
-            drawObjectiveAndTamer(canvas, right, fillRemaining = true)
+            withScrollablePage(canvas, right) { markBottom ->
+                markBottom(drawObjectiveAndTamer(canvas, right, fillRemaining = true))
+            }
             return
         }
         withScrollablePage(canvas, bounds) { markBottom ->
@@ -258,7 +263,7 @@ class DigiviceDashboardView(
     }
 
     private fun currentRadarBitmap(): Bitmap? {
-        val location = LocationResolver.resolve(snapshot.areaId, snapshot.mapId)
+        val location = LocationResolver.resolve(snapshot.publicMapId, snapshot.publicMapId)
         val mapRegion = MapRegionCatalog.resolve(location.publicMapId)
         val region = if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(snapshot.areaId) else mapRegion
         return radarBitmaps[region.server to region.sector]
@@ -277,7 +282,7 @@ class DigiviceDashboardView(
     }
 
     private fun drawRadar(canvas: Canvas, bounds: RectF) {
-        val location = LocationResolver.resolve(snapshot.areaId, snapshot.mapId)
+        val location = LocationResolver.resolve(snapshot.publicMapId, snapshot.publicMapId)
         val mapRegion = MapRegionCatalog.resolve(location.publicMapId)
         val region = if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(snapshot.areaId) else mapRegion
         val server = CompanionUiText.server(language, region.server)
@@ -303,13 +308,17 @@ class DigiviceDashboardView(
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = dp(2f)
         paint.color = CYAN
-        canvas.drawCircle(map.centerX(), map.centerY(), dp(7f), paint)
-        canvas.drawLine(map.centerX() - dp(12f), map.centerY(), map.centerX() + dp(12f), map.centerY(), paint)
-        canvas.drawLine(map.centerX(), map.centerY() - dp(12f), map.centerX(), map.centerY() + dp(12f), paint)
+        RadarPosition.forStage(snapshot.publicMapId)?.let { point ->
+            val x = map.left + map.width() * point.x
+            val y = map.top + map.height() * point.y
+            canvas.drawCircle(x, y, dp(7f), paint)
+            canvas.drawLine(x - dp(12f), y, x + dp(12f), y, paint)
+            canvas.drawLine(x, y - dp(12f), x, y + dp(12f), paint)
+        }
         paint.style = Paint.Style.FILL
         drawText(
             canvas,
-            CompanionUiText.locationRadar(language, snapshot.areaId, snapshot.mapId).uppercase(),
+            CompanionUiText.locationRadar(language, snapshot.publicMapId, snapshot.publicMapId).uppercase(),
             bounds.centerX(),
             bounds.bottom - dp(8f),
             dp(7.5f),
@@ -337,26 +346,26 @@ class DigiviceDashboardView(
     }
 
     private fun drawObjectiveAndTamer(canvas: Canvas, bounds: RectF, fillRemaining: Boolean = false): Float {
-        val objectiveHeight = if (fillRemaining) min(bounds.height() * .38f, dp(118f)) else dp(118f)
+        val objectiveText = WalkthroughCatalog.localized(
+            snapshot.objective, snapshot.storyStage, language,
+            snapshot.mapId.takeIf { it != 0 } ?: snapshot.areaId
+        )
+        val objectiveLines = wrappedLines(objectiveText, bounds.width() - dp(24f), dp(11f))
+        val objectiveHeight = max(dp(118f), dp(44f) + objectiveLines.size * dp(11f) * 1.35f)
         val objective = RectF(bounds.left, bounds.top, bounds.right, bounds.top + objectiveHeight)
         drawPanel(canvas, objective, tr("OBJETIVO ACTUAL", "CURRENT OBJECTIVE"))
         drawWrapped(
             canvas,
-            WalkthroughCatalog.localized(
-                snapshot.objective,
-                snapshot.storyStage,
-                language,
-                snapshot.mapId.takeIf { it != 0 } ?: snapshot.areaId
-            ),
+            objectiveText,
             objective.left + dp(12f),
             objective.top + dp(38f),
             objective.width() - dp(24f),
             dp(11f),
             WHITE,
-            5
+            objectiveLines.size
         )
 
-        val tamerBottom = if (fillRemaining) bounds.bottom else objective.bottom + dp(7f) + dp(178f)
+        val tamerBottom = max(if (fillRemaining) bounds.bottom else 0f, objective.bottom + dp(7f) + dp(178f))
         val tamerBounds = RectF(bounds.left, objective.bottom + dp(7f), bounds.right, tamerBottom)
         drawPanel(canvas, tamerBounds, tr("ESTADO DEL TAMER", "TAMER STATUS"))
         val showFishing = snapshot.isFishing || fishingPreview
@@ -403,6 +412,22 @@ class DigiviceDashboardView(
             val header = RectF(bounds.left, y, bounds.right, y + dp(30f))
             drawPanel(canvas, header, tr("TELEMETRÍA DE BATALLA", "BATTLE TELEMETRY"))
             y = header.bottom + dp(7f)
+            if (snapshot.party.isEmpty()) {
+                drawWrapped(
+                    canvas,
+                    tr(
+                        "No hay equipo en RAM todavía. Carga una partida; en USA el panel usa el bloque de memoria NTSC.",
+                        "No party in RAM yet. Load a save; on USA the panel reads the NTSC save block."
+                    ),
+                    bounds.left + dp(12f),
+                    y + dp(8f),
+                    bounds.width() - dp(24f),
+                    dp(11f),
+                    MUTED,
+                    4
+                )
+                return@withScrollablePage
+            }
             snapshot.party.take(3).forEachIndexed { index, digimon ->
                 val card = RectF(bounds.left + dp(9f), y, bounds.right - dp(9f), y + battleCardHeight(digimon))
                 drawDigimonCard(canvas, card, digimon, compact = true, partyIndex = index, expanded = true)
@@ -415,6 +440,22 @@ class DigiviceDashboardView(
     private fun drawStackedBattle(canvas: Canvas, bounds: RectF) {
         drawPanel(canvas, bounds, tr("TELEMETRÍA DE BATALLA", "BATTLE TELEMETRY"))
         val party = snapshot.party.take(3)
+        if (party.isEmpty()) {
+            drawWrapped(
+                canvas,
+                tr(
+                    "No hay equipo en RAM todavía. Carga una partida; en USA el panel usa el bloque de memoria NTSC.",
+                    "No party in RAM yet. Load a save; on USA the panel reads the NTSC save block."
+                ),
+                bounds.left + dp(12f),
+                bounds.top + dp(38f),
+                bounds.width() - dp(24f),
+                dp(11f),
+                MUTED,
+                4
+            )
+            return
+        }
         val gap = dp(7f)
         val cardW = (bounds.width() - dp(20f) - gap * 2) / max(1, party.size)
         party.forEachIndexed { index, digimon ->
@@ -440,7 +481,24 @@ class DigiviceDashboardView(
     }
 
     private fun drawManagement(canvas: Canvas, bounds: RectF) {
-        val selected = snapshot.party.getOrNull(selectedPartyIndex) ?: return
+        val selected = snapshot.party.getOrNull(selectedPartyIndex)
+        if (selected == null) {
+            drawPanel(canvas, bounds, tr("PARTNER / ESTADO", "PARTNER / STATUS"))
+            drawWrapped(
+                canvas,
+                tr(
+                    "No hay equipo en RAM todavía. Carga una partida; en USA el panel usa el bloque de memoria NTSC.",
+                    "No party in RAM yet. Load a save; on USA the panel reads the NTSC save block."
+                ),
+                bounds.left + dp(12f),
+                bounds.top + dp(38f),
+                bounds.width() - dp(24f),
+                dp(11f),
+                MUTED,
+                4
+            )
+            return
+        }
         if (!isSideColumn()) {
             val identity = RectF(bounds.left, bounds.top, bounds.left + bounds.width() * .26f, bounds.bottom)
             val details = RectF(identity.right + dp(7f), bounds.top, bounds.right, bounds.bottom)
@@ -823,12 +881,12 @@ class DigiviceDashboardView(
                 invalidate()
             }
         }
-        val currentIcon = FastTravelCatalog.iconId(snapshot.areaId, snapshot.mapId)
+        val currentIcon = FastTravelCatalog.iconId(snapshot.publicMapId)
         val groups = FastTravelCatalog.groups(
             snapshot.storyStage,
-            visitedMaps + snapshot.areaId + snapshot.mapId,
-            snapshot.areaId,
-            snapshot.mapId
+            visitedMaps,
+            snapshot.publicMapId,
+            snapshot.publicMapId
         )
         val destinationCount = groups.sumOf { it.destinations.size }
         if (destinationCount > 0) {
@@ -861,8 +919,8 @@ class DigiviceDashboardView(
             drawWrapped(
                 canvas,
                 tr(
-                    "El traslado desde esta lista solo está disponible fuera de batalla. Abrir pestaña Mapa usa START, cruceta y × para entrar al mapa de Flawe.",
-                    "Warps from this list are only available outside battle. Open Map Tab uses START, D-pad and × to enter Flawe's map."
+                    "El viaje rápido no está disponible durante batallas o eventos.",
+                    "Fast travel is unavailable during battles or events."
                 ),
                 bounds.left + dp(16f),
                 listTop + dp(4f),
@@ -1144,20 +1202,26 @@ class DigiviceDashboardView(
     }
 
     private fun drawWrapped(canvas: Canvas, text: String, x: Float, y: Float, maxWidth: Float, size: Float, color: Int, maxLines: Int) {
+        wrappedLines(text, maxWidth, size).take(maxLines).forEachIndexed { index, line ->
+            drawText(canvas, line, x, y + index * size * 1.35f, size, color)
+        }
+    }
+
+    private fun wrappedLines(text: String, maxWidth: Float, size: Float): List<String> {
         val words = text.replace('\n', ' ').split(Regex("\\s+")).filter(String::isNotBlank)
         val lines = mutableListOf<String>()
         var current = ""
         paint.textSize = size
+        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
         for (word in words) {
             val proposed = if (current.isEmpty()) word else "$current $word"
             if (paint.measureText(proposed) <= maxWidth) current = proposed else {
                 if (current.isNotEmpty()) lines += current
                 current = word
             }
-            if (lines.size == maxLines) break
         }
-        if (current.isNotEmpty() && lines.size < maxLines) lines += current
-        lines.take(maxLines).forEachIndexed { index, line -> drawText(canvas, line, x, y + index * size * 1.35f, size, color) }
+        if (current.isNotEmpty()) lines += current
+        return lines
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {

@@ -59,13 +59,40 @@ El umbral acumulado de EXP para el siguiente nivel no está almacenado junto al 
 
 ## Walkthrough del mod
 
-El bloque temporal se consulta desde `0x8000B200`. Los candidatos de puntero están en:
+El bloque de Flawe 2.0 en `0x8000B200` contiene:
 
-- `0x8000B208`
-- `0x8000B20C`
-- `0x8000B210`
+- `+0x00`: puntero absoluto a la base del módulo cargado.
+- `+0x04`: puntero al objeto de menú original.
+- `+0x08`: desplazamiento relativo del título.
+- `+0x0C`: desplazamiento relativo de la primera línea.
+- `+0x10`: desplazamiento relativo de la segunda línea, que puede estar vacía.
 
-Cada palabra alineada del bloque se trata como puntero candidato (`0x80000000`…`0x801FFFFF`). El texto se decodifica con la tabla europea de DW2003 y también como cadena ASCII. Si START carga `STSTATUS` y todavía no hay objetivo, se busca el mismo patrón en el overlay `0x80080000` y, si hace falta, en los 2 MiB. Flawe publica la guía solo en el idioma inglés del juego; el español del panel usa pistas propias cuando esos punteros no aparecen. En AUTO, `0x8005CCA8` decide el idioma del panel antes que ese texto, para que una partida española no se pinte en inglés solo porque Flawe dejó la guía en inglés.
+**No son tres punteros absolutos.** El renderer suma la base a los desplazamientos.
+La app valida las instrucciones del selector en `base + 0xD4C`
+(`ACC30008`, `ACC4000C`, `ACC50010`), decodifica ambas líneas con la tabla DW
+y las concatena en orden de pantalla. No elige misiones por palabras clave ni
+por el relleno entre cadenas.
+
+Evidencia: los PPF locales `Flawe's Mod - In-Game Walkthrough 2.0.ppf` y
+`Flawe's Mod - Combined 2.0.ppf`. Extrayendo el payload de los sectores de
+2352 bytes (2048 bytes desde +24), el módulo está en `0x21CEE000`.
+En `+0xBFC` se construye `0x8000B200`; `+0xD4C` guarda los desplazamientos;
+`+0x27D8`, `+0x280C` y `+0x2840` suman la base para dibujar título y líneas.
+Estas secuencias coinciden en ambos parches. Protocol Ruins usa título
+`0x8060`, primera línea `0x801C`, segunda `0x7FEC`; Repeating Tom usa
+`0x80D0`, `0x8084`, `0x8080`. La segunda línea puede estar antes de la primera
+en el archivo: buscar una sola cadena no recupera el objetivo completo.
+
+Referencias del juego original: [STSTATUS](https://github.com/markisha64/ddw3/blob/master/asm/dw2003/pro/ststatus.s)
+y [tabla de caracteres](https://github.com/markisha64/ddw3/blob/master/tools/ddw3-lang-file/src/codepoint.rs).
+Los desplazamientos anteriores proceden del parche, no del juego original.
+
+El lector se consulta cada 200 ms fuera de batalla y conserva el último
+objetivo si el módulo deja de estar cargado. Un cambio de etapa de historia
+invalida la caché. AUTO sigue usando `0x8005CCA8` para el idioma del panel.
+El perfil USA mantiene la guía deshabilitada: este análisis verifica los dos
+parches PAL locales, no un port del mod a USA. Las pruebas usan bytes del
+parche y RAM simulada; falta validar la sincronización en una partida real.
 
 ## Escrituras controladas (0.7)
 
@@ -77,7 +104,7 @@ La POC 0.7 escribe solo cuando el usuario lo pide y la sesión no está en batal
 
 Los destinos del panel son iconos del mapa de Flawe (no el puente ni interiores). START y los iconos del mapa se recorren con la cruceta; □ cambia de servidor. No se escriben `0x80048D68` / `0x8004B3F8` para viajar: Flawe usa el icono seleccionado con × al salir completamente con △. En las transiciones observadas, `MAP_ID` ya contiene el destino mientras `AREA` aún conserva el mapa anterior; por eso títulos e icono actual usan `MAP_ID`.
 
-### Dispatcher de Flawe 2.0
+### Dispatcher antiguo del IPS
 
 El parche público copia su selector a `0x8000C000`. La selección directa valida:
 
@@ -89,8 +116,36 @@ El parche público copia su selector a `0x8000C000`. La selección directa valid
 
 Durante ×, la app sustituye temporalmente la rama por `NOP` y la lectura del icono por `ori v1, zero, ID`. Los IDs son los índices de ASKMAP extraídos del IPS de [dmw_2003_patcher](https://github.com/markisha64/dmw_2003_patcher) (`0x14` Ciudad Asuka, `0x1E` Central Park, `0x16` Entrada del Bosque Alambre, `0x0A` Montaña de Bota, `0x06` Ciudad Genbu, y el resto de los 46 campos). Flawe ejecuta después su tabla original, que escribe el mapa y las coordenadas exactas; al soltar × se restaura la ventana completa de 80 bytes. Una firma distinta no se modifica y usa la cruceta como fallback. Amaterasu reutiliza los mismos índices de icono en otro mapa; el blob del parche solo escribe MAP_ID de Asuka, así que esos hubs siguen el fallback por cruceta.
 
-Algunas compilaciones combinadas reubican el dispatcher. Se busca la misma estructura en toda la RAM y se prefiere la copia referenciada por un `j` o `jal`. Si no hay thunk, una coincidencia única sigue siendo válida. También se acepta un `lw` con inmediato `0x184` y un `bne` de ese registro en los 112 bytes anteriores. Varias copias sin desempate nunca se escriben.
+Algunas compilaciones combinadas reubican el dispatcher. Se busca la misma estructura en toda la RAM y se prefiere la copia referenciada por un `j` o `jal`. Si no hay thunk, una coincidencia única sigue siendo válida. Las coincidencias sueltas de `lw 0x184` y `bne` se rechazan: también aparecen en el renderer normal del mapa. Varias copias sin desempate nunca se escriben.
 
 Los mods opcionales se aplican con `retro_cheat_set` del núcleo, no con parches permanentes. Datos fuera de rango, perfiles inválidos y punteros externos a RAM se descartan.
 
 No se ha documentado todavía un indicador estable para distinguir el cuadro exacto de pesca del estado normal de campo. ddw3 carga la pesca dentro de `FIELDSTG` (no hay overlay FISH/CAST/ROD). Recompilar el `.bin` no aportaría una firma nueva. Sigue haciendo falta un dump de los 2 MiB (o al menos la ventana principal y overlay) **de pie** y **con la caña echada** en el mismo mapa para localizar el byte de pose. Sin ese par, `isFishing` permanece en falso y la UI solo ofrece previsualización táctil.
+
+### Función de viaje de Flawe 2.0 y caché de código
+
+El volcado del mapa inglés inicializado contiene la función activa en
+`0x8009BBE4` y otra copia en `0x8016F860`. La firma valida múltiples
+instrucciones del prólogo; las copias reubicadas se resuelven por referencias
+`j/jal` y se rechazan cuando son ambiguas. Se sustituye temporalmente
+`+0x08` por NOP y `+0x38` por `ori a3, zero, icono`. Se conserva la
+comprobación del servidor en `+0x24`. La ventana original de 60 bytes se
+restaura al finalizar, también ante errores.
+
+Las escrituras de RAM del frontend notifican al núcleo mediante la extensión
+opcional `retro_notify_memory_write`. PCSX invalida los bloques recompilados
+que contienen esas instrucciones, tanto al aplicar como al restaurar el
+parche. No vacía toda la caché en cada sondeo. La presencia de esta función
+en RAM no demuestra que el menú esté abierto.
+
+### Guía independiente del idioma del menú
+
+El panel evalúa una copia acotada de la rutina `+0xC68…+0x2723` sobre la
+instantánea principal existente (`0x80048D00`, 10 KiB). Se detiene antes de
+los stores de `+0xD4C` y usa los registros de desplazamientos para seleccionar
+las líneas. No ejecuta código dentro del emulador ni escribe RAM.
+`assets/guide/objectives.json` contiene los 157 pares alcanzables y sus cinco
+idiomas. AUTO utiliza el byte PAL `0x8005CCA8`: 2 inglés, 3 francés, 4 italiano,
+5 alemán, 6 español. La selección explícita del panel prevalece. El lector
+del módulo vivo se conserva como respaldo cuando no se resuelve el catálogo.
+La guía PAL no habilita automáticamente soporte para la edición USA.

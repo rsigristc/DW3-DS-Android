@@ -6,18 +6,33 @@ import com.digitaladventure.dw2003.model.GameMode
 import com.digitaladventure.dw2003.model.GameSnapshot
 
 class GameStateReader {
+    private val locationTracker = LocationTracker()
+
     fun parse(
         main: ByteArray,
         overlaySignature: Long,
         objective: String?,
-        features: CompanionRomFeatures = CompanionRomFeatures.PAL
+        features: CompanionRomFeatures = CompanionRomFeatures.PAL,
+        overlayStageId: Int? = null
     ): GameSnapshot {
         require(main.size >= MAIN_LENGTH) { "Incomplete DW2003 RAM window" }
 
-        val areaId = u16(main, AREA - MAIN_BASE)
+        val rawAreaId = u16(main, AREA - MAIN_BASE)
         val rawMapId = u16(main, MAP_ID - MAIN_BASE)
-        val mapId = rawMapId.takeIf { it != 0 } ?: areaId
-        val location = LocationResolver.resolve(areaId, mapId)
+        val rawStory = u16(main, STORY_STAGE - MAIN_BASE)
+        val sessionLooksValid = rawStory in 0..300 && (
+            (rawAreaId == 0 && rawMapId == 0) ||
+                AreaCatalog.knownName(rawAreaId) != null ||
+                AreaCatalog.knownName(rawMapId) != null
+            )
+        val areaId = if (sessionLooksValid) rawAreaId else 0
+        val mapId = if (sessionLooksValid) rawMapId.takeIf { it != 0 } ?: areaId else 0
+        val publicMapId = if (sessionLooksValid) {
+            locationTracker.follow(areaId, mapId, overlayStageId)
+        } else {
+            0
+        }
+        val location = LocationResolver.resolve(areaId, mapId, publicMapId)
         val mapRegion = MapRegionCatalog.resolve(location.publicMapId)
         val region = if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(areaId) else mapRegion
         val mode = when (overlaySignature) {
@@ -30,11 +45,11 @@ class GameStateReader {
             profile.takeIf { it in DIGIMON_NAMES.indices }
         }.distinct()
 
-        val story = u16(main, STORY_STAGE - MAIN_BASE)
+        val story = if (sessionLooksValid) rawStory else 0
         // The title/language screens leave the party pointers at zero. Zero is also
         // Kotemon's valid profile id, so the session gate must be evaluated before
         // interpreting those pointers as a formation.
-        val gameStarted = areaId != 0 || story != 0
+        val gameStarted = sessionLooksValid && (areaId != 0 || story != 0)
         val party = if (gameStarted) {
             activeProfiles.map { parseDigimon(main, it) }.filter(::isPlausiblePartyMember)
         } else {
@@ -49,6 +64,7 @@ class GameStateReader {
             radarLabel = location.radarLabel,
             locationRoom = location.roomName,
             mapId = mapId,
+            publicMapId = location.publicMapId,
             mapName = location.mapLabel,
             serverName = region.server.label,
             sectorName = region.sector.label,
@@ -60,7 +76,7 @@ class GameStateReader {
                 else -> objective?.takeIf { it.length >= 4 } ?: WalkthroughCatalog.SYNC_PROMPT_ES
             },
             party = party,
-            bits = u32(main, BITS - MAIN_BASE),
+            bits = if (gameStarted) u32(main, BITS - MAIN_BASE) else 0,
             fishingAvailable = AreaCatalog.supportsFishing(location.publicMapId) ||
                 AreaCatalog.supportsFishing(areaId),
             // FIELDSTG has no dedicated fishing overlay in ddw3; the tamer stays
