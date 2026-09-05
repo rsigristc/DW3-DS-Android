@@ -8,6 +8,7 @@ import org.junit.Test
 class AppVersionTest {
     @Test
     fun detectsNewerGithubTags() {
+        assertTrue(AppVersion.isNewer("v1.0.3", "1.0.2"))
         assertTrue(AppVersion.isNewer("v1.0.2", "1.0.1"))
         assertTrue(AppVersion.isNewer("v1.0.1", "1.0.0"))
         assertTrue(AppVersion.isNewer("v1.0.0", "0.7.20-poc"))

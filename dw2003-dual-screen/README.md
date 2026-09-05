@@ -6,10 +6,11 @@ Prueba de concepto Android para ejecutar **Digimon World 2003 (Europa)** y aprov
 - Samsung Galaxy Z Fold y otros plegables compatibles con Jetpack WindowManager.
 - Tablets o pantallas grandes, con división lógica adaptable.
 
-La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.0.2** es la release actual; **1.0.0** fue la primera oficial firmada. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.0.3** es la release actual; **1.0.0** fue la primera oficial firmada. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
 
-## Estado 1.0.2
+## Estado 1.0.3
 
+- Al reabrir la app se reconstruye OpenGL si el Fold soltó el contexto en segundo plano.
 - El listado con scroll se usa cuando el panel va a un lado. Si el juego y el panel están arriba/abajo, se mantiene el diseño de columnas. El radar conserva su proporción.
 
 Implementado y compilado:
@@ -71,7 +72,7 @@ La POC permite continuar con otra imagen, pero desactiva cualquier garantía sob
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v1.0.2.apk` (release `v1.0.2`) en un dispositivo Android ARM64. Si tenías la POC debug, desinstálala antes. Si ya tienes 1.0.0 o 1.0.1, el actualizador de la app puede reemplazarla.
+1. Instala `DW2003-Dual-Screen-v1.0.3.apk` (release `v1.0.3`) en un dispositivo Android ARM64. Si tenías la POC debug, desinstálala antes. Si ya tienes 1.0.0–1.0.2, el actualizador de la app puede reemplazarla.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada o la imagen original europea.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.

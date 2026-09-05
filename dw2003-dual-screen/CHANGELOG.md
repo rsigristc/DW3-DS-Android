@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+- Al reabrir la app, el núcleo vuelve a crear los recursos OpenGL si Samsung soltó el contexto en segundo plano. `create`/`destroy` ya no tocan un núcleo nulo.
+
 ## 1.0.2
 
 - El listado con scroll de 1.0.1 solo se usa cuando el panel va a un lado (Fold horizontal). Si el juego y el panel están arriba/abajo, se recupera el diseño de columnas para que no quede cortado.

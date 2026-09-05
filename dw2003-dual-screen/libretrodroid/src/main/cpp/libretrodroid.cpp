@@ -232,11 +232,17 @@ void LibretroDroid::writeMemory(
 
 void LibretroDroid::onSurfaceChanged(unsigned int width, unsigned int height) {
     LOGD("Performing libretrodroid onSurfaceChanged");
+    if (!video) {
+        return;
+    }
     video->updateScreenSize(width, height);
 }
 
 void LibretroDroid::onSurfaceCreated() {
     LOGD("Performing libretrodroid onSurfaceCreated");
+    if (!core) {
+        return;
+    }
 
     struct retro_system_av_info system_av_info {};
     core->retro_get_system_av_info(&system_av_info);
@@ -316,7 +322,9 @@ void LibretroDroid::create(
 ) {
     LOGD("Performing libretrodroid create");
 
-    resetGlobalVariables();
+    if (core) {
+        destroy();
+    }
 
     Environment::getInstance().initialize(systemDir, savesDir, &callback_get_current_framebuffer);
     Environment::getInstance().setLanguage(language);
@@ -457,6 +465,9 @@ void LibretroDroid::destroy() {
     std::lock_guard<std::mutex> lock(coreLock);
 
     LOGD("Performing libretrodroid destroy");
+    if (!core) {
+        return;
+    }
 
     if (Environment::getInstance().getHwContextDestroy() != nullptr) {
         Environment::getInstance().getHwContextDestroy()();
@@ -480,8 +491,12 @@ void LibretroDroid::resume() {
 
     input = std::make_unique<Input>();
 
-    fpsSync->reset();
-    audio->start();
+    if (fpsSync) {
+        fpsSync->reset();
+    }
+    if (audio) {
+        audio->start();
+    }
     refreshAspectRatio();
 }
 
@@ -503,6 +518,10 @@ void LibretroDroid::step() {
 
         // If the application runs too slow it's better to just skip those frames.
         frames = std::min(requestedFrames, 2u);
+    }
+
+    if (!core) {
+        return;
     }
 
     for (size_t i = 0; i < frames * frameSpeed; i++)
@@ -545,6 +564,9 @@ float LibretroDroid::getAspectRatio() {
 }
 
 void LibretroDroid::refreshAspectRatio() {
+    if (!video) {
+        return;
+    }
     video->updateAspectRatio(getAspectRatio());
 }
 

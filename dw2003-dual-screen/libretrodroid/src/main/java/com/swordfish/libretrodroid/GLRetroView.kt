@@ -377,23 +377,25 @@ class GLRetroView(
 
     // These functions are called from the GL thread.
     private fun initializeCore() = catchExceptions {
-        if (isGameLoaded) return@catchExceptions
-        when {
-            data.gameFilePath != null -> loadGameFromPath(data.gameFilePath!!)
-            data.gameFileBytes != null -> loadGameFromBytes(data.gameFileBytes!!)
-            data.gameVirtualFiles.isNotEmpty() -> loadGameFromVirtualFiles(data.gameVirtualFiles)
+        if (!isGameLoaded) {
+            when {
+                data.gameFilePath != null -> loadGameFromPath(data.gameFilePath!!)
+                data.gameFileBytes != null -> loadGameFromBytes(data.gameFileBytes!!)
+                data.gameVirtualFiles.isNotEmpty() -> loadGameFromVirtualFiles(data.gameVirtualFiles)
+            }
+            data.saveRAMState?.let {
+                LibretroDroid.unserializeSRAM(data.saveRAMState)
+                data.saveRAMState = null
+            }
+            isGameLoaded = true
+            KtUtils.runOnUIThread {
+                lifecycle?.addObserver(RenderLifecycleObserver())
+            }
         }
-        data.saveRAMState?.let {
-            LibretroDroid.unserializeSRAM(data.saveRAMState)
-            data.saveRAMState = null
-        }
+        // Samsung and Fold devices often drop the EGL context after a long pause.
+        // Rebuild the video backend on every new surface so resume does not draw with dead GL objects.
         LibretroDroid.onSurfaceCreated()
-        isGameLoaded = true
         applyRuntimeOptions()
-
-        KtUtils.runOnUIThread {
-            lifecycle?.addObserver(RenderLifecycleObserver())
-        }
     }
 
     private fun loadGameFromVirtualFiles(virtualFiles: List<VirtualFile>) {

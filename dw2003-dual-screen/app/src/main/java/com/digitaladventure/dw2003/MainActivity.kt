@@ -183,6 +183,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             }
         }
 
+        crashLog.note("activity-create")
         val stored = getPreferences(MODE_PRIVATE).getString(PREF_ROM_URI, null)
         if (stored != null) bootRom(Uri.parse(stored)) else showSetup()
         checkForAppUpdate(manual = false)
@@ -217,11 +218,21 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     override fun onDestroy() {
+        crashLog.note("activity-destroy")
         memoryPoller?.stop()
+        memoryPoller = null
         emulatorEventsJob?.cancel()
+        emulatorEventsJob = null
         travelJob?.cancel()
         settingsDialog?.dismiss()
         presentation?.dismiss()
+        presentation = null
+        retroView?.let { view ->
+            lifecycle.removeObserver(view)
+            runCatching { view.onDestroy() }
+        }
+        retroView = null
+        memoryController = null
         displayManager.unregisterDisplayListener(this)
         super.onDestroy()
     }
@@ -448,6 +459,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     private fun bootRom(uri: Uri) {
+        if (retroView != null) return
+        crashLog.note("boot-rom")
         val descriptor = runCatching { contentResolver.openFileDescriptor(uri, "r") }.getOrNull()
         if (descriptor == null) {
             getPreferences(MODE_PRIVATE).edit().remove(PREF_ROM_URI).apply()
@@ -456,6 +469,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             return
         }
 
+        try {
         val data = GLRetroViewData(this).apply {
             coreFilePath = "${applicationInfo.nativeLibraryDir}/libretro.so"
             gameVirtualFiles = listOf(VirtualFile(displayName(uri), descriptor))
@@ -536,6 +550,17 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                     toast("Error del núcleo de emulación ($code)", "Emulation core error ($code)")
                 }
             }
+        }
+        } catch (error: Exception) {
+            crashLog.note("boot-rom-failed ${error.javaClass.simpleName}: ${error.message}")
+            retroView?.let { runCatching { lifecycle.removeObserver(it) } }
+            retroView = null
+            memoryController = null
+            toast(
+                "No se pudo reabrir la emulación: ${error.message}",
+                "Could not reopen emulation: ${error.message}"
+            )
+            showSetup()
         }
     }
 
