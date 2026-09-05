@@ -30,6 +30,10 @@ class GameSetupView(
     language: CompanionLanguage = CompanionLanguage.SPANISH,
     languageLabel: String = "Automático / Auto",
     onLanguage: (() -> Unit)? = null,
+    gameHudLabel: String? = null,
+    onGameHud: (() -> Unit)? = null,
+    battleScaleLabel: String? = null,
+    onBattleScale: (() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
     allowDemo: Boolean = onClose == null,
     onReturnToStart: (() -> Unit)? = null,
@@ -171,6 +175,40 @@ class GameSetupView(
                 false
             ).apply { setPadding(0, dp(8), 0, 0) })
         }
+        if (onGameHud != null && gameHudLabel != null) {
+            content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
+            content.addView(actionButton(gameHudLabel, onGameHud, outlined = true))
+            content.addView(label(
+                pick(
+                    language,
+                    "Oculta o muestra Guardar / Cargar / 2× / Sonido encima del juego. Esos botones viven en el panel complementario.",
+                    "Hide or show Save / Load / 2× / Sound over the game. Those buttons live on the companion pane."
+                ),
+                11f,
+                MUTED,
+                false
+            ).apply { setPadding(0, dp(8), 0, 0) })
+        }
+        if (onBattleScale != null && battleScaleLabel != null) {
+            content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
+            content.addView(
+                actionButton(
+                    "${pick(language, "Resolución en combate", "Battle resolution")}: $battleScaleLabel",
+                    onBattleScale,
+                    outlined = true
+                )
+            )
+            content.addView(label(
+                pick(
+                    language,
+                    "El render NEON puede doblar la resolución interna (2×) en combate 3D. No hay 4× en este núcleo; fuera de combate vuelve a nativo para no ensuciar el 2D.",
+                    "The NEON renderer can double internal resolution (2×) in 3D battles. This core has no 4× mode; it returns to native outside combat so 2D stays clean."
+                ),
+                11f,
+                MUTED,
+                false
+            ).apply { setPadding(0, dp(8), 0, 0) })
+        }
         if (onReturnToStart != null) {
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
             content.addView(actionButton(
@@ -266,7 +304,7 @@ class GameSetupView(
     private fun installedVersionName(): String =
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
-        }.getOrNull().orEmpty().ifBlank { "1.0.6" }
+        }.getOrNull().orEmpty().ifBlank { "1.0.8" }
 
     private fun pick(language: CompanionLanguage, spanish: String, english: String) =
         CompanionUiText.pick(language, spanish, english)

@@ -71,6 +71,39 @@ object CompanionUiText {
             CompanionLanguageSetting.ENGLISH -> "English"
         }
 
+    fun quickAction(language: CompanionLanguage, action: QuickAction, stateAvailable: Boolean, fastForward: Boolean, muted: Boolean): String =
+        when (action) {
+            QuickAction.SAVE_STATE -> pick(language, "GUARDAR", "SAVE")
+            QuickAction.LOAD_STATE -> when {
+                !stateAvailable -> pick(language, "SIN ESTADO", "NO STATE")
+                else -> pick(language, "CARGAR", "LOAD")
+            }
+            QuickAction.TOGGLE_SPEED -> if (fastForward) {
+                pick(language, "2× ACTIVO", "2× ON")
+            } else {
+                pick(language, "VELOCIDAD 1×", "SPEED 1×")
+            }
+            QuickAction.TOGGLE_MUTE -> if (muted) {
+                pick(language, "SONIDO OFF", "SOUND OFF")
+            } else {
+                pick(language, "SONIDO ON", "SOUND ON")
+            }
+            QuickAction.PICK_SCALE -> battleScaleShort(language, BattleScale.OFF)
+            QuickAction.TOGGLE_HUD -> pick(language, "HUD", "HUD")
+        }
+
+    fun battleScaleShort(language: CompanionLanguage, scale: BattleScale): String = when (scale) {
+        BattleScale.OFF -> pick(language, "NATIVO", "NATIVE")
+        BattleScale.BATTLE_2X -> pick(language, "2× BAT", "2× BAT")
+        BattleScale.ALWAYS_2X -> pick(language, "2× ON", "2× ON")
+    }
+
+    fun battleScale(language: CompanionLanguage, scale: BattleScale): String = when (scale) {
+        BattleScale.OFF -> pick(language, "Nativo", "Native")
+        BattleScale.BATTLE_2X -> pick(language, "2× en combate", "2× in battle")
+        BattleScale.ALWAYS_2X -> pick(language, "2× siempre", "Always 2×")
+    }
+
     fun paneArrangement(language: CompanionLanguage, arrangement: PaneArrangement): String =
         when (arrangement) {
             PaneArrangement.AUTO -> pick(language, "Automático", "Automatic")

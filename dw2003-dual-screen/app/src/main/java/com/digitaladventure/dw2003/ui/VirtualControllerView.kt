@@ -11,10 +11,11 @@ import android.graphics.Typeface
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
+import com.digitaladventure.dw2003.data.CompanionLanguage
 import kotlin.math.abs
 import kotlin.math.min
 
-enum class QuickAction { SAVE_STATE, LOAD_STATE, TOGGLE_SPEED, TOGGLE_MUTE }
+enum class QuickAction { SAVE_STATE, LOAD_STATE, TOGGLE_SPEED, TOGGLE_MUTE, PICK_SCALE, TOGGLE_HUD }
 
 @SuppressLint("ViewConstructor")
 class VirtualControllerView(
@@ -37,11 +38,19 @@ class VirtualControllerView(
 
     var gamepadVisible: Boolean = true
         set(value) { field = value; releaseAll(); invalidate() }
+    var quickBarVisible: Boolean = false
+        set(value) { field = value; invalidate() }
+    var language: CompanionLanguage = CompanionLanguage.SPANISH
+        set(value) { field = value; invalidate() }
     var fastForward: Boolean = false
         set(value) { field = value; invalidate() }
     var muted: Boolean = false
         set(value) { field = value; invalidate() }
     var stateAvailable: Boolean = false
+        set(value) { field = value; invalidate() }
+    var battleScale: BattleScale = BattleScale.BATTLE_2X
+        set(value) { field = value; invalidate() }
+    var gameHudVisible: Boolean = false
         set(value) { field = value; invalidate() }
 
     init {
@@ -54,7 +63,7 @@ class VirtualControllerView(
         super.onDraw(canvas)
         keyTargets.clear()
         actionTargets.clear()
-        drawQuickBar(canvas)
+        if (quickBarVisible) drawQuickBar(canvas)
         if (gamepadVisible) drawGamepad(canvas)
     }
 
@@ -63,28 +72,37 @@ class VirtualControllerView(
         val gap = dp(5f)
         val top = dp(8f)
         val bottom = top + dp(36f)
-        val available = width - margin * 2 - gap * 3
-        val itemWidth = available / 4f
         val labels = listOf(
-            QuickAction.SAVE_STATE to "GUARDAR",
-            QuickAction.LOAD_STATE to if (stateAvailable) "CARGAR" else "SIN ESTADO",
-            QuickAction.TOGGLE_SPEED to if (fastForward) "2× ACTIVO" else "VELOCIDAD 1×",
-            QuickAction.TOGGLE_MUTE to if (muted) "SONIDO OFF" else "SONIDO ON"
+            QuickAction.SAVE_STATE,
+            QuickAction.LOAD_STATE,
+            QuickAction.TOGGLE_SPEED,
+            QuickAction.TOGGLE_MUTE,
+            QuickAction.PICK_SCALE,
+            QuickAction.TOGGLE_HUD
         )
-        labels.forEachIndexed { index, item ->
+        val available = width - margin * 2 - gap * (labels.size - 1)
+        val itemWidth = available / labels.size
+        labels.forEachIndexed { index, action ->
             val left = margin + index * (itemWidth + gap)
             val rect = RectF(left, top, left + itemWidth, bottom)
-            val active = (item.first == QuickAction.TOGGLE_SPEED && fastForward) ||
-                (item.first == QuickAction.TOGGLE_MUTE && muted)
+            val active = (action == QuickAction.TOGGLE_SPEED && fastForward) ||
+                (action == QuickAction.TOGGLE_MUTE && muted)
             paint.color = if (active) Color.argb(225, 8, 105, 126) else Color.argb(205, 4, 31, 43)
             canvas.drawRoundRect(rect, dp(7f), dp(7f), paint)
             paint.style = Paint.Style.STROKE
             paint.strokeWidth = dp(1f)
-            paint.color = if (item.first == QuickAction.LOAD_STATE && !stateAvailable) DIM else CYAN
+            paint.color = if (action == QuickAction.LOAD_STATE && !stateAvailable) DIM else CYAN
             canvas.drawRoundRect(rect, dp(7f), dp(7f), paint)
             paint.style = Paint.Style.FILL
-            drawText(canvas, item.second, rect.centerX(), rect.centerY() + dp(3.5f), dp(if (width < dp(500f)) 7.5f else 9f), if (item.first == QuickAction.LOAD_STATE && !stateAvailable) DIM else WHITE)
-            actionTargets += ActionTarget(rect, item.first)
+            val label = if (action == QuickAction.PICK_SCALE) {
+                CompanionUiText.battleScaleShort(language, battleScale)
+            } else if (action == QuickAction.TOGGLE_HUD) {
+                if (gameHudVisible) "HUD ON" else "HUD OFF"
+            } else {
+                CompanionUiText.quickAction(language, action, stateAvailable, fastForward, muted)
+            }
+            drawText(canvas, label, rect.centerX(), rect.centerY() + dp(3.5f), dp(if (width < dp(500f)) 7.5f else 9f), if (action == QuickAction.LOAD_STATE && !stateAvailable) DIM else WHITE)
+            actionTargets += ActionTarget(rect, action)
         }
     }
 
@@ -109,7 +127,7 @@ class VirtualControllerView(
         addRoundKey(canvas, faceCenterX - faceRadius * 1.45f, faceCenterY, faceRadius, KeyEvent.KEYCODE_BUTTON_Y, "□")
         addRoundKey(canvas, faceCenterX, faceCenterY - faceRadius * 1.45f, faceRadius, KeyEvent.KEYCODE_BUTTON_X, "△")
 
-        val shoulderTop = dp(54f)
+        val shoulderTop = if (quickBarVisible) dp(54f) else dp(8f)
         addRectKey(canvas, RectF(dp(12f), shoulderTop, dp(92f), shoulderTop + dp(34f)), KeyEvent.KEYCODE_BUTTON_L1, "L1")
         addRectKey(canvas, RectF(width - dp(92f), shoulderTop, width - dp(12f), shoulderTop + dp(34f)), KeyEvent.KEYCODE_BUTTON_R1, "R1")
 
@@ -242,6 +260,11 @@ class VirtualControllerView(
 }
 
 enum class PadDirection { UP, DOWN, LEFT, RIGHT }
+
+object AnalogStickMath {
+    fun dpadFromStick(x: Float, y: Float, deadZone: Float = 0.35f): Set<PadDirection> =
+        VirtualPadMath.dpadDirections(x, y, deadZone)
+}
 
 object VirtualPadMath {
     /**

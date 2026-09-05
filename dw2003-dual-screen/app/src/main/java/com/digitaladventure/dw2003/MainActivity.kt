@@ -58,11 +58,14 @@ import com.digitaladventure.dw2003.emulation.RomVerifier
 import com.digitaladventure.dw2003.emulation.SaveManager
 import com.digitaladventure.dw2003.emulation.QuickStateManager
 import com.digitaladventure.dw2003.ui.AdaptiveDualPaneLayout
+import com.digitaladventure.dw2003.ui.AnalogStickMath
+import com.digitaladventure.dw2003.ui.BattleScale
 import com.digitaladventure.dw2003.ui.CompanionPresentation
 import com.digitaladventure.dw2003.ui.DashboardActions
 import com.digitaladventure.dw2003.ui.DigiviceDashboardView
 import com.digitaladventure.dw2003.ui.GamePlaceholderView
 import com.digitaladventure.dw2003.ui.GameSetupView
+import com.digitaladventure.dw2003.ui.PadDirection
 import com.digitaladventure.dw2003.ui.PaneArrangement
 import com.digitaladventure.dw2003.ui.QuickAction
 import com.digitaladventure.dw2003.ui.VirtualControllerView
@@ -112,6 +115,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private var travelJob: Job? = null
     private var languageSetting = CompanionLanguageSetting.AUTO
     private var detectedLanguage: CompanionLanguage? = null
+    private var battleScale = BattleScale.BATTLE_2X
+    private var lastEnhancementEnabled: Boolean? = null
+    private val analogDpadKeys = mutableSetOf<Int>()
 
     private val openRom = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(::acceptRom)
@@ -153,6 +159,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             ?.mapNotNull { it.toIntOrNull(16) }
             ?.toCollection(LinkedHashSet())
             ?: linkedSetOf()
+        battleScale = BattleScale.fromPreference(
+            getPreferences(MODE_PRIVATE).getString(PREF_BATTLE_SCALE, null)
+        )
         languageSetting = CompanionLanguageSetting.fromPreference(
             getPreferences(MODE_PRIVATE).getString(PREF_LANGUAGE, null)
         )
@@ -179,6 +188,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                     localDashboard?.submitSnapshot(snapshot)
                     presentation?.submitSnapshot(snapshot)
                     syncDashboardExtras()
+                    applyBattleEnhancement(snapshot.mode)
                 }
             }
         }
@@ -323,6 +333,14 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         language = resolvedLanguage(),
         languageLabel = CompanionUiText.languageSetting(resolvedLanguage(), languageSetting),
         onLanguage = ::showLanguageMenu,
+        gameHudLabel = if (gameHudVisible()) {
+            CompanionUiText.pick(resolvedLanguage(), "HUD en el juego: visible", "Game HUD: visible")
+        } else {
+            CompanionUiText.pick(resolvedLanguage(), "HUD en el juego: oculto", "Game HUD: hidden")
+        },
+        onGameHud = ::toggleGameHud,
+        battleScaleLabel = CompanionUiText.battleScale(resolvedLanguage(), battleScale),
+        onBattleScale = ::showBattleScaleMenu,
         onClose = onClose,
         onReturnToStart = if (onClose != null) ::returnToStartScreen else null,
         hasCrashLog = crashLog.hasLog(),
@@ -408,6 +426,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         val language = resolvedLanguage()
         localDashboard?.language = language
         presentation?.setLanguage(language)
+        virtualController?.language = language
     }
 
     private fun toast(spanish: String, english: String, duration: Int = Toast.LENGTH_LONG) {
@@ -501,7 +520,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 Variable("pcsx_rearmed_gpu_thread_rendering", "disabled"),
                 Variable("pcsx_rearmed_spu_thread", "disabled"),
                 Variable("pcsx_rearmed_frameskip_type", "disabled"),
-                Variable("pcsx_rearmed_dithering", "enabled")
+                Variable("pcsx_rearmed_dithering", "enabled"),
+                Variable(
+                    "pcsx_rearmed_neon_enhancement_enable",
+                    if (battleScale.enhancementEnabled(GameMode.EXPLORATION)) "enabled" else "disabled"
+                ),
+                Variable("pcsx_rearmed_neon_enhancement_tex_adj_v2", "enabled")
             )
         }
         val view = GLRetroView(this, data).apply {
@@ -531,8 +555,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             quickActionSink = ::handleQuickAction
         ).apply {
             gamepadVisible = virtualControlsVisible()
+            quickBarVisible = gameHudVisible()
+            gameHudVisible = gameHudVisible()
+            language = resolvedLanguage()
             muted = this@MainActivity.muted
             fastForward = this@MainActivity.fastForward
+            battleScale = this@MainActivity.battleScale
             stateAvailable = states.hasState || states.hasLegacyState
         }
         virtualController = controller
@@ -575,6 +603,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                     if (event is GLRetroView.GLRetroEvents.FrameRendered ||
                         event is GLRetroView.GLRetroEvents.SurfaceCreated
                     ) {
+                        view.setControllerType(0, RETRO_DEVICE_PSE_DUALSHOCK)
+                        applyBattleEnhancement(repository.snapshot.value.mode)
                         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) memoryPoller?.start()
                     }
                 }
@@ -620,6 +650,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 }
                 result.onSuccess { saved ->
                     virtualController?.stateAvailable = true
+                    syncDashboardExtras()
                     toast(
                         "Estado + Memory Card guardados (${saved.stateBytes / 1024} KiB)",
                         "State + Memory Card saved (${saved.stateBytes / 1024} KiB)",
@@ -652,6 +683,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 view.frameSpeed = if (fastForward) 2 else 1
                 view.applyRuntimeOptions()
                 virtualController?.fastForward = fastForward
+                syncDashboardExtras()
                 toast(
                     if (fastForward) "Velocidad 2×" else "Velocidad normal",
                     if (fastForward) "Speed 2×" else "Normal speed",
@@ -664,12 +696,15 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 view.applyRuntimeOptions()
                 getPreferences(MODE_PRIVATE).edit().putBoolean(PREF_MUTED, muted).apply()
                 virtualController?.muted = muted
+                syncDashboardExtras()
                 toast(
                     if (muted) "Sonido desactivado" else "Sonido activado",
                     if (muted) "Sound off" else "Sound on",
                     Toast.LENGTH_SHORT
                 )
             }
+            QuickAction.PICK_SCALE -> showBattleScaleMenu()
+            QuickAction.TOGGLE_HUD -> toggleGameHud()
         }
     }
 
@@ -679,6 +714,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
         val dashboard = DigiviceDashboardView(this, dashboardActions()).apply {
             controlsVisible = virtualControlsVisible()
+            gameHudVisible = gameHudVisible()
         }
         dashboard.submitSnapshot(repository.snapshot.value)
         syncDashboardExtras()
@@ -712,9 +748,14 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
         val view = retroView
         if (view != null && event.source and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK && event.action == MotionEvent.ACTION_MOVE) {
-            view.sendMotionEvent(0, event.getAxisValue(MotionEvent.AXIS_HAT_X), event.getAxisValue(MotionEvent.AXIS_HAT_Y), 0)
-            view.sendMotionEvent(1, event.getAxisValue(MotionEvent.AXIS_X), event.getAxisValue(MotionEvent.AXIS_Y), 0)
+            val hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X)
+            val hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y)
+            val leftX = event.getAxisValue(MotionEvent.AXIS_X)
+            val leftY = event.getAxisValue(MotionEvent.AXIS_Y)
+            view.sendMotionEvent(0, hatX, hatY, 0)
+            view.sendMotionEvent(1, leftX, leftY, 0)
             view.sendMotionEvent(2, event.getAxisValue(MotionEvent.AXIS_Z), event.getAxisValue(MotionEvent.AXIS_RZ), 0)
+            applyAnalogToDpad(view, hatX, hatY, leftX, leftY)
             return true
         }
         return super.dispatchGenericMotionEvent(event)
@@ -741,6 +782,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             it.show()
             it.submitSnapshot(repository.snapshot.value)
             it.setControlsVisible(virtualControlsVisible())
+            it.setGameHudVisible(gameHudVisible())
             syncDashboardExtras()
         }
         dualLayout?.setGameOnly(true)
@@ -768,9 +810,14 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun virtualControlsVisible(): Boolean =
         getPreferences(MODE_PRIVATE).getBoolean(PREF_VIRTUAL_GAMEPAD, true)
 
+    private fun gameHudVisible(): Boolean =
+        getPreferences(MODE_PRIVATE).getBoolean(PREF_GAME_HUD, false)
+
     private fun dashboardActions() = DashboardActions(
         onAppSettings = ::showAppSettings,
         onToggleControls = ::toggleVirtualControls,
+        onToggleGameHud = ::toggleGameHud,
+        onQuickAction = ::handleQuickAction,
         onFastTravel = ::requestFastTravel,
         onOpenGameMap = ::openInGameMap,
         onPartyMove = ::movePartyMember,
@@ -788,16 +835,65 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         virtualController?.fastForward = fastForward
     }
 
+    private fun applyAnalogToDpad(view: GLRetroView, hatX: Float, hatY: Float, leftX: Float, leftY: Float) {
+        val fromHat = AnalogStickMath.dpadFromStick(hatX, hatY, 0.5f)
+        val next = if (fromHat.isNotEmpty()) {
+            fromHat
+        } else {
+            AnalogStickMath.dpadFromStick(leftX, leftY)
+        }.map {
+            when (it) {
+                PadDirection.UP -> KeyEvent.KEYCODE_DPAD_UP
+                PadDirection.DOWN -> KeyEvent.KEYCODE_DPAD_DOWN
+                PadDirection.LEFT -> KeyEvent.KEYCODE_DPAD_LEFT
+                PadDirection.RIGHT -> KeyEvent.KEYCODE_DPAD_RIGHT
+            }
+        }.toSet()
+        (analogDpadKeys - next).forEach { view.sendKeyEvent(KeyEvent.ACTION_UP, it, 0) }
+        (next - analogDpadKeys).forEach { view.sendKeyEvent(KeyEvent.ACTION_DOWN, it, 0) }
+        analogDpadKeys.clear()
+        analogDpadKeys += next
+    }
+
+    private fun applyBattleEnhancement(mode: GameMode, announce: Boolean = false) {
+        val view = retroView ?: return
+        val enabled = battleScale.enhancementEnabled(mode)
+        if (lastEnhancementEnabled == enabled) return
+        lastEnhancementEnabled = enabled
+        view.updateVariables(
+            Variable("pcsx_rearmed_neon_enhancement_enable", if (enabled) "enabled" else "disabled"),
+            Variable("pcsx_rearmed_neon_enhancement_tex_adj_v2", "enabled")
+        )
+        if (announce) {
+            toast(
+                if (enabled) "Resolución interna 2× activa" else "Resolución nativa",
+                if (enabled) "Internal 2× resolution on" else "Native resolution",
+                Toast.LENGTH_SHORT
+            )
+        }
+    }
+
     private fun syncDashboardExtras() {
+        val stateAvailable = virtualController?.stateAvailable ?: (quickStateManager?.hasState == true)
         localDashboard?.modsEnabled = modsEnabled
         localDashboard?.enabledCheats = enabledCheats
         localDashboard?.customCheats = customCheats.all()
         localDashboard?.visitedMaps = visitedMaps
+        localDashboard?.gameHudVisible = gameHudVisible()
+        localDashboard?.quickMuted = muted
+        localDashboard?.quickFastForward = fastForward
+        localDashboard?.quickStateAvailable = stateAvailable
+        localDashboard?.battleScale = battleScale
+        virtualController?.quickBarVisible = gameHudVisible()
+        virtualController?.gameHudVisible = gameHudVisible()
+        virtualController?.battleScale = battleScale
         applyCompanionLanguage()
         presentation?.setModsEnabled(modsEnabled)
         presentation?.setEnabledCheats(enabledCheats)
         presentation?.setCustomCheats(customCheats.all())
         presentation?.setVisitedMaps(visitedMaps)
+        presentation?.setGameHudVisible(gameHudVisible())
+        presentation?.setQuickBar(muted, fastForward, stateAvailable, battleScale)
     }
 
     private fun returnToStartScreen() {
@@ -1266,6 +1362,40 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             .show()
     }
 
+    private fun toggleGameHud() {
+        val next = !gameHudVisible()
+        getPreferences(MODE_PRIVATE).edit().putBoolean(PREF_GAME_HUD, next).apply()
+        syncDashboardExtras()
+        if (settingsDialog != null) showAppSettings()
+        toast(
+            if (next) "HUD del juego visible" else "HUD del juego oculto",
+            if (next) "Game HUD visible" else "Game HUD hidden",
+            Toast.LENGTH_SHORT
+        )
+    }
+
+    private fun showBattleScaleMenu() {
+        val options = BattleScale.entries
+        val language = resolvedLanguage()
+        AlertDialog.Builder(this)
+            .setTitle(CompanionUiText.pick(language, "Resolución en combate", "Battle resolution"))
+            .setSingleChoiceItems(
+                options.map { CompanionUiText.battleScale(language, it) }.toTypedArray(),
+                options.indexOf(battleScale)
+            ) { dialog, index ->
+                battleScale = options[index]
+                lastEnhancementEnabled = null
+                getPreferences(MODE_PRIVATE).edit()
+                    .putString(PREF_BATTLE_SCALE, battleScale.name)
+                    .apply()
+                applyBattleEnhancement(repository.snapshot.value.mode, announce = true)
+                dialog.dismiss()
+                if (settingsDialog != null) showAppSettings()
+            }
+            .setNegativeButton(CompanionUiText.pick(language, "Cancelar", "Cancel"), null)
+            .show()
+    }
+
     private fun toggleVirtualControls() {
         val next = !virtualControlsVisible()
         getPreferences(MODE_PRIVATE).edit().putBoolean(PREF_VIRTUAL_GAMEPAD, next).apply()
@@ -1291,6 +1421,10 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         private const val PREF_VISITED_MAPS = "visited_maps"
         private const val PREF_PANE_ARRANGEMENT = "pane_arrangement"
         private const val PREF_LANGUAGE = "companion_language"
+        private const val PREF_GAME_HUD = "game_hud"
+        private const val PREF_BATTLE_SCALE = "battle_scale"
+        // RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 1) — DualShock
+        private const val RETRO_DEVICE_PSE_DUALSHOCK = (2 shl 8) or 5
         private val GAME_KEYS = setOf(
             KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
             KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BUTTON_X, KeyEvent.KEYCODE_BUTTON_Y,

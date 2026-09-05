@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.0.8
+
+Cambios principales desde la release 1.0.6.
+
+- **HUD exclusivo:** HUD OFF oculta Guardar / Cargar / 2× / Sonido / escala sobre el juego y los muestra en el panel. HUD ON hace lo contrario. El interruptor HUD permanece en la cabecera del panel, junto a PAD / APP.
+- **Idioma:** esas etiquetas siguen el idioma del panel (español o English).
+- **Stick analógico:** el puerto 1 se presenta como DualShock. El stick izquierdo envía ejes analógicos y, si el juego sigue en modo digital, también se mapea a la cruceta.
+- **Escala 2×:** el render NEON puede usar resolución interna 2× solo en batalla (opción por defecto), siempre o nunca. El botón junto a Sonido abre la lista. Este núcleo no ofrece 4×; el 2× no agranda la imagen, solo nítidez 3D.
+- **Validación:** pruebas unitarias actualizadas. HUD, DualShock y el selector de escala se instalaron y probaron en Samsung SM-F971B.
+
+Limitaciones: el 2× interno es sutil en HUD 2D. Se necesita una copia propia del juego y BIOS.
+
+### English — highlights since 1.0.6
+
+- Exclusive HUD: OFF hides Save / Load / 2× / Sound / scale on the game and shows them on the companion. ON does the reverse. The HUD toggle stays on the companion header next to PAD / APP.
+- Those labels follow the companion language (Spanish or English).
+- Port 1 is DualShock: the left stick sends analog axes and also maps to the D-pad when the game stays in digital mode.
+- Optional 2× internal resolution: battle only (default), always, or never. The control sits next to Sound. 4× is not available in this renderer; 2× does not enlarge the picture, it only sharpens 3D.
+- Unit tests updated. HUD, DualShock and the scale selector were installed and tested on a Samsung SM-F971B.
+
+The internal 2× effect is subtle on 2D HUD elements. ROM and BIOS are not included.
+
 ## 1.0.6
 
 Cambios principales desde la release 1.0.4 (incluye el trabajo de 1.0.5).

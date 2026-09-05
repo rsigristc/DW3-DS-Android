@@ -15,6 +15,13 @@ class VirtualPadMathTest {
     }
 
     @Test
+    fun leftStickMapsToDpadOutsideDeadZone() {
+        assertEquals(emptySet<PadDirection>(), AnalogStickMath.dpadFromStick(0.1f, -0.1f))
+        assertEquals(setOf(PadDirection.RIGHT), AnalogStickMath.dpadFromStick(0.8f, 0.05f))
+        assertEquals(setOf(PadDirection.LEFT, PadDirection.UP), AnalogStickMath.dpadFromStick(-0.9f, -0.7f))
+    }
+
+    @Test
     fun capturedDpadKeepsWalkingOutsideItsDrawnCircle() {
         assertEquals(
             null,

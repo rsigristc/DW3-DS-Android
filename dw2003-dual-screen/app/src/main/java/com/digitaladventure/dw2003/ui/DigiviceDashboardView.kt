@@ -61,6 +61,16 @@ class DigiviceDashboardView(
         ?: GameMode.EXPLORATION.name
     var controlsVisible: Boolean = true
         set(value) { if (field == value) return; field = value; invalidate() }
+    var gameHudVisible: Boolean = false
+        set(value) { if (field == value) return; field = value; invalidate() }
+    var quickFastForward: Boolean = false
+        set(value) { if (field == value) return; field = value; invalidate() }
+    var quickMuted: Boolean = false
+        set(value) { if (field == value) return; field = value; invalidate() }
+    var quickStateAvailable: Boolean = false
+        set(value) { if (field == value) return; field = value; invalidate() }
+    var battleScale: BattleScale = BattleScale.BATTLE_2X
+        set(value) { if (field == value) return; field = value; invalidate() }
     var modsEnabled: Boolean = false
         set(value) {
             if (field == value) return
@@ -160,7 +170,7 @@ class DigiviceDashboardView(
         drawGrid(canvas)
 
         val margin = dp(12f)
-        val headerBottom = dp(68f)
+        val headerBottom = if (gameHudVisible) dp(68f) else dp(104f)
         val tabTop = height - dp(52f)
         drawHeader(canvas, margin, headerBottom)
 
@@ -198,20 +208,69 @@ class DigiviceDashboardView(
             else -> "◇ DEMO"
         }
         val appButton = RectF(width - margin - dp(58f), dp(8f), width - margin, dp(35f))
-        val padButton = RectF(appButton.left - dp(64f), dp(8f), appButton.left - dp(6f), dp(35f))
+        val hudButton = RectF(appButton.left - dp(64f), dp(8f), appButton.left - dp(6f), dp(35f))
+        val padButton = RectF(hudButton.left - dp(64f), dp(8f), hudButton.left - dp(6f), dp(35f))
         paint.color = Color.rgb(8, 43, 56)
         canvas.drawRoundRect(appButton, dp(6f), dp(6f), paint)
         canvas.drawRoundRect(padButton, dp(6f), dp(6f), paint)
+        paint.color = if (gameHudVisible) Color.rgb(8, 105, 126) else Color.rgb(8, 43, 56)
+        canvas.drawRoundRect(hudButton, dp(6f), dp(6f), paint)
         drawText(canvas, "⚙ APP", appButton.centerX(), appButton.centerY() + dp(4f), dp(9f), CYAN, true, Paint.Align.CENTER)
         drawText(canvas, if (controlsVisible) "PAD ON" else "PAD OFF", padButton.centerX(), padButton.centerY() + dp(4f), dp(8f), if (controlsVisible) CYAN else MUTED, true, Paint.Align.CENTER)
+        drawText(canvas, if (gameHudVisible) "HUD ON" else "HUD OFF", hudButton.centerX(), hudButton.centerY() + dp(4f), dp(8f), if (gameHudVisible) CYAN else MUTED, true, Paint.Align.CENTER)
         hitTargets += appButton to actions.onAppSettings
         hitTargets += padButton to actions.onToggleControls
+        hitTargets += hudButton to actions.onToggleGameHud
         val statusColor = if (snapshot.gameStarted && snapshot.isLive) GREEN else AMBER
         drawText(canvas, status, padButton.left - dp(8f), dp(27f), dp(10f), statusColor, true, Paint.Align.RIGHT)
         val tabLabel = if (selectedTab == TAB_MODS) "Mods" else CompanionUiText.mode(language, selectedMode)
         drawText(canvas, tabLabel.uppercase(), width - margin, dp(49f), dp(10f), CYAN, true, Paint.Align.RIGHT)
+        if (!gameHudVisible) {
+            drawCompanionQuickBar(canvas, margin, dp(58f), bottom - dp(6f))
+        }
         paint.color = CYAN_DARK
         canvas.drawRect(margin, bottom - dp(2f), width - margin, bottom, paint)
+    }
+
+    private fun drawCompanionQuickBar(canvas: Canvas, margin: Float, top: Float, bottom: Float) {
+        val gap = dp(5f)
+        val actionsToDraw = listOf(
+            QuickAction.SAVE_STATE,
+            QuickAction.LOAD_STATE,
+            QuickAction.TOGGLE_SPEED,
+            QuickAction.TOGGLE_MUTE,
+            QuickAction.PICK_SCALE
+        )
+        val available = width - margin * 2 - gap * (actionsToDraw.size - 1)
+        val itemWidth = available / actionsToDraw.size
+        actionsToDraw.forEachIndexed { index, action ->
+            val left = margin + index * (itemWidth + gap)
+            val rect = RectF(left, top, left + itemWidth, bottom)
+            val active = (action == QuickAction.TOGGLE_SPEED && quickFastForward) ||
+                (action == QuickAction.TOGGLE_MUTE && quickMuted) ||
+                (action == QuickAction.PICK_SCALE && battleScale != BattleScale.OFF)
+            paint.color = if (active) Color.rgb(8, 105, 126) else Color.rgb(8, 43, 56)
+            canvas.drawRoundRect(rect, dp(6f), dp(6f), paint)
+            val dimmed = action == QuickAction.LOAD_STATE && !quickStateAvailable
+            val label = if (action == QuickAction.PICK_SCALE) {
+                CompanionUiText.battleScaleShort(language, battleScale)
+            } else {
+                CompanionUiText.quickAction(language, action, quickStateAvailable, quickFastForward, quickMuted)
+            }
+            drawText(
+                canvas,
+                label,
+                rect.centerX(),
+                rect.centerY() + dp(3.5f),
+                dp(if (width < dp(420f)) 7f else 8.5f),
+                if (dimmed) MUTED else WHITE,
+                true,
+                Paint.Align.CENTER
+            )
+            if (!dimmed) {
+                hitTargets += rect to { actions.onQuickAction(action) }
+            }
+        }
     }
 
     private fun drawWaitingForGame(canvas: Canvas, bounds: RectF) {
