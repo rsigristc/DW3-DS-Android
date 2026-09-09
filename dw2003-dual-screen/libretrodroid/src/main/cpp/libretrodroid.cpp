@@ -657,12 +657,18 @@ std::pair<int8_t*, size_t> LibretroDroid::serializeState() {
 
 void LibretroDroid::resetCheat() {
     std::lock_guard<std::mutex> lock(coreLock);
+    if (!core) {
+        return;
+    }
 
     core->retro_cheat_reset();
 }
 
 void LibretroDroid::setCheat(unsigned index, bool enabled, const std::string& code) {
     std::lock_guard<std::mutex> lock(coreLock);
+    if (!core) {
+        return;
+    }
 
     core->retro_cheat_set(index, enabled, Utils::cloneToCString(code));
 }

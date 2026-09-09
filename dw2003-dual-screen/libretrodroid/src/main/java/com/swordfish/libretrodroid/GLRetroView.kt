@@ -179,6 +179,7 @@ class GLRetroView(
 
     fun setCheat(index: Int, enable: Boolean, code: String, useEmulationThread: Boolean = true) {
         runOnEmulationThread(useEmulationThread) {
+            requireCoreReady()
             LibretroDroid.setCheat(index, enable, code)
         }
     }
@@ -227,6 +228,7 @@ class GLRetroView(
 
     fun resetCheat(useEmulationThread: Boolean = true) {
         runOnEmulationThread(useEmulationThread) {
+            requireCoreReady()
             LibretroDroid.resetCheat()
         }
     }

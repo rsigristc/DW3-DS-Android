@@ -304,7 +304,7 @@ class GameSetupView(
     private fun installedVersionName(): String =
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
-        }.getOrNull().orEmpty().ifBlank { "1.0.8" }
+        }.getOrNull().orEmpty().ifBlank { "1.1.0" }
 
     private fun pick(language: CompanionLanguage, spanish: String, english: String) =
         CompanionUiText.pick(language, spanish, english)

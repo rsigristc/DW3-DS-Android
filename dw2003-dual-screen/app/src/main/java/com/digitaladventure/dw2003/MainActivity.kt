@@ -535,7 +535,6 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
         retroView = view
         memoryController = GameMemoryController(view)
-        if (enabledCheats.isNotEmpty()) applyEnabledCheats()
         if (!biosManager.isInstalled) {
             toast(
                 "BIOS HLE activo: el guardado dentro del juego puede congelarse. Importa un BIOS europeo desde ⚙ APP.",
@@ -606,6 +605,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                         view.setControllerType(0, RETRO_DEVICE_PSE_DUALSHOCK)
                         applyBattleEnhancement(repository.snapshot.value.mode)
                         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) memoryPoller?.start()
+                    }
+                    if (event is GLRetroView.GLRetroEvents.SurfaceCreated && enabledCheats.isNotEmpty()) {
+                        applyEnabledCheats()
                     }
                 }
             }

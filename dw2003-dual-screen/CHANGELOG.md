@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.1.0
+
+Cambios principales desde la release 1.0.8.
+
+- **Mods al arrancar:** reabrir la app con códigos GameShark activos ya no cierra el proceso. En 1.0.8 se aplicaban antes de crear el núcleo (`core` nulo) y el hilo nativo moría al instante. Ahora se aplican en `SurfaceCreated`, con el juego cargado.
+- **Códigos personalizados:** se aceptan pares `80`, `30` y condicionales `D0` (además del formato `800XXXXX YYYY`). El núcleo sigue sin `core` nulo en `setCheat` / `resetCheat`.
+- **Validación:** prueba unitaria de códigos `D0`/`30`. El fallo de arranque se reprodujo con mods persistidos activados.
+
+Limitaciones: los códigos que parchean instrucciones (`D0` + `800`) siguen siendo más delicados que los de inventario. Se necesita una copia propia del juego y BIOS.
+
+### English — highlights since 1.0.8
+
+- Restarting with GameShark mods still enabled no longer kills the process. 1.0.8 applied cheats before the core existed (`core` was null). They now apply on `SurfaceCreated` after the game is loaded.
+- Custom codes accept `80`, `30` and `D0` pairs. Native `setCheat` / `resetCheat` no longer touch a null core.
+- Unit coverage for `D0`/`30` codes. The boot crash was reproduced with persisted mods left on.
+
+Codes that patch executable RAM (`D0` + `800`) remain more fragile than inventory writes. ROM and BIOS are not included.
+
 ## 1.0.8
 
 Cambios principales desde la release 1.0.6.

@@ -18,4 +18,14 @@ class CheatCodeParserTest {
         assertNull(CheatCodeParser.normalize("infinite bits"))
         assertNull(CheatCodeParser.normalize(""))
     }
+
+    @Test
+    fun acceptsConditionalAndByteCodes() {
+        assertEquals(
+            "D0084AB4 1023+80084AB4 1040+30048EF1 0003",
+            CheatCodeParser.normalize(
+                "D0084AB4 1023\n80084AB4 1040\n30048EF1 0003"
+            )
+        )
+    }
 }
