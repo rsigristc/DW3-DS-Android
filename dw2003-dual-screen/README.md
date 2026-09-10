@@ -6,7 +6,14 @@ Prueba de concepto Android para ejecutar **Digimon World 2003 (Europa)** y aprov
 - Samsung Galaxy Z Fold y otros plegables compatibles con Jetpack WindowManager.
 - Tablets o pantallas grandes, con división lógica adaptable.
 
-La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.1.0** es la release actual; **1.0.8** fue la anterior firmada. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.2.0** es la release actual. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+
+## Estado 1.2.0
+
+- El título del panel muestra Menú, Mapa o Viaje rápido según RAM (START, mapa Flawe, MAP_ID destino).
+- En Batalla, Equipo / Enemigos, técnicas con power y botín; combate por `FIGHTST2` en `0x80082CB0`.
+- Resolución Nativo o 2× siempre; Ñ/ñ; OLED opcional.
+- Sonda RAM solo en debug (Descargas/DDW3).
 
 ## Estado 1.1.0
 

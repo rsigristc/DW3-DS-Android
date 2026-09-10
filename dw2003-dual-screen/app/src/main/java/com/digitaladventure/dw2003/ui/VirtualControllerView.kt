@@ -12,6 +12,7 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import com.digitaladventure.dw2003.data.CompanionLanguage
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -48,7 +49,7 @@ class VirtualControllerView(
         set(value) { field = value; invalidate() }
     var stateAvailable: Boolean = false
         set(value) { field = value; invalidate() }
-    var battleScale: BattleScale = BattleScale.BATTLE_2X
+    var battleScale: BattleScale = BattleScale.ALWAYS_2X
         set(value) { field = value; invalidate() }
     var gameHudVisible: Boolean = false
         set(value) { field = value; invalidate() }
@@ -242,10 +243,15 @@ class VirtualControllerView(
     override fun onDetachedFromWindow() { releaseAll(); super.onDetachedFromWindow() }
 
     private fun drawText(canvas: Canvas, text: String, x: Float, y: Float, size: Float, color: Int) {
+        paint.style = Paint.Style.FILL
+        paint.strokeWidth = 0f
+        paint.isAntiAlias = true
+        paint.isSubpixelText = true
         paint.color = color
         paint.textSize = size
         paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+        paint.textLocale = if (language == CompanionLanguage.ENGLISH) Locale.ENGLISH else Locale("es", "ES")
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         canvas.drawText(text, x, y, paint)
     }
 

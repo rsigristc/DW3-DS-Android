@@ -2,6 +2,7 @@ package com.digitaladventure.dw2003.emulation
 
 import com.digitaladventure.dw2003.data.CheatSpec
 import com.digitaladventure.dw2003.data.GameStateReader
+import com.digitaladventure.dw2003.data.OverlaySignatures
 import com.digitaladventure.dw2003.data.FlaweMenuStateReader
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.LibretroDroid
@@ -33,12 +34,23 @@ class GameMemoryController(private val view: GLRetroView) {
     }
 
     fun readOverlaySignature(): Long {
-        val bytes = view.readMemory(
-            LibretroDroid.MEMORY_SYSTEM_RAM,
-            GameStateReader.OVERLAY_BASE and RAM_MASK,
-            4
+        val hook = GameStateReader.u32(
+            view.readMemory(
+                LibretroDroid.MEMORY_SYSTEM_RAM,
+                GameStateReader.OVERLAY_BASE and RAM_MASK,
+                4
+            ),
+            0
         )
-        return GameStateReader.u32(bytes, 0)
+        val slot = GameStateReader.u32(
+            view.readMemory(
+                LibretroDroid.MEMORY_SYSTEM_RAM,
+                OverlaySignatures.SLOT_BASE and RAM_MASK,
+                4
+            ),
+            0
+        )
+        return OverlaySignatures.preferred(hook, slot)
     }
 
     fun hasPreferredFlaweDispatcher(): Boolean {

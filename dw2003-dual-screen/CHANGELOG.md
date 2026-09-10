@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.2.0
+
+- **Escena RAM:** el panel detecta menú START, mapa mundial (Flawe en RAM), viaje rápido (MAP_ID destino con mapa abierto) y estado (STSTATUS). El título muestra Menú / Mapa / Viaje rápido.
+- **Enemigos y combate:** grupo desde `0x80042B1C` / `0x800A4000`, firma `FIGHTST2` en `0x80082CB0`, habilidades con nombre y power, botín, sin MP enemigo.
+- **Interfaz:** texto vacío de enemigos corto; resolución solo Nativo o 2× siempre; Ñ/ñ con fuente del sistema; protección OLED.
+- **Sonda RAM (debug):** pestaña RAM; capturas `.txt` en Descargas/DDW3 sin PNG/state en caliente.
+- **2×:** render en hilo aparte cuando la mejora está activa, para aliviar el tirón en técnicas especiales.
+
+### English
+
+- Companion detects START menu, Flawe world map, fast travel in progress, and STSTATUS from RAM.
+- Battle enemy panel, named techniques with power, loot, FIGHTST2 slot detection.
+- Shorter empty-enemy copy; Native / Always 2× only; Spanish Ñ glyphs; OLED guard.
+- Debug RAM tab writes text captures to Downloads/DDW3.
+- Threaded GPU while 2× is on.
+
+## 1.1.2
+
+Candidata local (sin publicar).
+
+- **OLED:** en APP, protección del panel (off / atenuar / desplazar píxeles) con espera de 30, 60 o 120 s. Solo mira inactividad del companion, no del mando.
+- **Enemigos:** la pestaña Batalla tiene subpestañas Equipo / Enemigos (necesario en Fold con HUD arriba). Lee `0x80042B1C` en campo y combate, retiene el último grupo válido y escanea `0x800A4000` si el bloque se vacía.
+- **HUD:** el título del mapa ya no se pisa con PAD / HUD / APP ni con RAM EN VIVO / EXPLORACIÓN en pantallas estrechas (Ayaneo).
+- **Sonda RAM:** solo en el APK debug. Al cambiar RAM guarda PNG del juego, `.txt` y `.state` en `ram-captures`.
+- **Enemigos:** resistencias en verde/rojo (mín/máx), sin MP, técnicas stub (p. ej. 228 = Rayo Trueno) y botín del catálogo.
+- **Combate:** la firma ya no se lee solo en `0x80080000` (en Flawe suele ser un gancho `0x800C1548` y el panel se quedaba en campo, con el mapa en Crucero Amarillo). Se usa el slot `0x80082CB0` (`FIGHTST2`).
+
+### English
+
+- Optional OLED companion guard in APP (off / dim / pixel shift; 30/60/120 s).
+- Battle tab has Party / Enemies sub-tabs. Encounter reads stay on `0x80042B1C`, with a sticky cache and `0x800A4000` scan if the copy is gone.
+- Companion header no longer overlaps PAD / HUD / APP on narrow Presentation screens.
+- RAM probe is debug-only and writes PNG + RAM text + savestate when watched words change.
+- Battle mode reads the overlay slot at `0x80082CB0`. Flawe's hook at `0x80080000` (`0x800C1548`) no longer keeps the pane on the field or jumps the map to Yellow Cruiser.
+
 ## 1.1.0
 
 Cambios principales desde la release 1.0.8.

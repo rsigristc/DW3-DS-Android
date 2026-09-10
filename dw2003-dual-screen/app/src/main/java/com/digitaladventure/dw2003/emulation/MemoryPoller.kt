@@ -4,7 +4,15 @@ import android.util.Log
 import android.os.SystemClock
 import com.digitaladventure.dw2003.data.OverlayScanSchedule
 import com.digitaladventure.dw2003.data.CompanionLanguage
+import com.digitaladventure.dw2003.data.BattleSetupReader
+import com.digitaladventure.dw2003.data.RamWatch
 import com.digitaladventure.dw2003.data.GameStateReader
+import com.digitaladventure.dw2003.data.FlaweMenuStateReader
+import com.digitaladventure.dw2003.data.OverlaySceneResolver
+import com.digitaladventure.dw2003.data.OverlaySignatures
+import com.digitaladventure.dw2003.model.BattleEnemy
+import com.digitaladventure.dw2003.model.GameMode
+import com.digitaladventure.dw2003.model.RamProbe
 import com.digitaladventure.dw2003.data.GameStateRepository
 import com.digitaladventure.dw2003.data.PalLanguage
 import com.digitaladventure.dw2003.data.CompanionRomFeatures
@@ -27,7 +35,8 @@ class MemoryPoller(
     private val scope: CoroutineScope,
     private val features: CompanionRomFeatures = CompanionRomFeatures.PAL,
     private val onLanguageDetected: (CompanionLanguage) -> Unit = {},
-    private val objectiveLanguageOverride: () -> Int? = { null }
+    private val objectiveLanguageOverride: () -> Int? = { null },
+    private val ramCaptures: RamCaptureStore? = null
 ) {
     private val guide by lazy {
         FlaweGuideCatalog(
@@ -39,6 +48,10 @@ class MemoryPoller(
     private var job: Job? = null
     private var cachedObjective: String? = null
     private var cachedStoryStage = -1
+    private var cachedEnemies = emptyList<BattleEnemy>()
+    private var wasInBattle = false
+    private var previousSetup: ByteArray? = null
+    private var previousArena: ByteArray? = null
     private val overlayScans = OverlayScanSchedule()
     @Volatile
     private var stopped = false
@@ -67,7 +80,12 @@ class MemoryPoller(
     private fun pollOnce() {
         val main = read(features.ramBase, GameStateReader.MAIN_LENGTH)
         val overlay = read(GameStateReader.OVERLAY_BASE, 4)
-        val signature = GameStateReader.u32(overlay, 0)
+        val overlaySlotBytes = runCatching {
+            read(OverlaySignatures.SLOT_BASE, 4)
+        }.getOrNull()
+        val hookWord = GameStateReader.u32(overlay, 0)
+        val slotWord = overlaySlotBytes?.let { GameStateReader.u32(it, 0) } ?: 0L
+        val signature = OverlaySignatures.preferred(hookWord, slotWord)
         val storyStage = GameStateReader.u16(
             main,
             GameStateReader.STORY_STAGE - GameStateReader.MAIN_BASE
@@ -84,8 +102,18 @@ class MemoryPoller(
             cachedStoryStage = storyStage
             cachedObjective = null
         }
+        val fieldMenuVisible = runCatching { FlaweMenuStateReader.isFieldMenuVisible(::read) }.getOrNull()
+        val flaweMapLoaded = runCatching {
+            FlaweDirectWarpPatch.matchesV2(read(FlaweDirectWarpPatch.V2_RAM_OFFSET, FlaweDirectWarpPatch.V2_WINDOW_SIZE)) ||
+                FlaweDirectWarpPatch.matchesPreferred(
+                    read(FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET, FlaweDirectWarpPatch.WINDOW_SIZE)
+                )
+        }.getOrDefault(false)
+        val liveMode = OverlaySignatures.mode(hookWord, slotWord)
+        val scene = OverlaySceneResolver.resolve(liveMode, areaId, mapId, fieldMenuVisible, flaweMapLoaded)
+        val inBattle = liveMode == GameMode.BATTLE
         var overlayStageId: Int? = null
-        if (!stopped && overlayScans.shouldScan(locationKey, signature, SystemClock.elapsedRealtime())) {
+        if (!inBattle && !stopped && overlayScans.shouldScan(locationKey, signature, SystemClock.elapsedRealtime())) {
             try {
                 val overlayBytes = read(OVERLAY_SCAN_BASE, OVERLAY_SCAN_LENGTH)
                 overlayStageId = OverlayLocationFinder.stageId(overlayBytes)
@@ -107,9 +135,71 @@ class MemoryPoller(
         } else {
             null
         }
-        repository.publish(
-            reader.parse(main, signature, objective, features, overlayStageId)
+        val battleSetup = runCatching {
+            read(BattleSetupReader.SETUP_BASE, BattleSetupReader.SETUP_LENGTH)
+        }.getOrNull()
+        val battleArena = runCatching {
+            read(BattleSetupReader.ARENA_BASE, BattleSetupReader.ARENA_LENGTH)
+        }.getOrNull()
+        val battleScan = if (inBattle) {
+            runCatching { read(BattleSetupReader.SCAN_BASE, BattleSetupReader.SCAN_LENGTH) }.getOrNull()
+        } else {
+            null
+        }
+        val spanishNames = (objectiveLanguageOverride() ?: languageCode) == PalLanguage.SPANISH ||
+            palLanguage == CompanionLanguage.SPANISH
+        val setupChanges = RamWatch.wordChanges(previousSetup, battleSetup ?: ByteArray(0), BattleSetupReader.SETUP_BASE)
+        val arenaChanges = RamWatch.wordChanges(previousArena, battleArena ?: ByteArray(0), BattleSetupReader.ARENA_BASE)
+        previousSetup = battleSetup
+        previousArena = battleArena
+        val changes = (setupChanges + arenaChanges).take(24)
+        val ramProbe = if (ramCaptures != null) {
+            RamProbe(
+                overlaySignature = signature,
+                hookWord = hookWord,
+                slotWord = slotWord,
+                inBattle = inBattle,
+                scene = scene.name,
+                setupSummary = BattleSetupReader.summarizeSlots(battleSetup ?: ByteArray(0), spanishNames),
+                setupHex = RamWatch.hexDump(battleSetup ?: ByteArray(0), BattleSetupReader.SETUP_BASE),
+                arenaHex = RamWatch.hexDump(battleArena ?: ByteArray(0), BattleSetupReader.ARENA_BASE),
+                changes = changes,
+                captures = ramCaptures.latest
+            )
+        } else {
+            null
+        }
+        if (ramCaptures != null && ramProbe != null) {
+            ramCaptures.maybeCapture(ramProbe, changes)
+        }
+        val snapshot = reader.parse(
+            main,
+            signature,
+            objective,
+            features,
+            overlayStageId,
+            battleSetup,
+            battleArena,
+            battleScan,
+            spanishNames,
+            ramProbe,
+            slotWord,
+            fieldMenuVisible,
+            flaweMapLoaded
         )
+        if (snapshot.enemies.isNotEmpty()) {
+            cachedEnemies = snapshot.enemies
+        }
+        val published = if (inBattle && snapshot.enemies.isEmpty() && cachedEnemies.isNotEmpty()) {
+            snapshot.copy(enemies = cachedEnemies)
+        } else {
+            snapshot
+        }
+        if (!inBattle && wasInBattle) {
+            cachedEnemies = emptyList()
+        }
+        wasInBattle = inBattle
+        repository.publish(published)
     }
 
     private fun read(offset: Int, length: Int): ByteArray {
@@ -121,7 +211,7 @@ class MemoryPoller(
         signature: Long,
         palLanguage: CompanionLanguage?
     ): String? {
-        if (signature != GameStateReader.FIGHTST2_SIGNATURE) {
+        if (OverlaySignatures.mode(signature) != GameMode.BATTLE) {
             FlaweWalkthroughReader.read(::read)?.let { cacheObjective(it, palLanguage) }
         }
         return cachedObjective

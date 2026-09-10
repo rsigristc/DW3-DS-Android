@@ -32,8 +32,13 @@ class CompanionPresentation(
         dashboard.battleScale = scale
     }
     fun setModsEnabled(enabled: Boolean) { dashboard.modsEnabled = enabled }
+    fun setRamProbeEnabled(enabled: Boolean) { dashboard.ramProbeEnabled = enabled }
     fun setEnabledCheats(ids: Set<String>) { dashboard.enabledCheats = ids }
     fun setCustomCheats(items: List<CheatSpec>) { dashboard.customCheats = items }
     fun setVisitedMaps(ids: Set<Int>) { dashboard.visitedMaps = ids }
     fun setLanguage(value: CompanionLanguage) { dashboard.language = value }
+    fun setIdleGuard(mode: CompanionIdleMode, delay: CompanionIdleDelay) {
+        dashboard.idleMode = mode
+        dashboard.idleDelay = delay
+    }
 }

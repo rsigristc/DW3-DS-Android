@@ -9,6 +9,7 @@ import com.digitaladventure.dw2003.data.MapRegionCatalog
 import com.digitaladventure.dw2003.data.SectorRegion
 import com.digitaladventure.dw2003.data.ServerRegion
 import com.digitaladventure.dw2003.model.GameMode
+import com.digitaladventure.dw2003.model.OverlayScene
 
 object CompanionUiText {
     fun pick(language: CompanionLanguage, spanish: String, english: String): String =
@@ -18,6 +19,15 @@ object CompanionUiText {
         GameMode.EXPLORATION -> pick(language, "Exploración", "Exploration")
         GameMode.BATTLE -> pick(language, "Batalla", "Battle")
         GameMode.MANAGEMENT -> pick(language, "Gestión", "Management")
+    }
+
+    fun scene(language: CompanionLanguage, scene: OverlayScene): String = when (scene) {
+        OverlayScene.FIELD -> pick(language, "Campo", "Field")
+        OverlayScene.BATTLE -> pick(language, "Combate", "Battle")
+        OverlayScene.MENU -> pick(language, "Menú", "Menu")
+        OverlayScene.MAP -> pick(language, "Mapa", "Map")
+        OverlayScene.FAST_TRAVEL -> pick(language, "Viaje rápido", "Fast travel")
+        OverlayScene.STATUS -> pick(language, "Estado", "Status")
     }
 
     fun server(language: CompanionLanguage, server: ServerRegion): String = when (server) {
@@ -98,11 +108,25 @@ object CompanionUiText {
         BattleScale.ALWAYS_2X -> pick(language, "2× ON", "2× ON")
     }
 
+    fun idleMode(language: CompanionLanguage, mode: CompanionIdleMode): String = when (mode) {
+        CompanionIdleMode.OFF -> pick(language, "Desactivado", "Off")
+        CompanionIdleMode.DIM -> pick(language, "Atenuar panel", "Dim pane")
+        CompanionIdleMode.PIXEL_SHIFT -> pick(language, "Desplazar píxeles", "Pixel shift")
+    }
+
+    fun idleDelay(language: CompanionLanguage, delay: CompanionIdleDelay): String = when (delay) {
+        CompanionIdleDelay.S30 -> pick(language, "30 segundos", "30 seconds")
+        CompanionIdleDelay.S60 -> pick(language, "60 segundos", "60 seconds")
+        CompanionIdleDelay.S120 -> pick(language, "120 segundos", "120 seconds")
+    }
+
     fun battleScale(language: CompanionLanguage, scale: BattleScale): String = when (scale) {
         BattleScale.OFF -> pick(language, "Nativo", "Native")
-        BattleScale.BATTLE_2X -> pick(language, "2× en combate", "2× in battle")
-        BattleScale.ALWAYS_2X -> pick(language, "2× siempre", "Always 2×")
+        BattleScale.BATTLE_2X, BattleScale.ALWAYS_2X -> pick(language, "2× siempre", "Always 2×")
     }
+
+    fun emptyEnemies(language: CompanionLanguage): String =
+        pick(language, "Sin encuentros leídos", "No encounters read")
 
     fun paneArrangement(language: CompanionLanguage, arrangement: PaneArrangement): String =
         when (arrangement) {

@@ -2,6 +2,7 @@ package com.digitaladventure.dw2003.model
 
 data class GameSnapshot(
     val mode: GameMode,
+    val scene: OverlayScene = OverlayScene.FIELD,
     val areaId: Int,
     val areaName: String,
     val locationTitle: String,
@@ -17,6 +18,8 @@ data class GameSnapshot(
     val storyStage: Int,
     val objective: String,
     val party: List<DigimonState>,
+    val enemies: List<BattleEnemy> = emptyList(),
+    val ramProbe: RamProbe? = null,
     val bits: Long,
     val fishingAvailable: Boolean,
     val isFishing: Boolean,
@@ -28,6 +31,15 @@ data class GameSnapshot(
     val isLive: Boolean,
     val sampledAtMillis: Long = System.currentTimeMillis()
 ) {
+    fun idleKey(): String = listOf(
+        mode.name,
+        scene.name,
+        publicMapId,
+        bits,
+        party.joinToString { "${it.profileId}:${it.currentHp}:${it.currentMp}" },
+        enemies.joinToString { "${it.enemyId}:${it.currentHp}" }
+    ).joinToString("|")
+
     companion object {
         fun waiting() = GameSnapshot(
             mode = GameMode.EXPLORATION,
@@ -46,6 +58,7 @@ data class GameSnapshot(
             storyStage = 0,
             objective = "Inicia o carga una partida para activar el panel complementario.",
             party = emptyList(),
+            enemies = emptyList(),
             bits = 0,
             fishingAvailable = false,
             isFishing = false,
@@ -87,6 +100,29 @@ data class GameSnapshot(
                 DigimonState(6, "Renamon", 27, 16940, 9, 1420, 1420, 540, 540, 93, 88, 126, 118, 121, 80, listOf(8, 11, 13, 16, 12, 7, 10), listOf(162, 0, 245, 0, 332, 0)),
                 DigimonState(3, "Agumon", 26, 15120, 7, 1180, 1180, 620, 620, 125, 98, 82, 75, 89, 76, listOf(18, 6, 5, 8, 10, 7, 4), listOf(134, 0, 240, 0, 330, 0))
             ),
+            enemies = if (mode == GameMode.BATTLE) {
+                listOf(
+                    BattleEnemy(
+                        enemyId = 0x20,
+                        name = "Kunemon",
+                        level = 6,
+                        currentHp = 180,
+                        maxHp = 220,
+                        maxMp = 40,
+                        strength = 50,
+                        defense = 42,
+                        spirit = 40,
+                        wisdom = 50,
+                        speed = 48,
+                        resistances = listOf(90, 90, 90, 60, 160, 90, 160),
+                        expMultiplier = 4,
+                        attacks = listOf("Static Elect"),
+                        liveHp = true
+                    )
+                )
+            } else {
+                emptyList()
+            },
             bits = 24_560,
             fishingAvailable = true,
             isFishing = true,

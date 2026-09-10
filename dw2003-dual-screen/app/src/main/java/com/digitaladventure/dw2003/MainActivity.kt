@@ -52,6 +52,7 @@ import com.digitaladventure.dw2003.emulation.CrashLogStore
 import com.digitaladventure.dw2003.emulation.FastTravelNavigator
 import com.digitaladventure.dw2003.emulation.GameMemoryController
 import com.digitaladventure.dw2003.emulation.MemoryPoller
+import com.digitaladventure.dw2003.emulation.RamCaptureStore
 import com.digitaladventure.dw2003.emulation.PadStep
 import com.digitaladventure.dw2003.emulation.RetroPadButton
 import com.digitaladventure.dw2003.emulation.RomVerifier
@@ -60,6 +61,8 @@ import com.digitaladventure.dw2003.emulation.QuickStateManager
 import com.digitaladventure.dw2003.ui.AdaptiveDualPaneLayout
 import com.digitaladventure.dw2003.ui.AnalogStickMath
 import com.digitaladventure.dw2003.ui.BattleScale
+import com.digitaladventure.dw2003.ui.CompanionIdleDelay
+import com.digitaladventure.dw2003.ui.CompanionIdleMode
 import com.digitaladventure.dw2003.ui.CompanionPresentation
 import com.digitaladventure.dw2003.ui.DashboardActions
 import com.digitaladventure.dw2003.ui.DigiviceDashboardView
@@ -109,13 +112,16 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private var fastForward = false
     private var muted = false
     private var modsEnabled = false
+    private var ramProbeEnabled = false
     private var enabledCheats = linkedSetOf<String>()
     private var visitedMaps = linkedSetOf<Int>()
     private var wasOnSaveScreen = false
     private var travelJob: Job? = null
     private var languageSetting = CompanionLanguageSetting.AUTO
     private var detectedLanguage: CompanionLanguage? = null
-    private var battleScale = BattleScale.BATTLE_2X
+    private var battleScale = BattleScale.ALWAYS_2X
+    private var idleMode = CompanionIdleMode.OFF
+    private var idleDelay = CompanionIdleDelay.S30
     private var lastEnhancementEnabled: Boolean? = null
     private val analogDpadKeys = mutableSetOf<Int>()
 
@@ -149,6 +155,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         crashLog = (application as? Dw2003App)?.crashLog ?: CrashLogStore(this).also { it.install() }
         muted = getPreferences(MODE_PRIVATE).getBoolean(PREF_MUTED, false)
         modsEnabled = getPreferences(MODE_PRIVATE).getBoolean(PREF_MODS_ENABLED, false)
+        ramProbeEnabled = BuildConfig.DEBUG
         enabledCheats = getPreferences(MODE_PRIVATE).getString(PREF_ENABLED_CHEATS, "")
             ?.split(',')
             ?.filter { it.isNotBlank() }
@@ -161,6 +168,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             ?: linkedSetOf()
         battleScale = BattleScale.fromPreference(
             getPreferences(MODE_PRIVATE).getString(PREF_BATTLE_SCALE, null)
+        )
+        idleMode = CompanionIdleMode.fromPreference(
+            getPreferences(MODE_PRIVATE).getString(PREF_IDLE_MODE, null)
+        )
+        idleDelay = CompanionIdleDelay.fromPreference(
+            getPreferences(MODE_PRIVATE).getString(PREF_IDLE_DELAY, null)
         )
         languageSetting = CompanionLanguageSetting.fromPreference(
             getPreferences(MODE_PRIVATE).getString(PREF_LANGUAGE, null)
@@ -341,6 +354,10 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         onGameHud = ::toggleGameHud,
         battleScaleLabel = CompanionUiText.battleScale(resolvedLanguage(), battleScale),
         onBattleScale = ::showBattleScaleMenu,
+        idleModeLabel = CompanionUiText.idleMode(resolvedLanguage(), idleMode),
+        onIdleMode = ::showIdleModeMenu,
+        idleDelayLabel = CompanionUiText.idleDelay(resolvedLanguage(), idleDelay),
+        onIdleDelay = ::showIdleDelayMenu,
         onClose = onClose,
         onReturnToStart = if (onClose != null) ::returnToStartScreen else null,
         hasCrashLog = crashLog.hasLog(),
@@ -509,7 +526,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             saveRAMState = saveManager.load()
             shader = ShaderConfig.Sharp
             preferLowLatencyAudio = true
-            skipDuplicateFrames = false
+            skipDuplicateFrames = battleScale.enhancementEnabled(GameMode.EXPLORATION)
             variables = arrayOf(
                 Variable("pcsx_rearmed_region", storedRomVariant().emulatorRegion),
                 Variable("pcsx_rearmed_bios", "auto"),
@@ -517,15 +534,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 Variable("pcsx_rearmed_memcard2", "none"),
                 Variable("pcsx_rearmed_drc", "enabled"),
                 Variable("pcsx_rearmed_drc_thread", "auto"),
-                Variable("pcsx_rearmed_gpu_thread_rendering", "disabled"),
                 Variable("pcsx_rearmed_spu_thread", "disabled"),
-                Variable("pcsx_rearmed_frameskip_type", "disabled"),
                 Variable("pcsx_rearmed_dithering", "enabled"),
-                Variable(
-                    "pcsx_rearmed_neon_enhancement_enable",
-                    if (battleScale.enhancementEnabled(GameMode.EXPLORATION)) "enabled" else "disabled"
-                ),
-                Variable("pcsx_rearmed_neon_enhancement_tex_adj_v2", "enabled")
+                *enhancementVariables(battleScale.enhancementEnabled(GameMode.EXPLORATION))
             )
         }
         val view = GLRetroView(this, data).apply {
@@ -578,6 +589,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             repository,
             lifecycleScope,
             romVariant.features,
+            ramCaptures = if (BuildConfig.DEBUG) {
+                RamCaptureStore(this, java.io.File(filesDir, "ram-captures"), view)
+            } else {
+                null
+            },
             objectiveLanguageOverride = {
                 when (languageSetting) {
                     CompanionLanguageSetting.ENGLISH -> 2
@@ -719,11 +735,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             gameHudVisible = gameHudVisible()
         }
         dashboard.submitSnapshot(repository.snapshot.value)
-        syncDashboardExtras()
         layout.addView(gameView)
         layout.addView(dashboard)
         dualLayout = layout
         localDashboard = dashboard
+        syncDashboardExtras()
         dualContentActive = true
         setContentView(layout)
         updatePresentation()
@@ -862,10 +878,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         val enabled = battleScale.enhancementEnabled(mode)
         if (lastEnhancementEnabled == enabled) return
         lastEnhancementEnabled = enabled
-        view.updateVariables(
-            Variable("pcsx_rearmed_neon_enhancement_enable", if (enabled) "enabled" else "disabled"),
-            Variable("pcsx_rearmed_neon_enhancement_tex_adj_v2", "enabled")
-        )
+        view.updateVariables(*enhancementVariables(enabled))
         if (announce) {
             toast(
                 if (enabled) "Resolución interna 2× activa" else "Resolución nativa",
@@ -878,6 +891,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun syncDashboardExtras() {
         val stateAvailable = virtualController?.stateAvailable ?: (quickStateManager?.hasState == true)
         localDashboard?.modsEnabled = modsEnabled
+        localDashboard?.ramProbeEnabled = BuildConfig.DEBUG
         localDashboard?.enabledCheats = enabledCheats
         localDashboard?.customCheats = customCheats.all()
         localDashboard?.visitedMaps = visitedMaps
@@ -886,16 +900,20 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         localDashboard?.quickFastForward = fastForward
         localDashboard?.quickStateAvailable = stateAvailable
         localDashboard?.battleScale = battleScale
+        localDashboard?.idleMode = idleMode
+        localDashboard?.idleDelay = idleDelay
         virtualController?.quickBarVisible = gameHudVisible()
         virtualController?.gameHudVisible = gameHudVisible()
         virtualController?.battleScale = battleScale
         applyCompanionLanguage()
         presentation?.setModsEnabled(modsEnabled)
+        presentation?.setRamProbeEnabled(BuildConfig.DEBUG)
         presentation?.setEnabledCheats(enabledCheats)
         presentation?.setCustomCheats(customCheats.all())
         presentation?.setVisitedMaps(visitedMaps)
         presentation?.setGameHudVisible(gameHudVisible())
         presentation?.setQuickBar(muted, fastForward, stateAvailable, battleScale)
+        presentation?.setIdleGuard(idleMode, idleDelay)
     }
 
     private fun returnToStartScreen() {
@@ -1377,13 +1395,15 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     private fun showBattleScaleMenu() {
-        val options = BattleScale.entries
+        val options = BattleScale.menuOptions
         val language = resolvedLanguage()
         AlertDialog.Builder(this)
             .setTitle(CompanionUiText.pick(language, "Resolución en combate", "Battle resolution"))
             .setSingleChoiceItems(
                 options.map { CompanionUiText.battleScale(language, it) }.toTypedArray(),
-                options.indexOf(battleScale)
+                options.indexOf(
+                    if (battleScale == BattleScale.BATTLE_2X) BattleScale.ALWAYS_2X else battleScale
+                ).coerceAtLeast(0)
             ) { dialog, index ->
                 battleScale = options[index]
                 lastEnhancementEnabled = null
@@ -1391,6 +1411,48 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                     .putString(PREF_BATTLE_SCALE, battleScale.name)
                     .apply()
                 applyBattleEnhancement(repository.snapshot.value.mode, announce = true)
+                dialog.dismiss()
+                if (settingsDialog != null) showAppSettings()
+            }
+            .setNegativeButton(CompanionUiText.pick(language, "Cancelar", "Cancel"), null)
+            .show()
+    }
+
+    private fun showIdleModeMenu() {
+        val options = CompanionIdleMode.entries
+        val language = resolvedLanguage()
+        AlertDialog.Builder(this)
+            .setTitle(CompanionUiText.pick(language, "Protección OLED", "OLED protection"))
+            .setSingleChoiceItems(
+                options.map { CompanionUiText.idleMode(language, it) }.toTypedArray(),
+                options.indexOf(idleMode)
+            ) { dialog, index ->
+                idleMode = options[index]
+                getPreferences(MODE_PRIVATE).edit()
+                    .putString(PREF_IDLE_MODE, idleMode.name)
+                    .apply()
+                syncDashboardExtras()
+                dialog.dismiss()
+                if (settingsDialog != null) showAppSettings()
+            }
+            .setNegativeButton(CompanionUiText.pick(language, "Cancelar", "Cancel"), null)
+            .show()
+    }
+
+    private fun showIdleDelayMenu() {
+        val options = CompanionIdleDelay.entries
+        val language = resolvedLanguage()
+        AlertDialog.Builder(this)
+            .setTitle(CompanionUiText.pick(language, "Espera OLED", "OLED delay"))
+            .setSingleChoiceItems(
+                options.map { CompanionUiText.idleDelay(language, it) }.toTypedArray(),
+                options.indexOf(idleDelay)
+            ) { dialog, index ->
+                idleDelay = options[index]
+                getPreferences(MODE_PRIVATE).edit()
+                    .putString(PREF_IDLE_DELAY, idleDelay.name)
+                    .apply()
+                syncDashboardExtras()
                 dialog.dismiss()
                 if (settingsDialog != null) showAppSettings()
             }
@@ -1411,6 +1473,13 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         )
     }
 
+    private fun enhancementVariables(enabled: Boolean): Array<Variable> = arrayOf(
+        Variable("pcsx_rearmed_neon_enhancement_enable", if (enabled) "enabled" else "disabled"),
+        Variable("pcsx_rearmed_neon_enhancement_tex_adj_v2", if (enabled) "enabled" else "disabled"),
+        Variable("pcsx_rearmed_gpu_thread_rendering", if (enabled) "enabled" else "disabled"),
+        Variable("pcsx_rearmed_frameskip_type", "disabled")
+    )
+
     companion object {
         private const val PREF_ROM_URI = "rom_uri"
         private const val PREF_ROM_NAME = "rom_name"
@@ -1419,12 +1488,15 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         private const val PREF_MUTED = "muted"
         private const val PREF_VIRTUAL_GAMEPAD = "virtual_gamepad"
         private const val PREF_MODS_ENABLED = "mods_enabled"
+        private const val PREF_RAM_PROBE = "ram_probe"
         private const val PREF_ENABLED_CHEATS = "enabled_cheats"
         private const val PREF_VISITED_MAPS = "visited_maps"
         private const val PREF_PANE_ARRANGEMENT = "pane_arrangement"
         private const val PREF_LANGUAGE = "companion_language"
         private const val PREF_GAME_HUD = "game_hud"
         private const val PREF_BATTLE_SCALE = "battle_scale"
+        private const val PREF_IDLE_MODE = "companion_idle_mode"
+        private const val PREF_IDLE_DELAY = "companion_idle_delay"
         // RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 1) — DualShock
         private const val RETRO_DEVICE_PSE_DUALSHOCK = (2 shl 8) or 5
         private val GAME_KEYS = setOf(

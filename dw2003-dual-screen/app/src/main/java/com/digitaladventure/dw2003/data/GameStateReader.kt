@@ -4,6 +4,7 @@ import com.digitaladventure.dw2003.model.DigievolutionForm
 import com.digitaladventure.dw2003.model.DigimonState
 import com.digitaladventure.dw2003.model.GameMode
 import com.digitaladventure.dw2003.model.GameSnapshot
+import com.digitaladventure.dw2003.model.RamProbe
 
 class GameStateReader {
     private val locationTracker = LocationTracker()
@@ -13,7 +14,15 @@ class GameStateReader {
         overlaySignature: Long,
         objective: String?,
         features: CompanionRomFeatures = CompanionRomFeatures.PAL,
-        overlayStageId: Int? = null
+        overlayStageId: Int? = null,
+        battleSetup: ByteArray? = null,
+        battleArena: ByteArray? = null,
+        battleScan: ByteArray? = null,
+        spanishNames: Boolean = true,
+        ramProbe: RamProbe? = null,
+        overlaySlot: Long = overlaySignature,
+        fieldMenuVisible: Boolean? = null,
+        flaweMapLoaded: Boolean = false
     ): GameSnapshot {
         require(main.size >= MAIN_LENGTH) { "Incomplete DW2003 RAM window" }
 
@@ -27,19 +36,20 @@ class GameStateReader {
             )
         val areaId = if (sessionLooksValid) rawAreaId else 0
         val mapId = if (sessionLooksValid) rawMapId.takeIf { it != 0 } ?: areaId else 0
+        val mode = OverlaySignatures.mode(overlaySignature, overlaySlot)
+        val scene = OverlaySceneResolver.resolve(mode, areaId, mapId, fieldMenuVisible, flaweMapLoaded)
         val publicMapId = if (sessionLooksValid) {
-            locationTracker.follow(areaId, mapId, overlayStageId)
+            locationTracker.follow(
+                areaId,
+                mapId,
+                overlayStageId.takeUnless { mode == GameMode.BATTLE }
+            )
         } else {
             0
         }
         val location = LocationResolver.resolve(areaId, mapId, publicMapId)
         val mapRegion = MapRegionCatalog.resolve(location.publicMapId)
         val region = if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(areaId) else mapRegion
-        val mode = when (overlaySignature) {
-            FIGHTST2_SIGNATURE -> GameMode.BATTLE
-            STSTATUS_SIGNATURE -> GameMode.MANAGEMENT
-            else -> GameMode.EXPLORATION
-        }
         val activeProfiles = ACTIVE_PARTY.mapNotNull { address ->
             val profile = u32(main, address - MAIN_BASE).toInt()
             profile.takeIf { it in DIGIMON_NAMES.indices }
@@ -57,6 +67,7 @@ class GameStateReader {
         }
         return GameSnapshot(
             mode = mode,
+            scene = scene,
             areaId = areaId,
             areaName = AreaCatalog.name(areaId),
             locationTitle = location.title,
@@ -76,6 +87,12 @@ class GameStateReader {
                 else -> objective?.takeIf { it.length >= 4 } ?: WalkthroughCatalog.SYNC_PROMPT_ES
             },
             party = party,
+            enemies = if (mode == GameMode.BATTLE) {
+                BattleSetupReader.parse(battleSetup ?: ByteArray(0), battleArena, battleScan, spanishNames)
+            } else {
+                emptyList()
+            },
+            ramProbe = ramProbe,
             bits = if (gameStarted) u32(main, BITS - MAIN_BASE) else 0,
             fishingAvailable = AreaCatalog.supportsFishing(location.publicMapId) ||
                 AreaCatalog.supportsFishing(areaId),

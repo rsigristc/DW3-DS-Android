@@ -197,6 +197,24 @@ class GameStateReaderTest {
     }
 
     @Test
+    fun fightstgSlotMarksBattleWhenFlaweHooksOverlayBase() {
+        val ram = ByteArray(GameStateReader.MAIN_LENGTH)
+        put16(ram, GameStateReader.AREA - GameStateReader.MAIN_BASE, 0x0229)
+        put16(ram, GameStateReader.MAP_ID - GameStateReader.MAIN_BASE, 0x0229)
+        put16(ram, GameStateReader.STORY_STAGE - GameStateReader.MAIN_BASE, 4)
+
+        val snapshot = GameStateReader().parse(
+            ram,
+            0x800C1548L,
+            null,
+            overlaySlot = GameStateReader.FIGHTST2_SIGNATURE
+        )
+
+        assertEquals(GameMode.BATTLE, snapshot.mode)
+        assertEquals(0x0229, snapshot.publicMapId)
+    }
+
+    @Test
     fun ignoresOverlayNameBeforeTheSessionIsValid() {
         val ram = ByteArray(GameStateReader.MAIN_LENGTH)
         put16(ram, GameStateReader.AREA - GameStateReader.MAIN_BASE, 0x06FA)

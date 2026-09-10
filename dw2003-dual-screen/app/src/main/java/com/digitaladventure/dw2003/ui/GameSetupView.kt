@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.graphics.Typeface
 import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
@@ -12,6 +13,7 @@ import android.widget.Space
 import android.widget.TextView
 import com.digitaladventure.dw2003.R
 import com.digitaladventure.dw2003.data.CompanionLanguage
+import java.util.Locale
 
 @SuppressLint("ViewConstructor")
 class GameSetupView(
@@ -27,13 +29,19 @@ class GameSetupView(
     onModsChanged: ((Boolean) -> Unit)? = null,
     paneArrangementLabel: String = "Automático",
     onPaneArrangement: (() -> Unit)? = null,
-    language: CompanionLanguage = CompanionLanguage.SPANISH,
+    private val language: CompanionLanguage = CompanionLanguage.SPANISH,
     languageLabel: String = "Automático / Auto",
     onLanguage: (() -> Unit)? = null,
     gameHudLabel: String? = null,
     onGameHud: (() -> Unit)? = null,
     battleScaleLabel: String? = null,
     onBattleScale: (() -> Unit)? = null,
+    idleModeLabel: String? = null,
+    onIdleMode: (() -> Unit)? = null,
+    idleDelayLabel: String? = null,
+    onIdleDelay: (() -> Unit)? = null,
+    ramProbeEnabled: Boolean = false,
+    onRamProbeChanged: ((Boolean) -> Unit)? = null,
     onClose: (() -> Unit)? = null,
     allowDemo: Boolean = onClose == null,
     onReturnToStart: (() -> Unit)? = null,
@@ -209,6 +217,68 @@ class GameSetupView(
                 false
             ).apply { setPadding(0, dp(8), 0, 0) })
         }
+        if (onIdleMode != null && idleModeLabel != null) {
+            content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
+            content.addView(
+                actionButton(
+                    "${pick(language, "Protección OLED", "OLED protection")}: $idleModeLabel",
+                    onIdleMode,
+                    outlined = true
+                )
+            )
+            content.addView(label(
+                pick(
+                    language,
+                    "Si el panel no cambia, lo atenúa o mueve los píxeles. En AYN Thor evita quemado en la pantalla de abajo. Por defecto está apagado.",
+                    "If the companion stays still, dim it or shift pixels. On AYN Thor this protects the lower OLED. Off by default."
+                ),
+                11f,
+                MUTED,
+                false
+            ).apply { setPadding(0, dp(8), 0, 0) })
+        }
+        if (onIdleDelay != null && idleDelayLabel != null) {
+            content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
+            content.addView(
+                actionButton(
+                    "${pick(language, "Espera OLED", "OLED delay")}: $idleDelayLabel",
+                    onIdleDelay,
+                    outlined = true
+                )
+            )
+        }
+        if (onRamProbeChanged != null) {
+            var probeOn = ramProbeEnabled
+            fun probeLabel(enabled: Boolean) = if (enabled) {
+                pick(language, "Sonda RAM: activa", "RAM probe: on")
+            } else {
+                pick(language, "Sonda RAM: oculta", "RAM probe: hidden")
+            }
+            val probeButton = actionButton(probeLabel(probeOn), {}, outlined = !probeOn)
+            probeButton.setOnClickListener {
+                probeOn = !probeOn
+                probeButton.text = probeLabel(probeOn)
+                probeButton.background = GradientDrawable().apply {
+                    cornerRadius = dp(8).toFloat()
+                    setColor(if (probeOn) CYAN else Color.TRANSPARENT)
+                    if (!probeOn) setStroke(dp(1), CYAN)
+                }
+                probeButton.setTextColor(if (probeOn) Color.rgb(2, 16, 22) else CYAN)
+                onRamProbeChanged.invoke(probeOn)
+            }
+            content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
+            content.addView(probeButton)
+            content.addView(label(
+                pick(
+                    language,
+                    "Añade una pestaña RAM con 0x80042B1C y 0x800A4460. Los halfwords que cambian al atacar o caminar ayudan a mapear el combate.",
+                    "Adds a RAM tab for 0x80042B1C and 0x800A4460. Halfwords that change when you walk or attack help map the battle structs."
+                ),
+                11f,
+                MUTED,
+                false
+            ).apply { setPadding(0, dp(8), 0, 0) })
+        }
         if (onReturnToStart != null) {
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
             content.addView(actionButton(
@@ -282,7 +352,8 @@ class GameSetupView(
         textSize = sp
         setTextColor(color)
         gravity = Gravity.CENTER
-        if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
+        textLocale = if (language == CompanionLanguage.ENGLISH) Locale.ENGLISH else Locale("es", "ES")
+        setTypeface(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
     }
 
     private fun actionButton(text: String, action: () -> Unit, outlined: Boolean = false, enabled: Boolean = true) = Button(context).apply {
@@ -291,7 +362,8 @@ class GameSetupView(
         isEnabled = enabled
         alpha = if (enabled) 1f else .45f
         setTextColor(if (outlined) CYAN else Color.rgb(2, 16, 22))
-        setTypeface(typeface, android.graphics.Typeface.BOLD)
+        textLocale = if (language == CompanionLanguage.ENGLISH) Locale.ENGLISH else Locale("es", "ES")
+        setTypeface(Typeface.DEFAULT, Typeface.BOLD)
         minWidth = dp(250)
         background = GradientDrawable().apply {
             cornerRadius = dp(8).toFloat()
@@ -304,7 +376,7 @@ class GameSetupView(
     private fun installedVersionName(): String =
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
-        }.getOrNull().orEmpty().ifBlank { "1.1.0" }
+        }.getOrNull().orEmpty().ifBlank { "1.2.0" }
 
     private fun pick(language: CompanionLanguage, spanish: String, english: String) =
         CompanionUiText.pick(language, spanish, english)
