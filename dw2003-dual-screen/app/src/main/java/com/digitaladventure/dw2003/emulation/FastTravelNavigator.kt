@@ -11,7 +11,7 @@ import com.digitaladventure.dw2003.data.GameStateReader
  * Cross on Map opens Flawe's world map, where the D-pad selects icons
  * and Cross + Triangle confirm the warp.
  */
-enum class RetroPadButton { START, L1, R1, CROSS, TRIANGLE, SQUARE, DPAD_UP, DPAD_DOWN }
+enum class RetroPadButton { START, L1, R1, CROSS, TRIANGLE, SQUARE, DPAD_UP, DPAD_DOWN, DPAD_LEFT, DPAD_RIGHT }
 
 data class PadStep(val button: RetroPadButton, val afterMs: Long, val holdMs: Long = 70)
 
@@ -58,22 +58,45 @@ object FastTravelNavigator {
     fun switchServer(): List<PadStep> = listOf(PadStep(RetroPadButton.SQUARE, 380, 110))
 
     fun selectMapDestination(): List<PadStep> =
-        listOf(PadStep(RetroPadButton.CROSS, 400, 120))
+        listOf(PadStep(RetroPadButton.CROSS, 500, 180))
+
+    /** One short walk so Flawe arms the hovered-icon path. Do not hunt AREA. */
+    fun primeMapCursor(): List<PadStep> =
+        List(4) { PadStep(RetroPadButton.DPAD_RIGHT, 320, 140) }
 
     fun exitMapMenu(): List<PadStep> = listOf(
         PadStep(RetroPadButton.TRIANGLE, 420, 120),
         PadStep(RetroPadButton.TRIANGLE, 500, 120)
     )
 
+    /** The session that warped used × × after the cursor had moved. */
     fun confirmMapDestination(): List<PadStep> =
-        selectMapDestination() + exitMapMenu()
+        listOf(
+            PadStep(RetroPadButton.CROSS, 600, 180),
+            PadStep(RetroPadButton.CROSS, 700, 180)
+        )
 
     fun closeMenu(): List<PadStep> = listOf(PadStep(RetroPadButton.TRIANGLE, 260))
 
+    fun isWorldMapOpen(areaId: Int, mapId: Int): Boolean =
+        areaId == MENU_OVERLAY || mapId == MENU_OVERLAY
+
     fun isStatusMenu(overlaySignature: Long, areaId: Int, mapId: Int): Boolean =
         overlaySignature == GameStateReader.STSTATUS_SIGNATURE ||
-            areaId == MENU_OVERLAY ||
-            mapId == MENU_OVERLAY
+            isWorldMapOpen(areaId, mapId)
+
+    fun enterWorldMap(): List<PadStep> =
+        listOf(PadStep(RetroPadButton.CROSS, 500, 140))
+
+    val mapCursorDirections: List<RetroPadButton> = listOf(
+        RetroPadButton.DPAD_DOWN,
+        RetroPadButton.DPAD_UP,
+        RetroPadButton.DPAD_RIGHT,
+        RetroPadButton.DPAD_LEFT
+    )
+
+    fun nudgeMapCursor(direction: RetroPadButton): List<PadStep> =
+        listOf(PadStep(direction, 260, 100))
 
     fun stepsToFlaweIcon(fromIcon: Int, toIcon: Int, order: List<Int>): List<PadStep> {
         if (fromIcon == toIcon || order.size < 2) return emptyList()

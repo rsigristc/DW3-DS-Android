@@ -79,6 +79,8 @@ class DigiviceDashboardView(
         set(value) { if (field == value) return; field = value; invalidate() }
     var battleScale: BattleScale = BattleScale.ALWAYS_2X
         set(value) { if (field == value) return; field = value; invalidate() }
+    var videoFilter: VideoFilter = VideoFilter.ANTIALIAS_PLUS
+        set(value) { if (field == value) return; field = value; invalidate() }
     var idleMode: CompanionIdleMode = CompanionIdleMode.OFF
         set(value) {
             if (field == value) return
@@ -405,12 +407,12 @@ class DigiviceDashboardView(
             val rect = RectF(left, top, left + itemWidth, bottom)
             val active = (action == QuickAction.TOGGLE_SPEED && quickFastForward) ||
                 (action == QuickAction.TOGGLE_MUTE && quickMuted) ||
-                (action == QuickAction.PICK_SCALE && battleScale != BattleScale.OFF)
+                (action == QuickAction.PICK_SCALE && (battleScale != BattleScale.OFF || videoFilter != VideoFilter.SHARP))
             paint.color = if (active) Color.rgb(8, 105, 126) else Color.rgb(8, 43, 56)
             canvas.drawRoundRect(rect, dp(6f), dp(6f), paint)
             val dimmed = action == QuickAction.LOAD_STATE && !quickStateAvailable
             val label = if (action == QuickAction.PICK_SCALE) {
-                CompanionUiText.battleScaleShort(language, battleScale)
+                CompanionUiText.imageOptionsShort(language, battleScale, videoFilter)
             } else {
                 CompanionUiText.quickAction(language, action, quickStateAvailable, quickFastForward, quickMuted)
             }
@@ -1276,8 +1278,8 @@ class DigiviceDashboardView(
                 drawWrapped(
                     canvas,
                     tr(
-                        "Arranca una partida para leer 0x80042B1C y 0x800A4460. Los halfwords que cambien aparecen arriba.",
-                        "Start a game to read 0x80042B1C and 0x800A4460. Changing halfwords show at the top."
+                        "Arranca una partida. En menú, mapa o viaje rápido se leen 0x8000B200, el widget Flawe y los dispatchers. En combate, 0x80042B1C y 0x800A4460.",
+                        "Start a game. Menu, map and fast travel watch 0x8000B200, the Flawe widget and dispatchers. Battle still uses 0x80042B1C and 0x800A4460."
                     ),
                     bounds.left + dp(12f),
                     y,
@@ -1305,6 +1307,19 @@ class DigiviceDashboardView(
                 4
             )
             y += dp(48f)
+            if (probe.travelSummary.isNotBlank()) {
+                drawWrapped(
+                    canvas,
+                    probe.travelSummary,
+                    bounds.left + dp(12f),
+                    y,
+                    bounds.width() - dp(24f),
+                    dp(10f),
+                    WHITE,
+                    4
+                )
+                y += dp(52f)
+            }
             if (probe.setupSummary.isNotBlank()) {
                 drawWrapped(
                     canvas,
@@ -1369,6 +1384,12 @@ class DigiviceDashboardView(
                 )
                 y += dp(40f)
             }
+            if (probe.travelHex.isNotBlank()) {
+                drawText(canvas, tr("FLAWE / MAPA", "FLAWE / MAP"), bounds.left + dp(12f), y, dp(9f), CYAN, true)
+                y += dp(14f)
+                y = drawMonospaceBlock(canvas, probe.travelHex, bounds, y)
+                y += dp(10f)
+            }
             drawText(canvas, "0x80042B1C", bounds.left + dp(12f), y, dp(9f), CYAN, true)
             y += dp(14f)
             y = drawMonospaceBlock(canvas, probe.setupHex, bounds, y)
@@ -1413,7 +1434,7 @@ class DigiviceDashboardView(
         val currentIcon = FastTravelCatalog.iconId(snapshot.publicMapId)
         val groups = FastTravelCatalog.groups(
             snapshot.storyStage,
-            visitedMaps,
+            visitedMaps + snapshot.revealedMapIds,
             snapshot.publicMapId,
             snapshot.publicMapId
         )

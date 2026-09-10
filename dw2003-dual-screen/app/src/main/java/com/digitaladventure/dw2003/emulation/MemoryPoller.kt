@@ -8,7 +8,9 @@ import com.digitaladventure.dw2003.data.BattleSetupReader
 import com.digitaladventure.dw2003.data.RamWatch
 import com.digitaladventure.dw2003.data.GameStateReader
 import com.digitaladventure.dw2003.data.FlaweMenuStateReader
+import com.digitaladventure.dw2003.data.FlaweOverlayWatch
 import com.digitaladventure.dw2003.data.OverlaySceneResolver
+import com.digitaladventure.dw2003.model.OverlayScene
 import com.digitaladventure.dw2003.data.OverlaySignatures
 import com.digitaladventure.dw2003.model.BattleEnemy
 import com.digitaladventure.dw2003.model.GameMode
@@ -52,6 +54,8 @@ class MemoryPoller(
     private var wasInBattle = false
     private var previousSetup: ByteArray? = null
     private var previousArena: ByteArray? = null
+    private var previousTravel: FlaweOverlayWatch.Snapshot? = null
+    private var previousScene: OverlayScene? = null
     private val overlayScans = OverlayScanSchedule()
     @Volatile
     private var stopped = false
@@ -113,7 +117,11 @@ class MemoryPoller(
         val scene = OverlaySceneResolver.resolve(liveMode, areaId, mapId, fieldMenuVisible, flaweMapLoaded)
         val inBattle = liveMode == GameMode.BATTLE
         var overlayStageId: Int? = null
-        if (!inBattle && !stopped && overlayScans.shouldScan(locationKey, signature, SystemClock.elapsedRealtime())) {
+        val menuOverlay = areaId == OverlaySceneResolver.MENU_OVERLAY ||
+            mapId == OverlaySceneResolver.MENU_OVERLAY
+        if (!inBattle && !menuOverlay && !stopped &&
+            overlayScans.shouldScan(locationKey, signature, SystemClock.elapsedRealtime())
+        ) {
             try {
                 val overlayBytes = read(OVERLAY_SCAN_BASE, OVERLAY_SCAN_LENGTH)
                 overlayStageId = OverlayLocationFinder.stageId(overlayBytes)
@@ -148,11 +156,25 @@ class MemoryPoller(
         }
         val spanishNames = (objectiveLanguageOverride() ?: languageCode) == PalLanguage.SPANISH ||
             palLanguage == CompanionLanguage.SPANISH
+        val travel = if (ramCaptures != null) {
+            runCatching { FlaweOverlayWatch.collect(::read) }.getOrNull()
+        } else {
+            null
+        }
         val setupChanges = RamWatch.wordChanges(previousSetup, battleSetup ?: ByteArray(0), BattleSetupReader.SETUP_BASE)
         val arenaChanges = RamWatch.wordChanges(previousArena, battleArena ?: ByteArray(0), BattleSetupReader.ARENA_BASE)
+        val travelChanges = FlaweOverlayWatch.wordChanges(previousTravel, travel ?: FlaweOverlayWatch.Snapshot())
         previousSetup = battleSetup
         previousArena = battleArena
-        val changes = (setupChanges + arenaChanges).take(24)
+        previousTravel = travel
+        val mappingScene = scene == OverlayScene.MENU ||
+            scene == OverlayScene.MAP ||
+            scene == OverlayScene.FAST_TRAVEL
+        val sceneEntered = mappingScene && previousScene != scene
+        previousScene = scene
+        val changes = (
+            setupChanges + arenaChanges + if (mappingScene) travelChanges else emptyList()
+            ).take(24)
         val ramProbe = if (ramCaptures != null) {
             RamProbe(
                 overlaySignature = signature,
@@ -161,8 +183,12 @@ class MemoryPoller(
                 inBattle = inBattle,
                 scene = scene.name,
                 setupSummary = BattleSetupReader.summarizeSlots(battleSetup ?: ByteArray(0), spanishNames),
+                travelSummary = travel?.let {
+                    FlaweOverlayWatch.summarize(it, areaId, mapId, fieldMenuVisible, flaweMapLoaded)
+                }.orEmpty(),
                 setupHex = RamWatch.hexDump(battleSetup ?: ByteArray(0), BattleSetupReader.SETUP_BASE),
                 arenaHex = RamWatch.hexDump(battleArena ?: ByteArray(0), BattleSetupReader.ARENA_BASE),
+                travelHex = travel?.let { FlaweOverlayWatch.hexDump(it) }.orEmpty(),
                 changes = changes,
                 captures = ramCaptures.latest
             )
@@ -170,7 +196,7 @@ class MemoryPoller(
             null
         }
         if (ramCaptures != null && ramProbe != null) {
-            ramCaptures.maybeCapture(ramProbe, changes)
+            ramCaptures.maybeCapture(ramProbe, changes, force = sceneEntered)
         }
         val snapshot = reader.parse(
             main,

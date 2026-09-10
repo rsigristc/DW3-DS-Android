@@ -102,6 +102,16 @@ class LocationResolverTest {
     }
 
     @Test
+    fun worldMapOverlayDoesNotAdoptHoveredOrAtlasNames() {
+        val tracker = LocationTracker()
+        assertEquals(0x022E, tracker.follow(0x022E, 0x022E))
+        assertEquals(0x022E, tracker.follow(0x021E, 0x1000, 0x0264))
+        assertEquals(0x022E, tracker.follow(0x0200, 0x1000, 0x0264))
+        val cold = LocationTracker()
+        assertEquals(0, cold.follow(0x0264, 0x1000, 0x0780))
+    }
+
+    @Test
     fun overlayBannerOverridesStaleCityId() {
         val tracker = LocationTracker()
         assertEquals(0x0200, tracker.follow(0x0200, 0x0200))

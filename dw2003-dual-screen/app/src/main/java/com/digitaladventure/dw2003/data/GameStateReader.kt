@@ -106,6 +106,7 @@ class GameStateReader {
                 LocationResolver.canFastTravel(areaId, mapId, mode, gameStarted),
             supportsWalkthrough = features.supportsWalkthrough,
             supportsFastTravel = features.supportsFastTravel,
+            revealedMapIds = if (gameStarted) FlaweRevealedIcons.fromMain(main, story) else emptySet(),
             isLive = true
         )
     }

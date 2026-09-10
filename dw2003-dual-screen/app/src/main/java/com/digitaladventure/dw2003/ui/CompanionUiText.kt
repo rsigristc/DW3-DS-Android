@@ -98,7 +98,7 @@ object CompanionUiText {
             } else {
                 pick(language, "SONIDO ON", "SOUND ON")
             }
-            QuickAction.PICK_SCALE -> battleScaleShort(language, BattleScale.OFF)
+            QuickAction.PICK_SCALE -> imageOptionsShort(language, BattleScale.OFF, VideoFilter.SHARP)
             QuickAction.TOGGLE_HUD -> pick(language, "HUD", "HUD")
         }
 
@@ -122,8 +122,40 @@ object CompanionUiText {
 
     fun battleScale(language: CompanionLanguage, scale: BattleScale): String = when (scale) {
         BattleScale.OFF -> pick(language, "Nativo", "Native")
-        BattleScale.BATTLE_2X, BattleScale.ALWAYS_2X -> pick(language, "2× siempre", "Always 2×")
+        BattleScale.BATTLE_2X -> pick(language, "2× en batalla", "2× in battle")
+        BattleScale.ALWAYS_2X -> pick(language, "2× siempre", "Always 2×")
     }
+
+    fun videoFilter(language: CompanionLanguage, filter: VideoFilter): String = when (filter) {
+        VideoFilter.SHARP -> pick(language, "Nítido (píxel)", "Sharp (pixel)")
+        VideoFilter.ANTIALIAS, VideoFilter.ANTIALIAS_PLUS ->
+            pick(language, "AA+ (2D+3D)", "AA+ (2D+3D)")
+    }
+
+    fun imageMode(language: CompanionLanguage, scale: BattleScale): String =
+        if (scale != BattleScale.OFF) {
+            pick(language, "2× 3D (solo batalla)", "3D 2× (battle only)")
+        } else {
+            pick(language, "AA+ (2D+3D)", "AA+ (2D+3D)")
+        }
+
+    fun imageOptionsShort(
+        language: CompanionLanguage,
+        scale: BattleScale,
+        filter: VideoFilter
+    ): String = if (scale != BattleScale.OFF) {
+        battleScaleShort(language, scale)
+    } else if (filter != VideoFilter.SHARP) {
+        "AA+"
+    } else {
+        pick(language, "OFF", "OFF")
+    }
+
+    fun imageOptions(
+        language: CompanionLanguage,
+        scale: BattleScale,
+        @Suppress("UNUSED_PARAMETER") filter: VideoFilter
+    ): String = imageMode(language, scale)
 
     fun emptyEnemies(language: CompanionLanguage): String =
         pick(language, "Sin encuentros leídos", "No encounters read")

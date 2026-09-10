@@ -14,6 +14,7 @@ Las direcciones son virtuales de PS1. Para `RETRO_MEMORY_SYSTEM_RAM`, la aplicac
 | `0x80048DAC` | `u32` | Perfil activo 3 |
 | `0x8004B370` | `u16` | Etapa de historia |
 | `0x8004B3F8` | `u16` | ID del mapa lógico actual |
+| `0x8004B200` | bits/bytes | Candidato a iconos ASKMAP revelados (Flawe): bits del código 1–46 o byte en `0x8004B000+MAP_ID`. Sin confirmar en dump vivo. |
 | `0x8005CCA8` | `u32` | Idioma PAL: 0 japonés, 1 inglés US, 2 inglés europeo, 3 francés, 4 italiano, 5 alemán, 6 español |
 | `0x80080000` | `u32` | Firma inicial del overlay cargado |
 

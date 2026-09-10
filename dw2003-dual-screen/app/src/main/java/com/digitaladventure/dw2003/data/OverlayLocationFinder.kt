@@ -31,6 +31,9 @@ object OverlayLocationFinder {
 
     fun prefer(labels: List<Label>): Int? {
         if (labels.isEmpty()) return null
+        // Flawe's atlas draws many stage names at once. A transition banner
+        // has one or two; more than that is the world map, not a location.
+        if (labels.size >= 3) return null
         val specific = labels.filter { it.id !in HUBS }
         return (specific.ifEmpty { labels }).maxBy { it.text.length }.id
     }

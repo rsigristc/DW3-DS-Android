@@ -14,12 +14,11 @@ enum class BattleScale {
     }
 
     companion object {
-        val menuOptions: List<BattleScale> = listOf(OFF, ALWAYS_2X)
+        val menuOptions: List<BattleScale> = listOf(OFF, BATTLE_2X)
 
         fun fromPreference(value: String?): BattleScale = when (value) {
-            OFF.name -> OFF
-            ALWAYS_2X.name, BATTLE_2X.name, null -> ALWAYS_2X
-            else -> ALWAYS_2X
+            BATTLE_2X.name, ALWAYS_2X.name -> BATTLE_2X
+            else -> OFF
         }
     }
 }

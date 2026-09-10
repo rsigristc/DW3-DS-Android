@@ -28,6 +28,30 @@ class OverlayLocationFinderTest {
     }
 
     @Test
+    fun ignoresWorldMapAtlasWithManyStageNames() {
+        val ram = ByteArray(0x200)
+        listOf("Asuka City", "Central Park", "Wire Forest Entrance", "Shell Beach", "Freeze Mountain")
+            .forEachIndexed { index, name ->
+                val bytes = name.toByteArray(Charsets.US_ASCII)
+                bytes.copyInto(ram, index * 0x30)
+                ram[index * 0x30 + bytes.size] = 0
+            }
+        assertEquals(null, OverlayLocationFinder.stageId(ram))
+    }
+
+    @Test
+    fun ignoresPartialAtlasLeftoversLikeIceMountainAndAmaterasu() {
+        val ram = ByteArray(0x100)
+        listOf("Asuka City", "Central Park", "Wire Forest Entrance")
+            .forEachIndexed { index, name ->
+                val bytes = name.toByteArray(Charsets.US_ASCII)
+                bytes.copyInto(ram, index * 0x30)
+                ram[index * 0x30 + bytes.size] = 0
+            }
+        assertEquals(null, OverlayLocationFinder.stageId(ram))
+    }
+
+    @Test
     fun prefersInnOverCityHubWhenBothLabelsAreVisible() {
         val ram = ByteArray(0x80)
         "Asuka City".toByteArray(Charsets.US_ASCII).copyInto(ram, 0x08)

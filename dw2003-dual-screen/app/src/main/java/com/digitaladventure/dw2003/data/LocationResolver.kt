@@ -82,7 +82,10 @@ class LocationTracker {
     private var current = 0
 
     fun follow(areaId: Int, mapId: Int, overlayStageId: Int? = null): Int {
-        if (overlayStageId != null && LocationResolver.isStage(overlayStageId)) {
+        val menuOverlay = LocationResolver.isOverlay(areaId) || LocationResolver.isOverlay(mapId)
+        // World-map RAM contains every field name. Never treat those labels as
+        // the current stage; AREA is the hovered icon, not the room you left.
+        if (!menuOverlay && overlayStageId != null && LocationResolver.isStage(overlayStageId)) {
             val ramStage = when {
                 LocationResolver.isStage(mapId) -> mapId
                 LocationResolver.isStage(areaId) -> areaId
@@ -102,9 +105,9 @@ class LocationTracker {
         val areaStage = LocationResolver.isStage(areaId)
         val mapStage = LocationResolver.isStage(mapId)
         if (LocationResolver.isOverlay(mapId)) {
-            // MAP/START overwrite MAP_ID and often rewind AREA to a previous room.
-            // Keep the last real stage; do not follow that rewind.
-            if (current == 0 && areaStage) current = areaId
+            // MAP/START overwrite MAP_ID. AREA may be the hovered atlas icon
+            // (or leftover names like Freeze Mountain). Never adopt that as
+            // the room you are standing in.
             lastArea = areaId
             lastMap = mapId
             return current

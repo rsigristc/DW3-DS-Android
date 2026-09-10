@@ -7,6 +7,29 @@ import org.junit.Test
 
 class FastTravelCatalogTest {
     @Test
+    fun recoversFlaweIconsFromLegacyPrefsWithoutAtlasGhosts() {
+        val recovered = FastTravelCatalog.fromLegacyPrefs(
+            setOf(0x0200, 0x021D, 0x022E, 0x0227, 0x0229, 0x0264, 0x0780, 0x026F)
+        )
+        assertTrue(recovered.containsAll(setOf(0x0200, 0x021D, 0x022E, 0x0227, 0x0229)))
+        assertFalse(recovered.contains(0x0264))
+        assertFalse(recovered.contains(0x0780))
+        assertFalse(recovered.contains(0x026F))
+    }
+
+    @Test
+    fun atlasAndStaleAreaDoNotRecordDistantIcons() {
+        assertTrue(FastTravelCatalog.visitTiles(0x0264, 0x1000).isEmpty())
+        assertTrue(FastTravelCatalog.visitTiles(0x0780, 0x1000).isEmpty())
+        assertEquals(setOf(0x021D), FastTravelCatalog.visitTiles(0x0264, 0x021D))
+        assertEquals(setOf(0x021D), FastTravelCatalog.visitTiles(0x021D, 0x021D))
+        val groups = FastTravelCatalog.groups(4, FastTravelCatalog.visitTiles(0x0264, 0x021D), 0x021D)
+        assertTrue(groups.any { group -> group.destinations.any { it.areaId == 0x021D } })
+        assertFalse(groups.any { group -> group.destinations.any { it.areaId == 0x0264 } })
+        assertFalse(groups.any { group -> group.destinations.any { it.areaId == 0x0780 } })
+    }
+
+    @Test
     fun unlocksOnlyVisitedFlaweIcons() {
         val asuka = FastTravelCatalog.groups(99, setOf(0x0200, 0x0206), 0x0206)
         assertTrue(asuka.any { group -> group.destinations.any { it.areaId == 0x0200 } })
@@ -53,8 +76,10 @@ class FastTravelCatalogTest {
         assertEquals(0x026F, FastTravelCatalog.iconId(0x026D))
         assertEquals(0x0268, FastTravelCatalog.iconId(0x0269))
         assertEquals(0x026F, FastTravelCatalog.iconId(0x02DA))
-        val groups = FastTravelCatalog.groups(99, setOf(0x026D), 0x026D)
-        assertTrue(groups.any { group -> group.destinations.any { it.areaId == 0x026F } })
+        val whileInside = FastTravelCatalog.groups(99, setOf(0x026D), 0x026D)
+        assertTrue(whileInside.any { group -> group.destinations.any { it.areaId == 0x026F } })
+        val afterLeaving = FastTravelCatalog.groups(99, setOf(0x026D), 0x0200)
+        assertFalse(afterLeaving.any { group -> group.destinations.any { it.areaId == 0x026F } })
     }
 
     @Test

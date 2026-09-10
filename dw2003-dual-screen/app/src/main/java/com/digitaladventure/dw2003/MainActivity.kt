@@ -7,6 +7,7 @@ import android.content.Intent
 import android.hardware.display.DisplayManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.view.InputDevice
@@ -71,6 +72,7 @@ import com.digitaladventure.dw2003.ui.GameSetupView
 import com.digitaladventure.dw2003.ui.PadDirection
 import com.digitaladventure.dw2003.ui.PaneArrangement
 import com.digitaladventure.dw2003.ui.QuickAction
+import com.digitaladventure.dw2003.ui.VideoFilter
 import com.digitaladventure.dw2003.ui.VirtualControllerView
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.GLRetroViewData
@@ -115,14 +117,17 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private var ramProbeEnabled = false
     private var enabledCheats = linkedSetOf<String>()
     private var visitedMaps = linkedSetOf<Int>()
+    private var lastRevealedMaps = emptySet<Int>()
     private var wasOnSaveScreen = false
     private var travelJob: Job? = null
     private var languageSetting = CompanionLanguageSetting.AUTO
     private var detectedLanguage: CompanionLanguage? = null
-    private var battleScale = BattleScale.ALWAYS_2X
+    private var battleScale = BattleScale.OFF
+    private var videoFilter = VideoFilter.ANTIALIAS_PLUS
     private var idleMode = CompanionIdleMode.OFF
     private var idleDelay = CompanionIdleDelay.S30
     private var lastEnhancementEnabled: Boolean? = null
+    private var lastAppliedShader: ShaderConfig? = null
     private val analogDpadKeys = mutableSetOf<Int>()
 
     private val openRom = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -161,14 +166,33 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             ?.filter { it.isNotBlank() }
             ?.toCollection(LinkedHashSet())
             ?: linkedSetOf()
-        visitedMaps = getPreferences(MODE_PRIVATE).getString(PREF_VISITED_MAPS, "")
+        val prefs = getPreferences(MODE_PRIVATE)
+        visitedMaps = prefs.getString(PREF_VISITED_MAPS, "")
             ?.split(',')
             ?.mapNotNull { it.toIntOrNull(16) }
             ?.toCollection(LinkedHashSet())
             ?: linkedSetOf()
+        if (!prefs.getBoolean(PREF_VISITED_MAPS_MERGED, false)) {
+            val legacy = prefs.getString(PREF_VISITED_MAPS_LEGACY, "")
+                ?.split(',')
+                ?.mapNotNull { it.toIntOrNull(16) }
+                ?: emptyList()
+            val recovered = FastTravelCatalog.fromLegacyPrefs(legacy)
+            if (visitedMaps.addAll(recovered)) {
+                prefs.edit()
+                    .putString(PREF_VISITED_MAPS, visitedMaps.joinToString(",") { AreaCatalog.hex(it) })
+                    .apply()
+            }
+            prefs.edit().putBoolean(PREF_VISITED_MAPS_MERGED, true).apply()
+        }
         battleScale = BattleScale.fromPreference(
             getPreferences(MODE_PRIVATE).getString(PREF_BATTLE_SCALE, null)
         )
+        videoFilter = if (battleScale != BattleScale.OFF) {
+            VideoFilter.SHARP
+        } else {
+            VideoFilter.ANTIALIAS_PLUS
+        }
         idleMode = CompanionIdleMode.fromPreference(
             getPreferences(MODE_PRIVATE).getString(PREF_IDLE_MODE, null)
         )
@@ -196,12 +220,21 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 repository.snapshot.collectLatest { snapshot ->
-                    rememberVisited(snapshot.publicMapId, snapshot.publicMapId)
+                    rememberVisited(snapshot.areaId, snapshot.mapId)
+                    if (snapshot.revealedMapIds != lastRevealedMaps) {
+                        lastRevealedMaps = snapshot.revealedMapIds
+                        if (snapshot.revealedMapIds.isNotEmpty()) {
+                            Log.i(
+                                TRAVEL_TAG,
+                                "revealed=${snapshot.revealedMapIds.joinToString { "0x${it.toString(16)}" }}"
+                            )
+                        }
+                    }
                     persistMemoryCardAfterSave(snapshot.areaId, snapshot.mapId)
                     localDashboard?.submitSnapshot(snapshot)
                     presentation?.submitSnapshot(snapshot)
                     syncDashboardExtras()
-                    applyBattleEnhancement(snapshot.mode)
+                    applyImageForMode(snapshot.mode)
                 }
             }
         }
@@ -352,8 +385,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             CompanionUiText.pick(resolvedLanguage(), "HUD en el juego: oculto", "Game HUD: hidden")
         },
         onGameHud = ::toggleGameHud,
-        battleScaleLabel = CompanionUiText.battleScale(resolvedLanguage(), battleScale),
-        onBattleScale = ::showBattleScaleMenu,
+        imageOptionsLabel = CompanionUiText.imageOptions(resolvedLanguage(), battleScale, videoFilter),
+        onImageOptions = ::showImageOptionsMenu,
         idleModeLabel = CompanionUiText.idleMode(resolvedLanguage(), idleMode),
         onIdleMode = ::showIdleModeMenu,
         idleDelayLabel = CompanionUiText.idleDelay(resolvedLanguage(), idleDelay),
@@ -518,15 +551,17 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
 
         try {
+        lastEnhancementEnabled = battleScale.enhancementEnabled(GameMode.EXPLORATION)
+        lastAppliedShader = videoFilter.shaderFor(GameMode.EXPLORATION, battleScale)
         val data = GLRetroViewData(this).apply {
             coreFilePath = "${applicationInfo.nativeLibraryDir}/libretro.so"
             gameVirtualFiles = listOf(VirtualFile(displayName(uri), descriptor))
             systemDirectory = biosManager.systemDirectory.absolutePath
             savesDirectory = getDir("core-saves", MODE_PRIVATE).absolutePath
             saveRAMState = saveManager.load()
-            shader = ShaderConfig.Sharp
+            shader = videoFilter.shaderFor(GameMode.EXPLORATION, battleScale)
             preferLowLatencyAudio = true
-            skipDuplicateFrames = battleScale.enhancementEnabled(GameMode.EXPLORATION)
+            skipDuplicateFrames = false
             variables = arrayOf(
                 Variable("pcsx_rearmed_region", storedRomVariant().emulatorRegion),
                 Variable("pcsx_rearmed_bios", "auto"),
@@ -571,6 +606,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             muted = this@MainActivity.muted
             fastForward = this@MainActivity.fastForward
             battleScale = this@MainActivity.battleScale
+            videoFilter = this@MainActivity.videoFilter
             stateAvailable = states.hasState || states.hasLegacyState
         }
         virtualController = controller
@@ -615,15 +651,14 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         emulatorEventsJob = lifecycleScope.launch {
             launch {
                 view.getGLRetroEvents().collect { event ->
+                    if (event is GLRetroView.GLRetroEvents.SurfaceCreated) {
+                        view.setControllerType(0, RETRO_DEVICE_PSE_DUALSHOCK)
+                        if (enabledCheats.isNotEmpty()) applyEnabledCheats()
+                    }
                     if (event is GLRetroView.GLRetroEvents.FrameRendered ||
                         event is GLRetroView.GLRetroEvents.SurfaceCreated
                     ) {
-                        view.setControllerType(0, RETRO_DEVICE_PSE_DUALSHOCK)
-                        applyBattleEnhancement(repository.snapshot.value.mode)
                         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) memoryPoller?.start()
-                    }
-                    if (event is GLRetroView.GLRetroEvents.SurfaceCreated && enabledCheats.isNotEmpty()) {
-                        applyEnabledCheats()
                     }
                 }
             }
@@ -721,7 +756,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                     Toast.LENGTH_SHORT
                 )
             }
-            QuickAction.PICK_SCALE -> showBattleScaleMenu()
+            QuickAction.PICK_SCALE -> showImageOptionsMenu()
             QuickAction.TOGGLE_HUD -> toggleGameHud()
         }
     }
@@ -873,18 +908,17 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         analogDpadKeys += next
     }
 
-    private fun applyBattleEnhancement(mode: GameMode, announce: Boolean = false) {
+    private fun applyImageForMode(mode: GameMode) {
         val view = retroView ?: return
-        val enabled = battleScale.enhancementEnabled(mode)
-        if (lastEnhancementEnabled == enabled) return
-        lastEnhancementEnabled = enabled
-        view.updateVariables(*enhancementVariables(enabled))
-        if (announce) {
-            toast(
-                if (enabled) "Resolución interna 2× activa" else "Resolución nativa",
-                if (enabled) "Internal 2× resolution on" else "Native resolution",
-                Toast.LENGTH_SHORT
-            )
+        val enhance = battleScale.enhancementEnabled(mode)
+        if (lastEnhancementEnabled != enhance) {
+            lastEnhancementEnabled = enhance
+            view.updateVariables(*enhancementVariables(enhance))
+        }
+        val shader = videoFilter.shaderFor(mode, battleScale)
+        if (shader != lastAppliedShader) {
+            lastAppliedShader = shader
+            view.shader = shader
         }
     }
 
@@ -894,25 +928,27 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         localDashboard?.ramProbeEnabled = BuildConfig.DEBUG
         localDashboard?.enabledCheats = enabledCheats
         localDashboard?.customCheats = customCheats.all()
-        localDashboard?.visitedMaps = visitedMaps
+        localDashboard?.visitedMaps = listedVisited()
         localDashboard?.gameHudVisible = gameHudVisible()
         localDashboard?.quickMuted = muted
         localDashboard?.quickFastForward = fastForward
         localDashboard?.quickStateAvailable = stateAvailable
         localDashboard?.battleScale = battleScale
+        localDashboard?.videoFilter = videoFilter
         localDashboard?.idleMode = idleMode
         localDashboard?.idleDelay = idleDelay
         virtualController?.quickBarVisible = gameHudVisible()
         virtualController?.gameHudVisible = gameHudVisible()
         virtualController?.battleScale = battleScale
+        virtualController?.videoFilter = videoFilter
         applyCompanionLanguage()
         presentation?.setModsEnabled(modsEnabled)
         presentation?.setRamProbeEnabled(BuildConfig.DEBUG)
         presentation?.setEnabledCheats(enabledCheats)
         presentation?.setCustomCheats(customCheats.all())
-        presentation?.setVisitedMaps(visitedMaps)
+        presentation?.setVisitedMaps(listedVisited())
         presentation?.setGameHudVisible(gameHudVisible())
-        presentation?.setQuickBar(muted, fastForward, stateAvailable, battleScale)
+        presentation?.setQuickBar(muted, fastForward, stateAvailable, battleScale, videoFilter)
         presentation?.setIdleGuard(idleMode, idleDelay)
     }
 
@@ -942,10 +978,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         )
     }
 
+    private fun listedVisited(): Set<Int> = visitedMaps + lastRevealedMaps
+
     private fun rememberVisited(areaId: Int, mapId: Int) {
         var changed = false
-        listOf(areaId, mapId, FastTravelCatalog.iconId(areaId, mapId)).forEach { id ->
-            if (AreaCatalog.isField(id) && visitedMaps.add(id)) changed = true
+        FastTravelCatalog.visitTiles(areaId, mapId).forEach { id ->
+            if (id in FastTravelCatalog.askmapIcons && visitedMaps.add(id)) changed = true
         }
         if (changed) {
             getPreferences(MODE_PRIVATE).edit()
@@ -985,7 +1023,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             return
         }
         val currentIcon = FastTravelCatalog.iconId(snapshot.publicMapId)
-        if (areaId !in FastTravelCatalog.rememberedIcons(visitedMaps, snapshot.publicMapId)) {
+        if (areaId !in FastTravelCatalog.rememberedIcons(listedVisited(), snapshot.publicMapId)) {
             toast("Ese destino aún no está registrado como visitado", "That destination has not been recorded as visited")
             return
         }
@@ -993,68 +1031,76 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         val destinationServer = MapRegionCatalog.resolve(areaId).server
         val currentServer = MapRegionCatalog.resolve(currentIcon).server
         crashLog.note("fast-travel dest=0x${areaId.toString(16)} from=0x${currentIcon.toString(16)}")
+        Log.i(TRAVEL_TAG, "start dest=0x${areaId.toString(16)} from=0x${currentIcon.toString(16)}")
         runTravelSequence {
-            // Dispatcher code persists after the map closes; its presence is not
-            // evidence that the map UI is open. Establish a known menu state.
-            openMapTab()
-            delay(500)
+            // Leftover dispatcher bytes stay in RAM after the map closes.
+            // Only MAP_ID/AREA 0x1000 means the world map is actually on screen.
+            if (!openWorldMap(controller)) {
+                Log.i(TRAVEL_TAG, "world map did not open ${travelRam(controller)}")
+                toast(
+                    "No se abrió el mapa mundial de Flawe. Prueba Abrir mapa del juego o pulsa START → Mapa a mano.",
+                    "Flawe's world map did not open. Try Open in-game map or press START → Map yourself."
+                )
+                return@runTravelSequence
+            }
+            delay(400)
             if (currentServer != ServerRegion.UNKNOWN &&
                 destinationServer != ServerRegion.UNKNOWN &&
                 currentServer != destinationServer
             ) {
                 playPadSteps(FastTravelNavigator.switchServer())
                 delay(450)
-            }
-            waitUntil(1800) { controller.hasFlaweDispatcher() }
-            var directToken = if (destinationServer == ServerRegion.ASUKA) {
-                withContext(Dispatchers.Default) { controller.beginDirectFlaweWarp(areaId) }
-            } else {
-                null
-            }
-            if (directToken == null && destinationServer == ServerRegion.ASUKA) {
-                waitUntil(1200) { controller.hasFlaweDispatcher() }
-                directToken = withContext(Dispatchers.Default) { controller.beginDirectFlaweWarp(areaId) }
-            }
-            if (directToken != null) {
-                try {
-                    playPadSteps(FastTravelNavigator.selectMapDestination())
-                } finally {
-                    controller.restoreDirectFlaweWarp(directToken)
+                if (!waitUntil(2500) { worldMapOpen(controller) }) {
+                    Log.i(TRAVEL_TAG, "lost world map after server switch ${travelRam(controller)}")
                 }
-                playPadSteps(FastTravelNavigator.exitMapMenu())
-            } else if (destinationServer == ServerRegion.ASUKA) {
-                val walk = FastTravelNavigator.stepsToFlaweIcon(
-                    currentIcon,
-                    areaId,
-                    FastTravelCatalog.cycleOrder(areaId)
+            }
+            val dispatcherReady = waitUntil(5000) {
+                worldMapOpen(controller) && controller.hasFlaweDispatcher()
+            }
+            if (dispatcherReady) delay(800)
+            if (!worldMapOpen(controller) || !controller.hasFlaweDispatcher()) {
+                Log.i(TRAVEL_TAG, "atlas not ready after settle ${travelRam(controller)}")
+                toast(
+                    "El mapa mundial no llegó a cargar. Inténtalo otra vez.",
+                    "The world map did not finish loading. Try again."
                 )
-                if (walk.isEmpty()) {
-                    crashLog.note("fast-travel left map open dest=0x${areaId.toString(16)}")
-                    toast(
-                        "El mapa está abierto, pero no se detectó una función compatible de viaje rápido. Comprueba que el mod de Flawe esté activo en el idioma del juego.",
-                        "The map is open, but no compatible fast-travel function was detected. Check that Flawe's mod is active in the game's language."
-                    )
-                    return@runTravelSequence
-                }
-                playPadSteps(walk)
-                playPadSteps(FastTravelNavigator.confirmMapDestination())
-            } else {
+                return@runTravelSequence
+            }
+            if (destinationServer != ServerRegion.ASUKA) {
                 toast(
                     "Mapa de Amaterasu abierto. El IPS de Flawe no publica esos iconos; elige el destino con la cruceta y ×.",
                     "Amaterasu map opened. Flawe's IPS does not publish those icons; pick the destination with the D-pad and ×."
                 )
                 return@runTravelSequence
             }
-            waitUntil(2500) { !menuIsOpen() }
-            if (menuIsOpen()) {
-                playPadSteps(FastTravelNavigator.closeMenu())
-                waitUntil(900) { !menuIsOpen() }
+            playPadSteps(FastTravelNavigator.primeMapCursor())
+            delay(400)
+            val directToken = withContext(Dispatchers.Default) { controller.beginDirectFlaweWarp(areaId) }
+            Log.i(TRAVEL_TAG, "patch=${directToken != null} ${travelRam(controller)}")
+            if (directToken == null) {
+                toast(
+                    "El mapa está abierto, pero no se pudo preparar el viaje de Flawe.",
+                    "The map is open, but Flawe's travel function could not be prepared."
+                )
+                return@runTravelSequence
             }
-            val arrived = waitUntil(6000) {
-                val latest = repository.snapshot.value
-                latest.mode == GameMode.EXPLORATION &&
-                    FastTravelCatalog.iconId(latest.publicMapId) == areaId
+            try {
+                if (worldMapOpen(controller)) {
+                    playPadSteps(FastTravelNavigator.confirmMapDestination())
+                }
+                val warped = waitUntil(2000) { warpSelected(controller, areaId) }
+                Log.i(TRAVEL_TAG, "warped=$warped ${travelRam(controller)}")
+                repeat(3) {
+                    if (!worldMapOpen(controller)) return@repeat
+                    playPadSteps(FastTravelNavigator.closeMenu())
+                    delay(300)
+                }
+            } finally {
+                if (directToken != null) controller.restoreDirectFlaweWarp(directToken)
             }
+            val arrived = warpSelected(controller, areaId) ||
+                waitUntil(2000) { arrivedAt(controller, areaId) }
+            Log.i(TRAVEL_TAG, "arrived=$arrived ${travelRam(controller)}")
             val destination = CompanionUiText.area(resolvedLanguage(), areaId)
             toast(
                 if (arrived) "Llegaste a $destination" else "No se pudo confirmar el viaje a $destination. Revisa el mapa del juego.",
@@ -1082,8 +1128,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
         crashLog.note("open-map area=0x${snapshot.areaId.toString(16)} map=0x${snapshot.mapId.toString(16)}")
         runTravelSequence {
-            openMapTab()
-            toast("Mapa abierto", "Map opened")
+            val controller = memoryController
+            val opened = controller != null && openWorldMap(controller)
+            toast(
+                if (opened) "Mapa abierto" else "No se abrió el mapa mundial",
+                if (opened) "Map opened" else "World map did not open"
+            )
         }
     }
 
@@ -1111,10 +1161,42 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
     }
 
-    private suspend fun openMapTab() {
+    private suspend fun steerMapCursorTo(controller: GameMemoryController, areaId: Int): Boolean {
+        val directions = FastTravelNavigator.mapCursorDirections
+        var dirIndex = 0
+        var lastHover = -1
+        var stuck = 0
+        val seen = linkedSetOf<Int>()
+        repeat(24) {
+            if (!worldMapOpen(controller)) return false
+            val hover = controller.readAreaMap().first
+            if (hover == areaId) return true
+            if (hover != lastHover && !seen.add(hover) && seen.size > 1) {
+                Log.i(TRAVEL_TAG, "cursor cycle ${seen.joinToString { "0x${it.toString(16)}" }}")
+                return false
+            }
+            if (hover == lastHover) {
+                stuck++
+                if (stuck >= 2) {
+                    dirIndex = (dirIndex + 1) % directions.size
+                    stuck = 0
+                }
+            } else {
+                stuck = 0
+            }
+            lastHover = hover
+            playPadSteps(FastTravelNavigator.nudgeMapCursor(directions[dirIndex]))
+            delay(220)
+        }
+        return hoveredArea(controller) == areaId
+    }
+
+    private fun hoveredArea(controller: GameMemoryController): Int = controller.readAreaMap().first
+
+    private suspend fun openWorldMap(controller: GameMemoryController): Boolean {
         // Neither the field START list nor its Map page loads STSTATUS.
-        // Cancel unwinds both pages and is a no-op in exploration. This also
-        // works when a localized ROM has no Flawe walkthrough widget to read.
+        // Cancel unwinds both pages. The first × lands on START's Map page;
+        // Flawe's atlas needs a second ×. Leftover dispatcher code is ignored.
         repeat(3) {
             playPadSteps(FastTravelNavigator.dismissMenu())
         }
@@ -1122,7 +1204,36 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         playPadSteps(FastTravelNavigator.pressStart())
         delay(800)
         playPadSteps(FastTravelNavigator.stepsToMapFromUnknown())
-        delay(800)
+        if (waitUntil(2500) { worldMapOpen(controller) }) {
+            Log.i(TRAVEL_TAG, "world map after first cross ${travelRam(controller)}")
+            return true
+        }
+        playPadSteps(FastTravelNavigator.enterWorldMap())
+        val opened = waitUntil(3500) { worldMapOpen(controller) }
+        Log.i(TRAVEL_TAG, "world map after second cross opened=$opened ${travelRam(controller)}")
+        return opened
+    }
+
+    private fun worldMapOpen(controller: GameMemoryController): Boolean {
+        val ram = controller.readAreaMap()
+        return FastTravelNavigator.isWorldMapOpen(ram.first, ram.second)
+    }
+
+    private fun warpSelected(controller: GameMemoryController, areaId: Int): Boolean {
+        val ram = controller.readAreaMap()
+        if (ram.first == areaId || ram.second == areaId) return true
+        return FastTravelCatalog.iconId(ram.first, ram.second) == areaId
+    }
+
+    private fun arrivedAt(controller: GameMemoryController, areaId: Int): Boolean {
+        val ram = controller.readAreaMap()
+        if (ram.first == areaId || ram.second == areaId) return true
+        return FastTravelCatalog.iconId(ram.first, ram.second) == areaId
+    }
+
+    private fun travelRam(controller: GameMemoryController): String {
+        val ram = controller.readAreaMap()
+        return "area=0x${ram.first.toString(16)} map=0x${ram.second.toString(16)} dispatcher=${controller.hasFlaweDispatcher()}"
     }
 
     private fun menuIsOpen(): Boolean {
@@ -1164,6 +1275,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         RetroPadButton.SQUARE -> KeyEvent.KEYCODE_BUTTON_Y
         RetroPadButton.DPAD_UP -> KeyEvent.KEYCODE_DPAD_UP
         RetroPadButton.DPAD_DOWN -> KeyEvent.KEYCODE_DPAD_DOWN
+        RetroPadButton.DPAD_LEFT -> KeyEvent.KEYCODE_DPAD_LEFT
+        RetroPadButton.DPAD_RIGHT -> KeyEvent.KEYCODE_DPAD_RIGHT
     }
 
     private fun movePartyMember(fromIndex: Int, toIndex: Int) {
@@ -1394,28 +1507,45 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         )
     }
 
-    private fun showBattleScaleMenu() {
-        val options = BattleScale.menuOptions
+    private fun showImageOptionsMenu() {
         val language = resolvedLanguage()
-        AlertDialog.Builder(this)
-            .setTitle(CompanionUiText.pick(language, "Resolución en combate", "Battle resolution"))
-            .setSingleChoiceItems(
-                options.map { CompanionUiText.battleScale(language, it) }.toTypedArray(),
-                options.indexOf(
-                    if (battleScale == BattleScale.BATTLE_2X) BattleScale.ALWAYS_2X else battleScale
-                ).coerceAtLeast(0)
-            ) { dialog, index ->
-                battleScale = options[index]
+        val labels = arrayOf(
+            CompanionUiText.pick(language, "AA+ (2D+3D)", "AA+ (2D+3D)"),
+            CompanionUiText.pick(language, "2× 3D (solo batalla)", "3D 2× (battle only)")
+        )
+        val selected = if (battleScale != BattleScale.OFF) 1 else 0
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(CompanionUiText.pick(language, "Imagen", "Image"))
+            .setSingleChoiceItems(labels, selected) { _, which ->
+                if (which == 1) {
+                    battleScale = BattleScale.BATTLE_2X
+                    videoFilter = VideoFilter.SHARP
+                } else {
+                    battleScale = BattleScale.OFF
+                    videoFilter = VideoFilter.ANTIALIAS_PLUS
+                }
                 lastEnhancementEnabled = null
+                lastAppliedShader = null
                 getPreferences(MODE_PRIVATE).edit()
                     .putString(PREF_BATTLE_SCALE, battleScale.name)
+                    .putString(PREF_VIDEO_FILTER, videoFilter.name)
                     .apply()
-                applyBattleEnhancement(repository.snapshot.value.mode, announce = true)
-                dialog.dismiss()
+                applyImageForMode(repository.snapshot.value.mode)
+                syncDashboardExtras()
+            }
+            .setPositiveButton(CompanionUiText.pick(language, "Cerrar", "Close")) { _, _ ->
                 if (settingsDialog != null) showAppSettings()
             }
-            .setNegativeButton(CompanionUiText.pick(language, "Cancelar", "Cancel"), null)
-            .show()
+            .create()
+        dialog.show()
+        dialog.window?.let { window ->
+            val params = window.attributes
+            params.dimAmount = 0f
+            params.flags = params.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND.inv()
+            window.attributes = params
+            window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            window.setDimAmount(0f)
+        }
     }
 
     private fun showIdleModeMenu() {
@@ -1481,6 +1611,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     )
 
     companion object {
+        private const val TRAVEL_TAG = "DW2003Travel"
         private const val PREF_ROM_URI = "rom_uri"
         private const val PREF_ROM_NAME = "rom_name"
         private const val PREF_ROM_VARIANT = "rom_variant"
@@ -1490,11 +1621,14 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         private const val PREF_MODS_ENABLED = "mods_enabled"
         private const val PREF_RAM_PROBE = "ram_probe"
         private const val PREF_ENABLED_CHEATS = "enabled_cheats"
-        private const val PREF_VISITED_MAPS = "visited_maps"
+        private const val PREF_VISITED_MAPS = "visited_maps_v2"
+        private const val PREF_VISITED_MAPS_LEGACY = "visited_maps"
+        private const val PREF_VISITED_MAPS_MERGED = "visited_maps_merged_v1"
         private const val PREF_PANE_ARRANGEMENT = "pane_arrangement"
         private const val PREF_LANGUAGE = "companion_language"
         private const val PREF_GAME_HUD = "game_hud"
         private const val PREF_BATTLE_SCALE = "battle_scale"
+        private const val PREF_VIDEO_FILTER = "video_filter"
         private const val PREF_IDLE_MODE = "companion_idle_mode"
         private const val PREF_IDLE_DELAY = "companion_idle_delay"
         // RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 1) — DualShock

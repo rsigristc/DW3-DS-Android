@@ -20,8 +20,10 @@ data class RamProbe(
     val inBattle: Boolean,
     val scene: String = "",
     val setupSummary: String = "",
+    val travelSummary: String = "",
     val setupHex: String,
     val arenaHex: String,
+    val travelHex: String = "",
     val changes: List<RamChange> = emptyList(),
     val captures: List<RamCaptureInfo> = emptyList()
 ) {

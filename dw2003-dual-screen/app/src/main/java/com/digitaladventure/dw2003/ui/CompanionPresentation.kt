@@ -25,11 +25,18 @@ class CompanionPresentation(
     fun submitSnapshot(snapshot: GameSnapshot) = dashboard.submitSnapshot(snapshot)
     fun setControlsVisible(visible: Boolean) { dashboard.controlsVisible = visible }
     fun setGameHudVisible(visible: Boolean) { dashboard.gameHudVisible = visible }
-    fun setQuickBar(muted: Boolean, fastForward: Boolean, stateAvailable: Boolean, scale: BattleScale) {
+    fun setQuickBar(
+        muted: Boolean,
+        fastForward: Boolean,
+        stateAvailable: Boolean,
+        scale: BattleScale,
+        filter: VideoFilter = VideoFilter.ANTIALIAS_PLUS
+    ) {
         dashboard.quickMuted = muted
         dashboard.quickFastForward = fastForward
         dashboard.quickStateAvailable = stateAvailable
         dashboard.battleScale = scale
+        dashboard.videoFilter = filter
     }
     fun setModsEnabled(enabled: Boolean) { dashboard.modsEnabled = enabled }
     fun setRamProbeEnabled(enabled: Boolean) { dashboard.ramProbeEnabled = enabled }

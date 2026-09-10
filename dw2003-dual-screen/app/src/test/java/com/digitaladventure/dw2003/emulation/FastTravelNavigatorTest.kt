@@ -10,6 +10,8 @@ class FastTravelNavigatorTest {
         assertTrue(FastTravelNavigator.isStatusMenu(0x8008428CL, 0x0202, 0x0202))
         assertTrue(FastTravelNavigator.isStatusMenu(0L, 0x1000, 0x0200))
         assertTrue(!FastTravelNavigator.isStatusMenu(0L, 0x0202, 0x0202))
+        assertTrue(FastTravelNavigator.isWorldMapOpen(0x022E, 0x1000))
+        assertTrue(!FastTravelNavigator.isWorldMapOpen(0x022E, 0x022E))
     }
 
     @Test
@@ -65,9 +67,17 @@ class FastTravelNavigatorTest {
     }
 
     @Test
+    fun primesCursorWithFourRightTaps() {
+        assertEquals(
+            List(4) { RetroPadButton.DPAD_RIGHT },
+            FastTravelNavigator.primeMapCursor().map { it.button }
+        )
+    }
+
+    @Test
     fun confirmsDestinationAndFullyExitsMapMenu() {
         assertEquals(
-            listOf(RetroPadButton.CROSS, RetroPadButton.TRIANGLE, RetroPadButton.TRIANGLE),
+            listOf(RetroPadButton.CROSS, RetroPadButton.CROSS),
             FastTravelNavigator.confirmMapDestination().map { it.button }
         )
     }

@@ -1,130 +1,127 @@
 # Changelog
 
+## Unreleased
+
+## 1.3.0
+
+- El viaje rápido abre el mapa de Flawe y te lleva al sitio que elijas. Ya no se queda a medias ni abre menús de más.
+- La lista solo enseña destinos que de verdad visitaste. No aparecen sitios solo porque el cursor pasó por el mapa (por ejemplo Hielo o Amaterasu si no has ido).
+- Si ya habías estado en Seiryu, la Pradera y otros, vuelven a salir sin tener que entrar otra vez.
+- Con el mapa abierto, el panel ya no cambia el nombre del lugar por el icono que tengas debajo.
+- En Imagen eliges una cosa: **AA+ (2D+3D)** para suavizar sprites y modelos, o **2× 3D** más nítido solo en combate.
+- Ese menú no oscurece el juego, así ves el cambio al momento.
+- Menos parpadeos al cargar la partida.
+
+Sigue haciendo falta tu ROM y BIOS. En Amaterasu el viaje se elige a mano en el mapa.
+
+### English
+
+- Fast travel opens Flawe's map and takes you there more reliably.
+- The destination list only shows places you actually visited—not names the cursor merely hovered.
+- Places you already unlocked (Seiryu, the prairie, and so on) come back without re-entering them.
+- Image is a single choice: **AA+ (2D+3D)** or **3D 2× in battle only**. The menu does not dim the game.
+- Fewer flickers when a game starts.
+
+You still need your own ROM and BIOS. Amaterasu travel is still chosen by hand on the map.
+
 ## 1.2.0
 
-- **Escena RAM:** el panel detecta menú START, mapa mundial (Flawe en RAM), viaje rápido (MAP_ID destino con mapa abierto) y estado (STSTATUS). El título muestra Menú / Mapa / Viaje rápido.
-- **Enemigos y combate:** grupo desde `0x80042B1C` / `0x800A4000`, firma `FIGHTST2` en `0x80082CB0`, habilidades con nombre y power, botín, sin MP enemigo.
-- **Interfaz:** texto vacío de enemigos corto; resolución solo Nativo o 2× siempre; Ñ/ñ con fuente del sistema; protección OLED.
-- **Sonda RAM (debug):** pestaña RAM; capturas `.txt` en Descargas/DDW3 sin PNG/state en caliente.
-- **2×:** render en hilo aparte cuando la mejora está activa, para aliviar el tirón en técnicas especiales.
+- El panel sabe si estás en el menú, en el mapa o viajando, y lo escribe en el título.
+- En batalla ves a los enemigos, sus técnicas y el botín.
+- La Ñ se ve bien. Puedes proteger el panel OLED si dejas la app quieta.
+- El 2× en combate tira menos cuando sales una técnica especial.
 
 ### English
 
-- Companion detects START menu, Flawe world map, fast travel in progress, and STSTATUS from RAM.
-- Battle enemy panel, named techniques with power, loot, FIGHTST2 slot detection.
-- Shorter empty-enemy copy; Native / Always 2× only; Spanish Ñ glyphs; OLED guard.
-- Debug RAM tab writes text captures to Downloads/DDW3.
-- Threaded GPU while 2× is on.
-
-## 1.1.2
-
-Candidata local (sin publicar).
-
-- **OLED:** en APP, protección del panel (off / atenuar / desplazar píxeles) con espera de 30, 60 o 120 s. Solo mira inactividad del companion, no del mando.
-- **Enemigos:** la pestaña Batalla tiene subpestañas Equipo / Enemigos (necesario en Fold con HUD arriba). Lee `0x80042B1C` en campo y combate, retiene el último grupo válido y escanea `0x800A4000` si el bloque se vacía.
-- **HUD:** el título del mapa ya no se pisa con PAD / HUD / APP ni con RAM EN VIVO / EXPLORACIÓN en pantallas estrechas (Ayaneo).
-- **Sonda RAM:** solo en el APK debug. Al cambiar RAM guarda PNG del juego, `.txt` y `.state` en `ram-captures`.
-- **Enemigos:** resistencias en verde/rojo (mín/máx), sin MP, técnicas stub (p. ej. 228 = Rayo Trueno) y botín del catálogo.
-- **Combate:** la firma ya no se lee solo en `0x80080000` (en Flawe suele ser un gancho `0x800C1548` y el panel se quedaba en campo, con el mapa en Crucero Amarillo). Se usa el slot `0x80082CB0` (`FIGHTST2`).
-
-### English
-
-- Optional OLED companion guard in APP (off / dim / pixel shift; 30/60/120 s).
-- Battle tab has Party / Enemies sub-tabs. Encounter reads stay on `0x80042B1C`, with a sticky cache and `0x800A4000` scan if the copy is gone.
-- Companion header no longer overlaps PAD / HUD / APP on narrow Presentation screens.
-- RAM probe is debug-only and writes PNG + RAM text + savestate when watched words change.
-- Battle mode reads the overlay slot at `0x80082CB0`. Flawe's hook at `0x80080000` (`0x800C1548`) no longer keeps the pane on the field or jumps the map to Yellow Cruiser.
+- The companion title shows Menu, Map or Fast travel.
+- Battles list enemies, named techniques and loot.
+- Proper Ñ, optional OLED care, and smoother 2× during specials.
 
 ## 1.1.0
 
-Cambios principales desde la release 1.0.8.
+- Reabrir la app con mods (códigos) activos ya no cierra el juego.
+- Puedes pegar más tipos de códigos personalizados.
 
-- **Mods al arrancar:** reabrir la app con códigos GameShark activos ya no cierra el proceso. En 1.0.8 se aplicaban antes de crear el núcleo (`core` nulo) y el hilo nativo moría al instante. Ahora se aplican en `SurfaceCreated`, con el juego cargado.
-- **Códigos personalizados:** se aceptan pares `80`, `30` y condicionales `D0` (además del formato `800XXXXX YYYY`). El núcleo sigue sin `core` nulo en `setCheat` / `resetCheat`.
-- **Validación:** prueba unitaria de códigos `D0`/`30`. El fallo de arranque se reprodujo con mods persistidos activados.
+Algunos códigos que cambian el programa del juego siguen siendo delicados. ROM y BIOS no vienen incluidos.
 
-Limitaciones: los códigos que parchean instrucciones (`D0` + `800`) siguen siendo más delicados que los de inventario. Se necesita una copia propia del juego y BIOS.
+### English
 
-### English — highlights since 1.0.8
-
-- Restarting with GameShark mods still enabled no longer kills the process. 1.0.8 applied cheats before the core existed (`core` was null). They now apply on `SurfaceCreated` after the game is loaded.
-- Custom codes accept `80`, `30` and `D0` pairs. Native `setCheat` / `resetCheat` no longer touch a null core.
-- Unit coverage for `D0`/`30` codes. The boot crash was reproduced with persisted mods left on.
-
-Codes that patch executable RAM (`D0` + `800`) remain more fragile than inventory writes. ROM and BIOS are not included.
+- Restarting with cheats still on no longer crashes the app.
+- Custom codes accept more formats. ROM and BIOS are not included.
 
 ## 1.0.8
 
-Cambios principales desde la release 1.0.6.
+- **HUD OFF** deja Guardar, Cargar, velocidad y sonido en el panel; **HUD ON** los pone sobre el juego.
+- El stick izquierdo funciona como DualShock (y como cruceta si el juego va en digital).
+- Opción de imagen más nítida en 3D durante el combate.
 
-- **HUD exclusivo:** HUD OFF oculta Guardar / Cargar / 2× / Sonido / escala sobre el juego y los muestra en el panel. HUD ON hace lo contrario. El interruptor HUD permanece en la cabecera del panel, junto a PAD / APP.
-- **Idioma:** esas etiquetas siguen el idioma del panel (español o English).
-- **Stick analógico:** el puerto 1 se presenta como DualShock. El stick izquierdo envía ejes analógicos y, si el juego sigue en modo digital, también se mapea a la cruceta.
-- **Escala 2×:** el render NEON puede usar resolución interna 2× solo en batalla (opción por defecto), siempre o nunca. El botón junto a Sonido abre la lista. Este núcleo no ofrece 4×; el 2× no agranda la imagen, solo nítidez 3D.
-- **Validación:** pruebas unitarias actualizadas. HUD, DualShock y el selector de escala se instalaron y probaron en Samsung SM-F971B.
+### English
 
-Limitaciones: el 2× interno es sutil en HUD 2D. Se necesita una copia propia del juego y BIOS.
-
-### English — highlights since 1.0.6
-
-- Exclusive HUD: OFF hides Save / Load / 2× / Sound / scale on the game and shows them on the companion. ON does the reverse. The HUD toggle stays on the companion header next to PAD / APP.
-- Those labels follow the companion language (Spanish or English).
-- Port 1 is DualShock: the left stick sends analog axes and also maps to the D-pad when the game stays in digital mode.
-- Optional 2× internal resolution: battle only (default), always, or never. The control sits next to Sound. 4× is not available in this renderer; 2× does not enlarge the picture, it only sharpens 3D.
-- Unit tests updated. HUD, DualShock and the scale selector were installed and tested on a Samsung SM-F971B.
-
-The internal 2× effect is subtle on 2D HUD elements. ROM and BIOS are not included.
+- HUD OFF keeps Save / Load / speed / sound on the companion; HUD ON puts them on the game.
+- DualShock left stick, plus optional sharper 3D in battle.
 
 ## 1.0.6
 
-Cambios principales desde la release 1.0.4 (incluye el trabajo de 1.0.5).
+- Guía de Flawe sin conexión en español, inglés, francés, alemán e italiano.
+- Viaje rápido y «Abrir mapa» más fiables. Toca el radar, elige un destino de Asuka y viajas.
+- La app trabaja menos en segundo plano.
+- La versión USA arranca bien; la guía y el viaje de Flawe siguen siendo de la europea.
+- Al actualizar ves las notas antes de descargar.
 
-- **Guía de Flawe en cinco idiomas:** «Objetivo actual» sigue las condiciones de misión de la guía inglesa y ofrece inglés, español, francés, alemán e italiano sin conexión. Funciona en el panel aunque el menú localizado del juego no muestre la guía; ya no depende solo de la etapa de historia. Los objetivos largos pueden desplazarse.
-- **Mapa y viaje rápido:** corregida la secuencia de «Abrir pestaña Mapa» y la detección de la función de Flawe 2.0. Tocar el radar muestra los destinos registrados como visitados; seleccionar un destino Asuka inicia el viaje y comprueba la llegada. Verificado en español: Torre Seiryu → Pradera del Viento.
-- **Menos trabajo periódico:** las búsquedas de nombres en RAM se limitan a cambios de ubicación; se omiten actualizaciones idénticas del panel y el sondeo se detiene en segundo plano. Esto aborda trabajo innecesario relacionado con el reporte de CPU; todavía no hay mediciones de consumo o ventilador en Ayn Thor.
-- **Radar y ubicaciones:** el marcador sigue el sector actual y se corrigen nombres de salas/mapas. Representa el sector, no coordenadas exactas del personaje dentro de una sala.
-- **Correcciones USA:** ajustada la lectura del bloque de partida de SLUS-01436 para mapa, Tamer, Bits y equipo. La guía y el viaje rápido de Flawe siguen siendo funciones PAL.
-- **Estabilidad:** las lecturas de RAM toleran el cierre/recreación de la actividad; los parches temporales de viaje invalidan el código recompilado afectado al aplicarse y restaurarse.
-- **Actualizaciones:** el aviso muestra las notas de la release antes de descargar el APK. El menú APP muestra la versión instalada y se retira la opción de restaurar el respaldo automático.
-- **Validación:** 150 pruebas unitarias, Android Lint y APK release compilado. Instalación y pruebas de guía española, apertura del mapa y viaje completo realizadas en Samsung SM-F971B.
+En Amaterasu sigues eligiendo el destino a mano. ROM y BIOS no vienen incluidos.
 
-Limitaciones: Amaterasu conserva selección manual. La lista usa visitas registradas por la app, no importa el historial completo de partidas anteriores. Los otros cuatro idiomas tienen cobertura automatizada; su presentación no se ha probado en dispositivo. Se necesita una copia propia del juego y BIOS; las funciones de viaje requieren el mod compatible de Flawe.
+### English
 
-### English — highlights since 1.0.4
-
-- Offline companion walkthrough in English, Spanish, French, German and Italian, driven by Flawe's quest conditions. It works even when the localized in-game menu does not show the walkthrough. Long objectives can scroll.
-- Fixed automated map opening and Flawe 2.0 fast travel. Tap the radar, choose a recorded Asuka destination, and the app checks arrival. Spanish Seiryu Tower → Wind Prairie travel was tested on a Samsung SM-F971B.
-- Reduced repeated RAM searches and redundant UI updates; polling stops in the background. These changes address unnecessary work, but CPU/fan improvements have not yet been measured on an AYN Thor.
-- Radar marker follows the current sector; room/map labels and USA SLUS-01436 memory reads were corrected. Flawe walkthrough and fast travel remain PAL-only.
-- Improved activity lifecycle handling and temporary travel patch reliability. Update prompts now display release notes before downloading.
-- 150 unit tests pass, Android Lint passes, and the signed APK was installed and tested on device.
-
-Amaterasu still uses manual selection. Visited destinations are recorded by the app, not imported from an older save's full history. The marker indicates the sector, not exact room coordinates. ROM and BIOS are not included.
+- Offline Flawe walkthrough in five languages.
+- More reliable map opening and Asuka fast travel.
+- USA boots correctly; Flawe travel and walkthrough stay PAL-only.
+- Update notes show before you download. ROM and BIOS are not included.
 
 ## 1.0.4
 
-- El objetivo sigue la guía de Flawe al cambiar de mapa, no la pista fija de Historia 4. El overlay de START se relee y, si hay texto en vivo, se muestra también en español cuando hay traducción conocida.
-- Digimon World 3 USA (`SLUS-01436`) arranca en NTSC. El viaje rápido y la guía de Flawe quedan desactivados; el resto del panel sigue leyendo la partida.
+- El objetivo del panel sigue la guía al cambiar de mapa.
+- Digimon World 3 USA arranca en su formato. Viaje y guía de Flawe no aplican ahí.
+
+### English
+
+- The objective follows the walkthrough when you change maps.
+- USA boots correctly; Flawe travel and walkthrough stay off on that disc.
 
 ## 1.0.3
 
-- Al reabrir la app, el núcleo vuelve a crear los recursos OpenGL si Samsung soltó el contexto en segundo plano. `create`/`destroy` ya no tocan un núcleo nulo.
+- Si dejas la app en segundo plano en un Fold, el juego vuelve a pintarse al reabrirla.
+
+### English
+
+- After a long pause on a Fold, the game screen comes back instead of staying black.
 
 ## 1.0.2
 
-- El listado con scroll de 1.0.1 solo se usa cuando el panel va a un lado (Fold horizontal). Si el juego y el panel están arriba/abajo, se recupera el diseño de columnas para que no quede cortado.
+- Si el juego y el panel van uno encima del otro, el diseño ya no se corta.
+
+### English
+
+- Stacked game + companion layout no longer clips.
 
 ## 1.0.1
 
-- El panel complementario se puede desplazar en Exploración, Batalla y Gestión para que el contenido no quede cortado en foldables horizontales.
-- El radar regional conserva la proporción original del mapa y centra el título «Radar Regional · Servidor Asuka».
-- Batalla muestra HP, MP, EXP y la lista de digievoluciones (forma activa en azul) en cada carta.
-- Gestión deja las columnas comprimidas y pasa a una lista vertical: partner, parámetros, resistencias, habilidades y equipo.
+- El panel se puede desplazar para verlo entero en un Fold horizontal.
+- Batalla y Gestión muestran mejor HP, EXP, evoluciones y equipo.
+
+### English
+
+- The companion scrolls on a sideways Fold.
+- Clearer battle and party cards.
 
 ## 1.0.0
 
-- Primera release oficial firmada (`com.digitaladventure.dw2003`). El código, la licencia GPL-3.0-or-later y `scripts/build.sh` están en el árbol público.
-- Las etiquetas y APKs `v0.7.x-poc` se retiran. Quien tenga la POC debug debe desinstalarla una vez.
+- Primera versión oficial. Desinstala la prueba antigua (debug) una vez si la tenías.
+- No incluye ROM ni BIOS.
+
+### English
+
+- First official release. Uninstall the old debug POC once if you still have it.
+- ROM and BIOS are not included.
 
 ## 0.7.20-poc
 

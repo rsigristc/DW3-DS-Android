@@ -17,7 +17,8 @@ object FastTravelCatalog {
     /** Amaterasu city icons. Square swaps server; Flawe's IPS table only encodes Asuka MAP_IDs. */
     private val amaterasuIcons = setOf(0x0780, 0x0810, 0x0825, 0x0845, 0x0855)
 
-    private val flaweIcons: Set<Int> = FlaweFastTravelTable.asukaMapIds + amaterasuIcons
+    val askmapIcons: Set<Int> = FlaweFastTravelTable.asukaMapIds + amaterasuIcons
+    private val flaweIcons: Set<Int> = askmapIcons
 
     /**
      * Field tiles that share a nearby Flawe icon. Keys must themselves be Flawe icons.
@@ -74,10 +75,32 @@ object FastTravelCatalog {
         }
     }
 
+    /**
+     * Tiles to persist as walked. Ignore START/atlas: AREA is often a hovered
+     * or leftover icon (Freeze Mountain, Amaterasu) that Flawe has not revealed.
+     * Persist MAP_ID only, so a stale AREA cannot unlock a distant hub.
+     */
+    fun visitTiles(areaId: Int, mapId: Int): Set<Int> {
+        if (LocationResolver.isOverlay(areaId) || LocationResolver.isOverlay(mapId)) return emptySet()
+        val stage = LocationResolver.stageId(areaId, mapId)
+        return if (AreaCatalog.isField(stage)) setOf(stage) else emptySet()
+    }
+
+    /**
+     * Recover ASKMAP icons the app already logged, minus atlas leftovers
+     * (Freeze Mountain / Amaterasu / North) that Flawe never drew.
+     */
+    fun fromLegacyPrefs(raw: Collection<Int>): Set<Int> =
+        raw.filter { it in flaweIcons && it !in atlasGhosts }.toSet()
+
+    val atlasGhosts: Set<Int> =
+        amaterasuIcons + FlaweFastTravelTable.asukaIcons.map { it.mapId }.filter { it in 0x0261..0x026F }
+
     fun rememberedIcons(visited: Set<Int>, currentAreaId: Int, currentMapId: Int = currentAreaId): Set<Int> {
-        return (visited + currentAreaId + currentMapId).mapNotNull { tile ->
-            iconId(tile).takeIf { it in flaweIcons }
-        }.toSet()
+        val current = iconId(currentAreaId, currentMapId).takeIf { it in flaweIcons }
+        // Only ASKMAP icons themselves. Interiors must not unlock a hub you
+        // never opened on Flawe's world map (e.g. an inn listing Genbu City).
+        return visited.filter { it in flaweIcons }.toSet() + setOfNotNull(current)
     }
 
     fun groups(
@@ -86,11 +109,9 @@ object FastTravelCatalog {
         currentAreaId: Int,
         currentMapId: Int = currentAreaId
     ): List<FastTravelGroup> {
-        val currentIcon = iconId(currentAreaId, currentMapId)
         val unlockedIcons = rememberedIcons(visited, currentAreaId, currentMapId)
         val unlocked = destinations.filter { destination ->
-            destination.areaId in unlockedIcons ||
-                isUnlocked(destination, storyStage, visited, currentIcon)
+            destination.areaId in unlockedIcons
         }
         return unlocked
             .groupBy { it.server to it.sector }
@@ -111,6 +132,6 @@ object FastTravelCatalog {
         if (destination.server == ServerRegion.UNKNOWN) return false
         if (destination.areaId !in flaweIcons) return false
         if (destination.areaId == currentIconId) return true
-        return visited.any { tile -> iconId(tile) == destination.areaId }
+        return destination.areaId in visited
     }
 }

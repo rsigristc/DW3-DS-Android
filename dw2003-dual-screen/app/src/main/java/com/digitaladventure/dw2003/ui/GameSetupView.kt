@@ -34,8 +34,8 @@ class GameSetupView(
     onLanguage: (() -> Unit)? = null,
     gameHudLabel: String? = null,
     onGameHud: (() -> Unit)? = null,
-    battleScaleLabel: String? = null,
-    onBattleScale: (() -> Unit)? = null,
+    imageOptionsLabel: String? = null,
+    onImageOptions: (() -> Unit)? = null,
     idleModeLabel: String? = null,
     onIdleMode: (() -> Unit)? = null,
     idleDelayLabel: String? = null,
@@ -197,20 +197,20 @@ class GameSetupView(
                 false
             ).apply { setPadding(0, dp(8), 0, 0) })
         }
-        if (onBattleScale != null && battleScaleLabel != null) {
+        if (onImageOptions != null && imageOptionsLabel != null) {
             content.addView(Space(context), LinearLayout.LayoutParams(1, dp(8)))
             content.addView(
                 actionButton(
-                    "${pick(language, "Resolución en combate", "Battle resolution")}: $battleScaleLabel",
-                    onBattleScale,
+                    "${pick(language, "Imagen", "Image")}: $imageOptionsLabel",
+                    onImageOptions,
                     outlined = true
                 )
             )
             content.addView(label(
                 pick(
                     language,
-                    "El render NEON puede doblar la resolución interna (2×) en combate 3D. No hay 4× en este núcleo; fuera de combate vuelve a nativo para no ensuciar el 2D.",
-                    "The NEON renderer can double internal resolution (2×) in 3D battles. This core has no 4× mode; it returns to native outside combat so 2D stays clean."
+                    "Una sola opción: AA+ (2D y 3D) o 2× 3D solo en batalla.",
+                    "One option: AA+ (2D and 3D) or 3D 2× in battle only."
                 ),
                 11f,
                 MUTED,
@@ -271,8 +271,8 @@ class GameSetupView(
             content.addView(label(
                 pick(
                     language,
-                    "Añade una pestaña RAM con 0x80042B1C y 0x800A4460. Los halfwords que cambian al atacar o caminar ayudan a mapear el combate.",
-                    "Adds a RAM tab for 0x80042B1C and 0x800A4460. Halfwords that change when you walk or attack help map the battle structs."
+                    "Añade una pestaña RAM. En menú, mapa y viaje rápido captura el scratch Flawe, el widget (+0xC1 / +0x180 / +0x184) y los dispatchers. En combate sigue 0x80042B1C / 0x800A4460.",
+                    "Adds a RAM tab. Menu, map and fast travel capture Flawe scratch, the widget (+0xC1 / +0x180 / +0x184) and dispatchers. Battle still uses 0x80042B1C / 0x800A4460."
                 ),
                 11f,
                 MUTED,
@@ -376,7 +376,7 @@ class GameSetupView(
     private fun installedVersionName(): String =
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
-        }.getOrNull().orEmpty().ifBlank { "1.2.0" }
+        }.getOrNull().orEmpty().ifBlank { "1.3.0" }
 
     private fun pick(language: CompanionLanguage, spanish: String, english: String) =
         CompanionUiText.pick(language, spanish, english)

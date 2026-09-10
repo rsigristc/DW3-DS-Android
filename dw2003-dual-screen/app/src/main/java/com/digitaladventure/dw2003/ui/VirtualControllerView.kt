@@ -51,6 +51,8 @@ class VirtualControllerView(
         set(value) { field = value; invalidate() }
     var battleScale: BattleScale = BattleScale.ALWAYS_2X
         set(value) { field = value; invalidate() }
+    var videoFilter: VideoFilter = VideoFilter.ANTIALIAS_PLUS
+        set(value) { field = value; invalidate() }
     var gameHudVisible: Boolean = false
         set(value) { field = value; invalidate() }
 
@@ -87,7 +89,8 @@ class VirtualControllerView(
             val left = margin + index * (itemWidth + gap)
             val rect = RectF(left, top, left + itemWidth, bottom)
             val active = (action == QuickAction.TOGGLE_SPEED && fastForward) ||
-                (action == QuickAction.TOGGLE_MUTE && muted)
+                (action == QuickAction.TOGGLE_MUTE && muted) ||
+                (action == QuickAction.PICK_SCALE && (battleScale != BattleScale.OFF || videoFilter != VideoFilter.SHARP))
             paint.color = if (active) Color.argb(225, 8, 105, 126) else Color.argb(205, 4, 31, 43)
             canvas.drawRoundRect(rect, dp(7f), dp(7f), paint)
             paint.style = Paint.Style.STROKE
@@ -96,7 +99,7 @@ class VirtualControllerView(
             canvas.drawRoundRect(rect, dp(7f), dp(7f), paint)
             paint.style = Paint.Style.FILL
             val label = if (action == QuickAction.PICK_SCALE) {
-                CompanionUiText.battleScaleShort(language, battleScale)
+                CompanionUiText.imageOptionsShort(language, battleScale, videoFilter)
             } else if (action == QuickAction.TOGGLE_HUD) {
                 if (gameHudVisible) "HUD ON" else "HUD OFF"
             } else {

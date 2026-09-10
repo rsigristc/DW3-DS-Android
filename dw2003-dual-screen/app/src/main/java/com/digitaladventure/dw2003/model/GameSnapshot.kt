@@ -28,6 +28,7 @@ data class GameSnapshot(
     val canFastTravel: Boolean,
     val supportsWalkthrough: Boolean = true,
     val supportsFastTravel: Boolean = true,
+    val revealedMapIds: Set<Int> = emptySet(),
     val isLive: Boolean,
     val sampledAtMillis: Long = System.currentTimeMillis()
 ) {

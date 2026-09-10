@@ -32,10 +32,10 @@ class RamCaptureStore(
         latest = listCaptures()
     }
 
-    fun maybeCapture(probe: RamProbe, changes: List<RamChange>) {
-        if (changes.isEmpty()) return
+    fun maybeCapture(probe: RamProbe, changes: List<RamChange>, force: Boolean = false) {
+        if (!force && changes.isEmpty()) return
         val now = System.currentTimeMillis()
-        if (now - lastCaptureAt < DEBOUNCE_MS) return
+        if (!force && now - lastCaptureAt < DEBOUNCE_MS) return
         lastCaptureAt = now
         val stamp = clock.format(Date(now))
         val text = File(directory, "$stamp.txt")
@@ -45,9 +45,15 @@ class RamCaptureStore(
             appendLine("battle=${probe.inBattle}")
             appendLine("scene=${probe.scene}")
             appendLine("setup=${probe.setupSummary}")
+            if (probe.travelSummary.isNotBlank()) appendLine("travel=${probe.travelSummary}")
             appendLine("CHANGES")
+            if (changes.isEmpty()) appendLine("(scene)")
             changes.forEach { change ->
                 appendLine("0x${change.address.toString(16).uppercase()} ${change.previous} -> ${change.current}")
+            }
+            if (probe.travelHex.isNotBlank()) {
+                appendLine("TRAVEL")
+                appendLine(probe.travelHex)
             }
             appendLine("SETUP")
             appendLine(probe.setupHex)
@@ -105,7 +111,7 @@ class RamCaptureStore(
             }
 
     companion object {
-        private const val DEBOUNCE_MS = 4000L
-        private const val KEEP = 8
+        private const val DEBOUNCE_MS = 1500L
+        private const val KEEP = 16
     }
 }
