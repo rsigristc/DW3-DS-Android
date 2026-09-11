@@ -126,7 +126,8 @@ object BattleSetupReader {
                 EnemyCatalog.techniqueLabel(id, spanish)
             } ?: emptyList(),
             loot = EnemyDrops.label(enemyId, spanish),
-            liveHp = liveHp != null
+            liveHp = liveHp != null,
+            statusResistances = StatusResistanceCatalog.forEnemy(enemyId)
         )
     }
 
@@ -137,9 +138,14 @@ object BattleSetupReader {
             0x70 + index * ARENA_STRIDE,
             0x70 + index * ARENA_STRIDE + 8
         )
-        return candidates.firstNotNullOfOrNull { offset ->
-            GameStateReader.u16(arena, offset).takeIf { it in 1..maxHp }
+        candidates.forEach { offset ->
+            val raw = GameStateReader.u16(arena, offset)
+            when {
+                raw > 0xFF00 -> return 0
+                raw in 0..maxHp -> return raw
+            }
         }
+        return null
     }
 
     private fun looksLikePointer(bytes: ByteArray, offset: Int): Boolean {

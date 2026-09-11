@@ -7,6 +7,7 @@ import android.content.Intent
 import android.hardware.display.DisplayManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 import android.provider.OpenableColumns
 import android.provider.Settings
@@ -47,6 +48,7 @@ import com.digitaladventure.dw2003.data.MapRegionCatalog
 import com.digitaladventure.dw2003.data.ServerRegion
 import com.digitaladventure.dw2003.data.GameStateRepository
 import com.digitaladventure.dw2003.model.GameMode
+import com.digitaladventure.dw2003.model.GameSnapshot
 import com.digitaladventure.dw2003.ui.CompanionUiText
 import com.digitaladventure.dw2003.emulation.BiosManager
 import com.digitaladventure.dw2003.emulation.CrashLogStore
@@ -64,6 +66,8 @@ import com.digitaladventure.dw2003.ui.AnalogStickMath
 import com.digitaladventure.dw2003.ui.BattleScale
 import com.digitaladventure.dw2003.ui.CompanionIdleDelay
 import com.digitaladventure.dw2003.ui.CompanionIdleMode
+import com.digitaladventure.dw2003.ui.DevicePerformance
+import com.digitaladventure.dw2003.ui.PerformanceMode
 import com.digitaladventure.dw2003.ui.CompanionPresentation
 import com.digitaladventure.dw2003.ui.DashboardActions
 import com.digitaladventure.dw2003.ui.DigiviceDashboardView
@@ -74,6 +78,10 @@ import com.digitaladventure.dw2003.ui.PaneArrangement
 import com.digitaladventure.dw2003.ui.QuickAction
 import com.digitaladventure.dw2003.ui.VideoFilter
 import com.digitaladventure.dw2003.ui.VirtualControllerView
+import com.digitaladventure.dw2003.remote.RemoteCompanionServer
+import com.digitaladventure.dw2003.remote.protocol.RemoteCommand
+import com.digitaladventure.dw2003.remote.RemoteInputApplier
+import com.digitaladventure.dw2003.remote.toRemoteTelemetry
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.GLRetroViewData
 import com.swordfish.libretrodroid.ShaderConfig
@@ -87,6 +95,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.URL
+import java.security.SecureRandom
+import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private val repository = GameStateRepository()
@@ -108,10 +118,18 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private var memoryPoller: MemoryPoller? = null
     private var memoryController: GameMemoryController? = null
     private var emulatorEventsJob: Job? = null
+    private lateinit var remoteServer: RemoteCompanionServer
+    private var remoteInputApplier: RemoteInputApplier? = null
+    private var remotePairingCode = 0
+    private var remoteCompanionConnected = false
+    private val remoteTelemetrySequence = AtomicInteger()
     private var settingsDialog: Dialog? = null
     private var dualContentActive = false
     private var skipNextAutoSave = false
     private var fastForward = false
+    private var playClockAnchorSeconds: Long? = null
+    private var playClockAnchorElapsedMs = 0L
+    private var lastPlayClockWriteMs = 0L
     private var muted = false
     private var modsEnabled = false
     private var ramProbeEnabled = false
@@ -124,6 +142,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private var detectedLanguage: CompanionLanguage? = null
     private var battleScale = BattleScale.OFF
     private var videoFilter = VideoFilter.ANTIALIAS_PLUS
+    private var performanceMode = PerformanceMode.AUTO
     private var idleMode = CompanionIdleMode.OFF
     private var idleDelay = CompanionIdleDelay.S30
     private var lastEnhancementEnabled: Boolean? = null
@@ -167,6 +186,16 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             ?.toCollection(LinkedHashSet())
             ?: linkedSetOf()
         val prefs = getPreferences(MODE_PRIVATE)
+        remotePairingCode = prefs.getInt(PREF_REMOTE_PAIRING_CODE, 0).takeIf { it in 100_000..999_999 }
+            ?: (100_000 + SecureRandom().nextInt(900_000)).also {
+                prefs.edit().putInt(PREF_REMOTE_PAIRING_CODE, it).apply()
+            }
+        remoteServer = RemoteCompanionServer(
+            pairingCode = remotePairingCode,
+            onInput = { frame -> runOnUiThread { remoteInputApplier?.apply(frame) } },
+            onCommand = { frame -> runOnUiThread { handleRemoteCommand(frame) } },
+            onConnectionChanged = { connected -> runOnUiThread { setRemoteCompanionConnected(connected) } }
+        )
         visitedMaps = prefs.getString(PREF_VISITED_MAPS, "")
             ?.split(',')
             ?.mapNotNull { it.toIntOrNull(16) }
@@ -185,13 +214,16 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             }
             prefs.edit().putBoolean(PREF_VISITED_MAPS_MERGED, true).apply()
         }
-        battleScale = BattleScale.fromPreference(
-            getPreferences(MODE_PRIVATE).getString(PREF_BATTLE_SCALE, null)
-        )
-        videoFilter = if (battleScale != BattleScale.OFF) {
-            VideoFilter.SHARP
-        } else {
-            VideoFilter.ANTIALIAS_PLUS
+        val prefsForImage = getPreferences(MODE_PRIVATE)
+        performanceMode = PerformanceMode.fromPreference(prefsForImage.getString(PREF_PERFORMANCE, null))
+        val storedScale = prefsForImage.getString(PREF_BATTLE_SCALE, null)
+        val storedFilter = prefsForImage.getString(PREF_VIDEO_FILTER, null)
+        battleScale = BattleScale.fromPreference(storedScale)
+        videoFilter = when {
+            battleScale != BattleScale.OFF -> VideoFilter.SHARP
+            storedFilter != null -> VideoFilter.fromPreference(storedFilter)
+            performanceMode == PerformanceMode.AUTO && DevicePerformance.isLowEnd(this) -> VideoFilter.SHARP
+            else -> VideoFilter.ANTIALIAS_PLUS
         }
         idleMode = CompanionIdleMode.fromPreference(
             getPreferences(MODE_PRIVATE).getString(PREF_IDLE_MODE, null)
@@ -220,6 +252,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 repository.snapshot.collectLatest { snapshot ->
+                    synchronizePlayClock(snapshot)
                     rememberVisited(snapshot.areaId, snapshot.mapId)
                     if (snapshot.revealedMapIds != lastRevealedMaps) {
                         lastRevealedMaps = snapshot.revealedMapIds
@@ -247,6 +280,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     override fun onStart() {
         super.onStart()
+        remoteServer.start()
         val consumer = Consumer<androidx.window.layout.WindowLayoutInfo> { layout ->
             val feature = layout.displayFeatures.filterIsInstance<FoldingFeature>().firstOrNull()
             dualLayout?.setFold(feature)
@@ -260,6 +294,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         windowInfoConsumer?.let(windowInfoAdapter::removeWindowLayoutInfoListener)
         windowInfoConsumer = null
         memoryPoller?.stop()
+        remoteInputApplier?.releaseAll()
+        remoteServer.stop()
+        remoteCompanionConnected = false
         super.onStop()
     }
 
@@ -270,6 +307,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     override fun onPause() {
+        resetPlayClockAnchor()
         if (!skipNextAutoSave) persistMemoryCardIfSafe()
         skipNextAutoSave = false
         super.onPause()
@@ -279,6 +317,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         crashLog.note("activity-destroy")
         memoryPoller?.stop()
         memoryPoller = null
+        remoteInputApplier?.releaseAll()
+        remoteInputApplier = null
+        remoteServer.stop()
         emulatorEventsJob?.cancel()
         emulatorEventsJob = null
         travelJob?.cancel()
@@ -387,15 +428,23 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         onGameHud = ::toggleGameHud,
         imageOptionsLabel = CompanionUiText.imageOptions(resolvedLanguage(), battleScale, videoFilter),
         onImageOptions = ::showImageOptionsMenu,
+        performanceLabel = CompanionUiText.performanceMode(resolvedLanguage(), performanceMode),
+        onPerformance = ::showPerformanceMenu,
         idleModeLabel = CompanionUiText.idleMode(resolvedLanguage(), idleMode),
         onIdleMode = ::showIdleModeMenu,
         idleDelayLabel = CompanionUiText.idleDelay(resolvedLanguage(), idleDelay),
         onIdleDelay = ::showIdleDelayMenu,
+        remoteCompanionLabel = remoteServer.connectionLabel(),
+        onRemoteCompanion = ::showRemoteCompanionInfo,
+        ramProbeEnabled = false,
+        onRamProbeChanged = null,
         onClose = onClose,
+        allowDemo = onClose == null,
         onReturnToStart = if (onClose != null) ::returnToStartScreen else null,
         hasCrashLog = crashLog.hasLog(),
         onViewCrashLog = ::showCrashLog,
-        onCheckUpdate = { checkForAppUpdate(manual = true) }
+        onCheckUpdate = { checkForAppUpdate(manual = true) },
+        initialTab = GameSetupView.lastSelectedTab
     )
 
     private fun showAppSettings() {
@@ -410,6 +459,21 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         dialog.setOnDismissListener { settingsDialog = null }
         settingsDialog = dialog
         dialog.show()
+    }
+
+    private fun showRemoteCompanionInfo() {
+        val language = resolvedLanguage()
+        AlertDialog.Builder(this)
+            .setTitle(CompanionUiText.pick(language, "Pocket Companion", "Pocket Companion"))
+            .setMessage(
+                CompanionUiText.pick(
+                    language,
+                    "En la AYANEO abre DW2003 Pocket Companion e introduce:\n\n${remoteServer.connectionLabel()}\n\nAmbos dispositivos deben estar en la misma red Wi-Fi. El código protege la entrada remota durante este MVP.",
+                    "On the AYANEO open DW2003 Pocket Companion and enter:\n\n${remoteServer.connectionLabel()}\n\nBoth devices must be on the same Wi-Fi network. The code protects remote input during this MVP."
+                )
+            )
+            .setPositiveButton("OK", null)
+            .show()
     }
 
     private fun showPaneArrangementMenu() {
@@ -561,7 +625,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             saveRAMState = saveManager.load()
             shader = videoFilter.shaderFor(GameMode.EXPLORATION, battleScale)
             preferLowLatencyAudio = true
-            skipDuplicateFrames = false
+            skipDuplicateFrames = useLowEndPerformance()
             variables = arrayOf(
                 Variable("pcsx_rearmed_region", storedRomVariant().emulatorRegion),
                 Variable("pcsx_rearmed_bios", "auto"),
@@ -570,7 +634,10 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 Variable("pcsx_rearmed_drc", "enabled"),
                 Variable("pcsx_rearmed_drc_thread", "auto"),
                 Variable("pcsx_rearmed_spu_thread", "disabled"),
-                Variable("pcsx_rearmed_dithering", "enabled"),
+                // A small asynchronous disc cache reduces the map load that follows
+                // selecting a Memory Card slot without enabling unsafe Turbo CD hacks.
+                Variable("pcsx_rearmed_cd_readahead", "128"),
+                Variable("pcsx_rearmed_dithering", if (useLowEndPerformance()) "disabled" else "enabled"),
                 *enhancementVariables(battleScale.enhancementEnabled(GameMode.EXPLORATION))
             )
         }
@@ -580,6 +647,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             requestFocus()
         }
         retroView = view
+        remoteInputApplier?.releaseAll()
+        remoteInputApplier = RemoteInputApplier(
+            sendKey = { action, keyCode -> view.sendKeyEvent(action, keyCode, 0) },
+            sendMotion = { source, x, y -> view.sendMotionEvent(source, x, y, 0) }
+        )
         memoryController = GameMemoryController(view)
         if (!biosManager.isInstalled) {
             toast(
@@ -714,6 +786,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 }
             }
             QuickAction.LOAD_STATE -> lifecycleScope.launch {
+                resetPlayClockAnchor()
                 toast("Cargando estado rápido…", "Loading quick state…", Toast.LENGTH_SHORT)
                 val result = runCatching {
                     withContext(Dispatchers.IO) {
@@ -733,6 +806,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             }
             QuickAction.TOGGLE_SPEED -> {
                 fastForward = !fastForward
+                resetPlayClockAnchor()
                 view.frameSpeed = if (fastForward) 2 else 1
                 view.applyRuntimeOptions()
                 virtualController?.fastForward = fastForward
@@ -759,6 +833,61 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             QuickAction.PICK_SCALE -> showImageOptionsMenu()
             QuickAction.TOGGLE_HUD -> toggleGameHud()
         }
+    }
+
+    private fun handleRemoteCommand(frame: com.digitaladventure.dw2003.remote.protocol.RemoteCommandFrame) {
+        val argument = frame.argument
+        when (frame.command) {
+            RemoteCommand.SAVE_STATE -> handleQuickAction(QuickAction.SAVE_STATE)
+            RemoteCommand.LOAD_STATE -> handleQuickAction(QuickAction.LOAD_STATE)
+            RemoteCommand.TOGGLE_SPEED -> handleQuickAction(QuickAction.TOGGLE_SPEED)
+            RemoteCommand.TOGGLE_MUTE -> handleQuickAction(QuickAction.TOGGLE_MUTE)
+            RemoteCommand.CYCLE_IMAGE -> cycleRemoteImageMode()
+            RemoteCommand.FAST_TRAVEL -> requestFastTravel(argument)
+            RemoteCommand.TOGGLE_MOD -> {
+                val cheat = (CheatCatalog.all + customCheats.all()).getOrNull(argument) ?: return
+                if (!modsEnabled) setModsEnabled(true)
+                toggleCheat(cheat.id, cheat.id !in enabledCheats)
+            }
+            RemoteCommand.SET_MODS_ENABLED -> setModsEnabled(argument != 0)
+            RemoteCommand.ADD_CUSTOM_MOD -> {
+                val spec = customCheats.add(frame.text, frame.detail)
+                if (spec == null) {
+                    toast("Código personalizado inválido", "Invalid custom code")
+                } else {
+                    if (!modsEnabled) setModsEnabled(true)
+                    crashLog.note("add-remote-custom-cheat")
+                    syncDashboardExtras()
+                    toast("Mod añadido desde Companion", "Mod added from Companion", Toast.LENGTH_SHORT)
+                }
+            }
+            RemoteCommand.MOVE_PARTY -> movePartyMember(argument ushr 8 and 0xff, argument and 0xff)
+        }
+    }
+
+    private fun cycleRemoteImageMode() {
+        when {
+            battleScale != BattleScale.OFF -> {
+                battleScale = BattleScale.OFF
+                videoFilter = VideoFilter.SHARP
+            }
+            videoFilter == VideoFilter.SHARP -> {
+                battleScale = BattleScale.OFF
+                videoFilter = VideoFilter.ANTIALIAS_PLUS
+            }
+            else -> {
+                battleScale = BattleScale.BATTLE_2X
+                videoFilter = VideoFilter.SHARP
+            }
+        }
+        lastEnhancementEnabled = null
+        lastAppliedShader = null
+        getPreferences(MODE_PRIVATE).edit()
+            .putString(PREF_BATTLE_SCALE, battleScale.name)
+            .putString(PREF_VIDEO_FILTER, videoFilter.name)
+            .apply()
+        applyImageForMode(repository.snapshot.value.mode)
+        syncDashboardExtras()
     }
 
     private fun attachDualContent(gameView: View) {
@@ -816,6 +945,13 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     private fun updatePresentation() {
         if (!dualContentActive) return
+        if (remoteCompanionConnected) {
+            presentation?.setOnDismissListener(null)
+            presentation?.dismiss()
+            presentation = null
+            dualLayout?.setGameOnly(true)
+            return
+        }
         val activityDisplayId = window.decorView.display?.displayId
         val secondary = displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
             .firstOrNull { it.displayId != activityDisplayId }
@@ -839,6 +975,20 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             syncDashboardExtras()
         }
         dualLayout?.setGameOnly(true)
+    }
+
+    private fun setRemoteCompanionConnected(connected: Boolean) {
+        if (remoteCompanionConnected == connected) return
+        remoteCompanionConnected = connected
+        if (connected) {
+            presentation?.setOnDismissListener(null)
+            presentation?.dismiss()
+            presentation = null
+            dualLayout?.setGameOnly(true)
+        } else {
+            updatePresentation()
+        }
+        syncDashboardExtras()
     }
 
     override fun onDisplayAdded(displayId: Int) = updatePresentation()
@@ -924,6 +1074,8 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     private fun syncDashboardExtras() {
         val stateAvailable = virtualController?.stateAvailable ?: (quickStateManager?.hasState == true)
+        val localControlsVisible = virtualControlsVisible() && !remoteCompanionConnected
+        val localGameHudVisible = gameHudVisible() && !remoteCompanionConnected
         localDashboard?.modsEnabled = modsEnabled
         localDashboard?.ramProbeEnabled = BuildConfig.DEBUG
         localDashboard?.enabledCheats = enabledCheats
@@ -937,8 +1089,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         localDashboard?.videoFilter = videoFilter
         localDashboard?.idleMode = idleMode
         localDashboard?.idleDelay = idleDelay
-        virtualController?.quickBarVisible = gameHudVisible()
-        virtualController?.gameHudVisible = gameHudVisible()
+        virtualController?.gamepadVisible = localControlsVisible
+        virtualController?.quickBarVisible = localGameHudVisible
+        virtualController?.gameHudVisible = localGameHudVisible
         virtualController?.battleScale = battleScale
         virtualController?.videoFilter = videoFilter
         applyCompanionLanguage()
@@ -950,6 +1103,25 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         presentation?.setGameHudVisible(gameHudVisible())
         presentation?.setQuickBar(muted, fastForward, stateAvailable, battleScale, videoFilter)
         presentation?.setIdleGuard(idleMode, idleDelay)
+        if (::remoteServer.isInitialized && ::customCheats.isInitialized) {
+            publishRemoteTelemetry(repository.snapshot.value)
+        }
+    }
+
+    private fun publishRemoteTelemetry(snapshot: GameSnapshot) {
+        remoteServer.publish(
+            snapshot.toRemoteTelemetry(
+                remotePairingCode,
+                remoteTelemetrySequence.incrementAndGet(),
+                muted,
+                fastForward,
+                virtualController?.stateAvailable ?: (quickStateManager?.hasState == true),
+                modsEnabled,
+                CheatCatalog.all + customCheats.all(),
+                enabledCheats,
+                listedVisited()
+            )
+        )
     }
 
     private fun returnToStartScreen() {
@@ -1302,6 +1474,43 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             .onFailure { toast("No se pudo reordenar: ${it.message}", "Could not reorder: ${it.message}") }
     }
 
+    /** Keeps only the save-file play counter on wall-clock time while emulation runs at 2×. */
+    private fun synchronizePlayClock(snapshot: GameSnapshot) {
+        if (!fastForward || !snapshot.gameStarted || snapshot.playTimeSeconds !in 1..0xFFFF_FFFFL) {
+            resetPlayClockAnchor()
+            return
+        }
+        val now = SystemClock.elapsedRealtime()
+        val anchor = playClockAnchorSeconds
+        if (anchor == null || snapshot.playTimeSeconds < anchor) {
+            playClockAnchorSeconds = snapshot.playTimeSeconds
+            playClockAnchorElapsedMs = now
+            lastPlayClockWriteMs = now
+            return
+        }
+        val expected = anchor + (now - playClockAnchorElapsedMs) / 1_000L
+        // A large forward discontinuity means the game loaded another slot; adopt its counter.
+        if (snapshot.playTimeSeconds > expected + 30L) {
+            playClockAnchorSeconds = snapshot.playTimeSeconds
+            playClockAnchorElapsedMs = now
+            lastPlayClockWriteMs = now
+            return
+        }
+        if (snapshot.playTimeSeconds > expected + 1L && now - lastPlayClockWriteMs >= 750L) {
+            memoryController?.let { controller ->
+                runCatching { controller.writePlayTimeSeconds(expected) }
+                    .onFailure { Log.d("DW2003PlayClock", "No se pudo compensar el reloj", it) }
+            }
+            lastPlayClockWriteMs = now
+        }
+    }
+
+    private fun resetPlayClockAnchor() {
+        playClockAnchorSeconds = null
+        playClockAnchorElapsedMs = 0L
+        lastPlayClockWriteMs = 0L
+    }
+
     private fun toggleCheat(id: String, enabled: Boolean) {
         if (!modsEnabled) return
         if (enabled) enabledCheats += id else enabledCheats -= id
@@ -1511,18 +1720,30 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         val language = resolvedLanguage()
         val labels = arrayOf(
             CompanionUiText.pick(language, "AA+ (2D+3D)", "AA+ (2D+3D)"),
-            CompanionUiText.pick(language, "2× 3D (solo batalla)", "3D 2× (battle only)")
+            CompanionUiText.pick(language, "2× 3D (solo batalla)", "3D 2× (battle only)"),
+            CompanionUiText.pick(language, "Ninguno", "None")
         )
-        val selected = if (battleScale != BattleScale.OFF) 1 else 0
+        val selected = when {
+            battleScale != BattleScale.OFF -> 1
+            videoFilter == VideoFilter.SHARP -> 2
+            else -> 0
+        }
         val dialog = AlertDialog.Builder(this)
             .setTitle(CompanionUiText.pick(language, "Imagen", "Image"))
             .setSingleChoiceItems(labels, selected) { _, which ->
-                if (which == 1) {
-                    battleScale = BattleScale.BATTLE_2X
-                    videoFilter = VideoFilter.SHARP
-                } else {
-                    battleScale = BattleScale.OFF
-                    videoFilter = VideoFilter.ANTIALIAS_PLUS
+                when (which) {
+                    1 -> {
+                        battleScale = BattleScale.BATTLE_2X
+                        videoFilter = VideoFilter.SHARP
+                    }
+                    2 -> {
+                        battleScale = BattleScale.OFF
+                        videoFilter = VideoFilter.SHARP
+                    }
+                    else -> {
+                        battleScale = BattleScale.OFF
+                        videoFilter = VideoFilter.ANTIALIAS_PLUS
+                    }
                 }
                 lastEnhancementEnabled = null
                 lastAppliedShader = null
@@ -1546,6 +1767,39 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             window.setDimAmount(0f)
         }
+    }
+
+    private fun showPerformanceMenu() {
+        val options = PerformanceMode.entries
+        val language = resolvedLanguage()
+        AlertDialog.Builder(this)
+            .setTitle(CompanionUiText.pick(language, "Rendimiento", "Performance"))
+            .setSingleChoiceItems(
+                options.map { CompanionUiText.performanceMode(language, it) }.toTypedArray(),
+                options.indexOf(performanceMode)
+            ) { dialog, index ->
+                performanceMode = options[index]
+                getPreferences(MODE_PRIVATE).edit()
+                    .putString(PREF_PERFORMANCE, performanceMode.name)
+                    .apply()
+                retroView?.updateVariables(*enhancementVariables(battleScale.enhancementEnabled(repository.snapshot.value.mode)))
+                dialog.dismiss()
+                if (settingsDialog != null) showAppSettings()
+                toast(
+                    if (useLowEndPerformance()) {
+                        "Rendimiento automático: más fluido en este móvil. Reinicia el BIN para aplicar dithering y frameskip."
+                    } else {
+                        "Rendimiento en calidad. Reinicia el BIN si cambiaste desde automático."
+                    },
+                    if (useLowEndPerformance()) {
+                        "Automatic performance: smoother on this phone. Reboot the BIN to apply dithering and frameskip."
+                    } else {
+                        "Quality performance. Reboot the BIN if you switched from automatic."
+                    }
+                )
+            }
+            .setNegativeButton(CompanionUiText.pick(language, "Cancelar", "Cancel"), null)
+            .show()
     }
 
     private fun showIdleModeMenu() {
@@ -1593,7 +1847,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun toggleVirtualControls() {
         val next = !virtualControlsVisible()
         getPreferences(MODE_PRIVATE).edit().putBoolean(PREF_VIRTUAL_GAMEPAD, next).apply()
-        virtualController?.gamepadVisible = next
+        virtualController?.gamepadVisible = next && !remoteCompanionConnected
         localDashboard?.controlsVisible = next
         presentation?.setControlsVisible(next)
         toast(
@@ -1603,11 +1857,14 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         )
     }
 
+    private fun useLowEndPerformance(): Boolean =
+        performanceMode == PerformanceMode.AUTO && DevicePerformance.isLowEnd(this)
+
     private fun enhancementVariables(enabled: Boolean): Array<Variable> = arrayOf(
         Variable("pcsx_rearmed_neon_enhancement_enable", if (enabled) "enabled" else "disabled"),
         Variable("pcsx_rearmed_neon_enhancement_tex_adj_v2", if (enabled) "enabled" else "disabled"),
         Variable("pcsx_rearmed_gpu_thread_rendering", if (enabled) "enabled" else "disabled"),
-        Variable("pcsx_rearmed_frameskip_type", "disabled")
+        Variable("pcsx_rearmed_frameskip_type", if (useLowEndPerformance()) "auto" else "disabled")
     )
 
     companion object {
@@ -1629,8 +1886,10 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         private const val PREF_GAME_HUD = "game_hud"
         private const val PREF_BATTLE_SCALE = "battle_scale"
         private const val PREF_VIDEO_FILTER = "video_filter"
+        private const val PREF_PERFORMANCE = "performance_mode"
         private const val PREF_IDLE_MODE = "companion_idle_mode"
         private const val PREF_IDLE_DELAY = "companion_idle_delay"
+        private const val PREF_REMOTE_PAIRING_CODE = "remote_pairing_code"
         // RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_ANALOG, 1) — DualShock
         private const val RETRO_DEVICE_PSE_DUALSHOCK = (2 shl 8) or 5
         private val GAME_KEYS = setOf(

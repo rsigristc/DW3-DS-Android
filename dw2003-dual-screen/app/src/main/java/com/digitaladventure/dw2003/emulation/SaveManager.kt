@@ -54,7 +54,11 @@ class SaveManager(context: Context) {
     @Synchronized
     fun persistSnapshot(data: ByteArray) {
         require(AppFileRules.hasMemoryCardSignature(data)) { "Memory Card de estado inválida" }
-        if (memoryCard.isFile && !memoryCard.readBytes().contentEquals(data)) {
+        if (memoryCard.isFile) {
+            val current = memoryCard.readBytes()
+            // Loading a paired quick state commonly restores the exact card already on disk.
+            // Avoid a redundant fsync in that hot path.
+            if (current.contentEquals(data)) return
             memoryCard.copyTo(backupCard, overwrite = true)
         }
         val temporary = File(saveDirectory, "dw2003-memory-card.tmp")

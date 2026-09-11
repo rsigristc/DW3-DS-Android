@@ -20,4 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "DW2003DualScreen"
-include ':app', ':libretrodroid'
+include ':app', ':libretrodroid', ':remote-protocol', ':remote-controller'

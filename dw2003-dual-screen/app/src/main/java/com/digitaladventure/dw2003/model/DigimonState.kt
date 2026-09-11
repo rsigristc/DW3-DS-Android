@@ -7,6 +7,7 @@ import com.digitaladventure.dw2003.data.EquipmentInfo
 import com.digitaladventure.dw2003.data.TechniqueCatalog
 import com.digitaladventure.dw2003.data.DigievolutionCatalog
 import com.digitaladventure.dw2003.data.TechniqueInfo
+import com.digitaladventure.dw2003.data.StatusResistanceCatalog
 
 data class DigievolutionForm(
     val id: Int,
@@ -68,6 +69,8 @@ data class DigimonState(
         get() = List(7) { index ->
             (tolerances.getOrNull(index) ?: 0) + equipmentBonuses.resistance(index)
         }
+    val statusResistances: List<Int>
+        get() = StatusResistanceCatalog.forPartner(profileId, activeDigievolutionId)
 
     private fun ratio(value: Int, maximum: Int): Float =
         if (maximum <= 0) 0f else (value.toFloat() / maximum).coerceIn(0f, 1f)

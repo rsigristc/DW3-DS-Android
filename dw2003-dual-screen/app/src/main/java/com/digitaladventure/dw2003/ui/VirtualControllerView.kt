@@ -38,7 +38,12 @@ class VirtualControllerView(
     private var dpadRadius = 0f
 
     var gamepadVisible: Boolean = true
-        set(value) { field = value; releaseAll(); invalidate() }
+        set(value) {
+            if (field == value) return
+            field = value
+            if (!value) releaseAll()
+            invalidate()
+        }
     var quickBarVisible: Boolean = false
         set(value) { field = value; invalidate() }
     var language: CompanionLanguage = CompanionLanguage.SPANISH

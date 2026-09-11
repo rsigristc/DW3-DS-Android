@@ -47,6 +47,23 @@ class BattleSetupReaderTest {
     }
 
     @Test
+    fun treatsWrappedOrZeroArenaHpAsDefeated() {
+        val setup = ByteArray(BattleSetupReader.SETUP_LENGTH)
+        put16(setup, 0x18, 0x20)
+        put16(setup, 0x1C, 6)
+        put16(setup, 0x1E, 288)
+        put16(setup, 0x20, 40)
+        put16(setup, 0x22, 4)
+        val arena = ByteArray(BattleSetupReader.ARENA_LENGTH)
+        put16(arena, 3 * BattleSetupReader.ARENA_STRIDE + 0x18, 0)
+        put16(arena, 0x70, 110)
+
+        val enemy = BattleSetupReader.parse(setup, arena, spanish = false).single()
+        assertEquals(0, enemy.currentHp)
+        assertTrue(enemy.liveHp)
+    }
+
+    @Test
     fun scansArenaWhenSetupKeepsEncounterPointers() {
         val setup = ByteArray(BattleSetupReader.SETUP_LENGTH)
         put32(setup, 0x18, 0x80092E08.toInt())

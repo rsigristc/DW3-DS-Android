@@ -62,6 +62,15 @@ class DigiviceDashboardView(
     private var pageScrollMax = 0f
     private var pageScrollKey = ""
     private var pageViewport: RectF? = null
+    private var battleTeamScroll = 0f
+    private var battleTeamScrollMax = 0f
+    private var battleEnemyScroll = 0f
+    private var battleEnemyScrollMax = 0f
+    private var battleTeamViewport: RectF? = null
+    private var battleEnemyViewport: RectF? = null
+    private var activeBattleScroll = 0
+    private var localHitViewport: RectF? = null
+    private var localHitOffset = 0f
     private var gestureDragging = false
     private var gestureStartY = 0f
     private var lastTouchY = 0f
@@ -105,7 +114,6 @@ class DigiviceDashboardView(
         }
     }
     private var lastActivityAt = SystemClock.elapsedRealtime()
-    private var lastIdleKey = ""
     private var dimmed = false
     private var shiftUntil = 0L
     var ramProbeEnabled: Boolean = false
@@ -204,11 +212,6 @@ class DigiviceDashboardView(
         selectedPartyIndex = selectedProfile
             ?.let { profile -> value.party.indexOfFirst { it.profileId == profile }.takeIf { it >= 0 } }
             ?: selectedPartyIndex.coerceIn(0, max(0, value.party.lastIndex))
-        val key = value.idleKey()
-        if (key != lastIdleKey) {
-            lastIdleKey = key
-            noteCompanionActivity()
-        }
         invalidate()
     }
 
@@ -228,12 +231,14 @@ class DigiviceDashboardView(
 
     private fun noteCompanionActivity() {
         lastActivityAt = SystemClock.elapsedRealtime()
+        val wasAsleep = dimmed || shiftUntil != 0L
         dimmed = false
         shiftUntil = 0L
         if (isAttachedToWindow && idleMode != CompanionIdleMode.OFF) {
             idleHandler.removeCallbacks(idleTicker)
             idleHandler.post(idleTicker)
         }
+        if (wasAsleep) invalidate()
     }
 
     private fun refreshIdleGuard() {
@@ -248,7 +253,7 @@ class DigiviceDashboardView(
         val now = SystemClock.elapsedRealtime()
         val idle = now - lastActivityAt >= idleDelay.millis
         when (idleMode) {
-            CompanionIdleMode.DIM -> {
+            CompanionIdleMode.DIM, CompanionIdleMode.SLEEP -> {
                 if (dimmed != idle) {
                     dimmed = idle
                     invalidate()
@@ -275,10 +280,9 @@ class DigiviceDashboardView(
         super.onDraw(canvas)
         hitTargets.clear()
         pageViewport = null
-        if (!isSideColumn()) {
-            pageScroll = 0f
-            pageScrollMax = 0f
-        }
+        battleTeamViewport = null
+        battleEnemyViewport = null
+        localHitViewport = null
         val shift = pixelShiftOffset()
         canvas.save()
         if (shift != 0f) canvas.translate(shift, -shift * 0.35f)
@@ -309,8 +313,11 @@ class DigiviceDashboardView(
             drawPixelRain(canvas)
         }
         canvas.restore()
-        if (idleMode == CompanionIdleMode.DIM && dimmed) {
+        if (dimmed && idleMode == CompanionIdleMode.DIM) {
             paint.color = Color.argb(214, 0, 0, 0)
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        } else if (dimmed && idleMode == CompanionIdleMode.SLEEP) {
+            paint.color = Color.BLACK
             canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         }
     }
@@ -621,39 +628,134 @@ class DigiviceDashboardView(
     }
 
     private fun drawBattle(canvas: Canvas, bounds: RectF) {
-        if (!isSideColumn()) {
-            drawStackedBattle(canvas, bounds)
-            return
-        }
-        withScrollablePage(canvas, bounds) { markBottom ->
-            var y = drawBattlePaneTabs(canvas, bounds, bounds.top)
-            if (battlePane == PANE_ENEMIES) {
-                y = drawEnemySection(canvas, bounds, y)
-            } else if (snapshot.party.isEmpty()) {
-                drawWrapped(
-                    canvas,
-                    tr(
-                        "No hay equipo en RAM todavía. Carga una partida; en USA el panel usa el bloque de memoria NTSC.",
-                        "No party in RAM yet. Load a save; on USA the panel reads the NTSC save block."
-                    ),
-                    bounds.left + dp(12f),
-                    y + dp(8f),
-                    bounds.width() - dp(24f),
-                    dp(11f),
-                    MUTED,
-                    4
+        pageScrollMax = 0f
+        val gap = dp(7f)
+        val middle = bounds.centerX()
+        val teamBounds = RectF(bounds.left, bounds.top, middle - gap / 2f, bounds.bottom)
+        val enemyBounds = RectF(middle + gap / 2f, bounds.top, bounds.right, bounds.bottom)
+        val teamHeader = RectF(teamBounds.left, teamBounds.top, teamBounds.right, teamBounds.top + dp(30f))
+        val enemyHeader = RectF(enemyBounds.left, enemyBounds.top, enemyBounds.right, enemyBounds.top + dp(30f))
+        drawPanel(canvas, teamHeader, tr("EQUIPO", "PARTY"))
+        drawPanel(canvas, enemyHeader, tr("ENEMIGOS EN BATALLA", "ENEMIES IN BATTLE"))
+        val teamViewport = RectF(teamBounds.left, teamHeader.bottom + gap, teamBounds.right, teamBounds.bottom)
+        val enemyViewport = RectF(enemyBounds.left, enemyHeader.bottom + gap, enemyBounds.right, enemyBounds.bottom)
+        battleTeamViewport = teamViewport
+        battleEnemyViewport = enemyViewport
+
+        var teamY = teamViewport.top
+        canvas.save()
+        canvas.clipRect(teamViewport)
+        canvas.translate(0f, -battleTeamScroll)
+        localHitViewport = teamViewport
+        localHitOffset = battleTeamScroll
+        if (snapshot.party.isEmpty()) {
+            drawWrapped(
+                canvas,
+                tr(
+                    "No hay equipo en RAM todavía. Carga una partida; en USA el panel usa el bloque de memoria NTSC.",
+                    "No party in RAM yet. Load a save; on USA the panel reads the NTSC save block."
+                ),
+                teamViewport.left + dp(9f),
+                teamY + dp(7f),
+                teamViewport.width() - dp(18f),
+                dp(9f),
+                MUTED,
+                7
+            )
+            teamY += dp(92f)
+        } else {
+            snapshot.party.take(3).forEachIndexed { index, digimon ->
+                val card = RectF(
+                    teamViewport.left + dp(4f),
+                    teamY,
+                    teamViewport.right - dp(4f),
+                    teamY + battleCardHeight(digimon)
                 )
-                markBottom(y + dp(64f))
-                return@withScrollablePage
-            } else {
-                snapshot.party.take(3).forEachIndexed { index, digimon ->
-                    val card = RectF(bounds.left + dp(9f), y, bounds.right - dp(9f), y + battleCardHeight(digimon))
-                    drawDigimonCard(canvas, card, digimon, compact = true, partyIndex = index, expanded = true)
-                    y = card.bottom + dp(7f)
-                }
+                drawDigimonCard(canvas, card, digimon, compact = true, partyIndex = index, expanded = true)
+                teamY = card.bottom + gap
             }
-            markBottom(drawBattleNote(canvas, bounds.centerX(), y + dp(10f)) + dp(12f))
         }
+        localHitViewport = null
+        canvas.restore()
+        battleTeamScrollMax = max(0f, teamY - teamViewport.bottom + dp(3f))
+        battleTeamScroll = battleTeamScroll.coerceIn(0f, battleTeamScrollMax)
+
+        var enemyY = enemyViewport.top
+        canvas.save()
+        canvas.clipRect(enemyViewport)
+        canvas.translate(0f, -battleEnemyScroll)
+        if (snapshot.enemies.isEmpty()) {
+            drawWrapped(
+                canvas,
+                emptyEnemiesMessage(),
+                enemyViewport.left + dp(9f),
+                enemyY + dp(7f),
+                enemyViewport.width() - dp(18f),
+                dp(9f),
+                MUTED,
+                7
+            )
+            enemyY += dp(92f)
+        } else {
+            snapshot.enemies.forEach { enemy ->
+                val card = RectF(enemyViewport.left + dp(4f), enemyY, enemyViewport.right - dp(4f), enemyY + dp(266f))
+                drawBattleEnemySummary(canvas, card, enemy)
+                enemyY = card.bottom + gap
+            }
+        }
+        canvas.restore()
+        battleEnemyScrollMax = max(0f, enemyY - enemyViewport.bottom + dp(3f))
+        battleEnemyScroll = battleEnemyScroll.coerceIn(0f, battleEnemyScrollMax)
+        if (battleTeamScrollMax > 0f) drawScrollThumb(canvas, teamViewport, battleTeamScroll, battleTeamScrollMax)
+        if (battleEnemyScrollMax > 0f) drawScrollThumb(canvas, enemyViewport, battleEnemyScroll, battleEnemyScrollMax)
+    }
+
+    private fun drawBattleTeamSummary(canvas: Canvas, bounds: RectF, digimon: DigimonState, partyIndex: Int) {
+        paint.color = PANEL_INNER
+        canvas.drawRoundRect(bounds, dp(7f), dp(7f), paint)
+        drawText(canvas, ellipsize(digimon.name.uppercase(), bounds.width() * .57f, dp(10f), true), bounds.left + dp(8f), bounds.top + dp(17f), dp(10f), WHITE, true)
+        drawText(canvas, "NV ${digimon.level}", bounds.right - dp(8f), bounds.top + dp(17f), dp(8f), CYAN, true, Paint.Align.RIGHT)
+        val left = bounds.left + dp(8f)
+        val barX = bounds.left + bounds.width() * .48f
+        val barWidth = bounds.right - dp(8f) - barX
+        drawMetricLine(canvas, "HP ${digimon.currentHp}/${digimon.maxHp}", left, bounds.top + dp(36f), barX, barWidth, digimon.hpFraction, GREEN)
+        drawMetricLine(canvas, "MP ${digimon.currentMp}/${digimon.maxMp}", left, bounds.top + dp(53f), barX, barWidth, digimon.mpFraction, BLUE)
+        val next = digimon.nextLevelExperience
+        val exp = if (next == null) "EXP ${digimon.experience} · ${tr("MÁX.", "MAX")}" else "EXP ${digimon.experience}/$next"
+        drawMetricLine(canvas, exp, left, bounds.top + dp(70f), barX, barWidth, digimon.experienceFraction, AMBER)
+        hitContent(bounds) {
+            selectedPartyIndex = partyIndex
+            selectedTab = GameMode.MANAGEMENT.name
+            selectedMode = GameMode.MANAGEMENT
+            pageScroll = 0f
+            invalidate()
+        }
+    }
+
+    private fun drawBattleEnemySummary(canvas: Canvas, bounds: RectF, enemy: BattleEnemy) {
+        paint.color = Color.rgb(18, 8, 14)
+        canvas.drawRoundRect(bounds, dp(7f), dp(7f), paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = dp(1f)
+        paint.color = Color.rgb(126, 48, 68)
+        canvas.drawRoundRect(bounds, dp(7f), dp(7f), paint)
+        paint.style = Paint.Style.FILL
+        drawText(canvas, ellipsize(displayCase(enemy.name), bounds.width() * .62f, dp(10f), true), bounds.left + dp(8f), bounds.top + dp(17f), dp(10f), WHITE, true)
+        drawText(canvas, "NV ${enemy.level}", bounds.right - dp(8f), bounds.top + dp(17f), dp(8f), MUTED, true, Paint.Align.RIGHT)
+        val hpLabel = if (enemy.liveHp) "HP ${enemy.currentHp}/${enemy.maxHp}" else tr("HP MÁX. ${enemy.maxHp}", "MAX HP ${enemy.maxHp}")
+        drawText(canvas, hpLabel, bounds.left + dp(8f), bounds.top + dp(34f), dp(8f), CYAN, true)
+        drawBar(canvas, bounds.left + dp(8f), bounds.top + dp(40f), bounds.width() - dp(16f), dp(6f), enemy.hpFraction, RED)
+        var sectionY = bounds.top + dp(59f)
+        sectionY = drawBattleValueGroup(
+            canvas, bounds, sectionY, tr("PARÁMETROS", "PARAMETERS"),
+            listOf(tr("FUE", "STR"), tr("DEF", "DEF"), tr("ESP", "SPR"), tr("SAB", "WIS"), tr("VEL", "SPD")),
+            listOf(enemy.strength, enemy.defense, enemy.spirit, enemy.wisdom, enemy.speed), 3, false
+        )
+        sectionY = drawBattleValueGroup(canvas, bounds, sectionY, tr("ELEMENTALES", "ELEMENTAL"), elementalShortNames(), enemy.resistances, 4, true)
+        sectionY = drawBattleValueGroup(canvas, bounds, sectionY, tr("ESTADOS", "STATUS"), statusShortNames(), enemy.statusResistances, 3, true)
+        val attacks = enemy.attacks.joinToString(" · ").ifBlank { tr("Sin técnicas catalogadas", "No catalogued techniques") }
+        drawText(canvas, ellipsize(attacks, bounds.width() - dp(16f), dp(7.5f), false), bounds.left + dp(8f), sectionY + dp(5f), dp(7.5f), WHITE)
+        drawText(canvas, ellipsize(tr("BOTÍN: ${enemy.loot}", "LOOT: ${enemy.loot}"), bounds.width() - dp(16f), dp(7.5f), false), bounds.left + dp(8f), sectionY + dp(21f), dp(7.5f), MUTED)
     }
 
     private fun drawStackedBattle(canvas: Canvas, bounds: RectF) {
@@ -866,8 +968,8 @@ class DigiviceDashboardView(
             val x = bounds.left + dp(10f) + column * cell
             val y = bounds.top + dp(84f) + row * dp(12f)
             val color = when {
-                spread && value == lowest -> GREEN
-                spread && value == highest -> RED
+                spread && value == highest -> GREEN
+                spread && value == lowest -> RED
                 else -> MUTED
             }
             drawText(canvas, "${names[index]} $value", x, y, dp(7.5f), color, true)
@@ -913,7 +1015,9 @@ class DigiviceDashboardView(
             val equipment = RectF(skills.right + dp(7f), details.top, details.right, details.bottom)
             drawIdentity(canvas, identity, selected, vertical = true)
             drawParametersAndResists(canvas, stats, selected)
-            drawActiveSkills(canvas, skills, selected)
+            val skillSplit = skills.top + (skills.height() - dp(7f)) / 2f
+            drawStatusResists(canvas, RectF(skills.left, skills.top, skills.right, skillSplit), selected)
+            drawActiveSkills(canvas, RectF(skills.left, skillSplit + dp(7f), skills.right, skills.bottom), selected)
             drawEquipment(canvas, equipment, selected)
             return
         }
@@ -928,6 +1032,9 @@ class DigiviceDashboardView(
             val resists = RectF(bounds.left, y, bounds.right, y + resistsPanelHeight())
             drawResists(canvas, resists, selected)
             y = resists.bottom + dp(7f)
+            val status = RectF(bounds.left, y, bounds.right, y + statusResistsPanelHeight())
+            drawStatusResists(canvas, status, selected)
+            y = status.bottom + dp(7f)
             val skills = RectF(bounds.left, y, bounds.right, y + skillsPanelHeight(selected))
             drawActiveSkills(canvas, skills, selected)
             y = skills.bottom + dp(7f)
@@ -971,6 +1078,47 @@ class DigiviceDashboardView(
         paint.color = CYAN_DARK
         canvas.drawRoundRect(badge, dp(7f), dp(7f), paint)
         digimonSprites[digimon.profileId]?.let { drawPixelBitmap(canvas, it, RectF(badge.left + dp(4f), badge.top + dp(4f), badge.right - dp(4f), badge.bottom - dp(4f)), dp(34f)) }
+        if (compact) {
+            val detailX = badge.right + dp(8f)
+            val hasReorder = partyIndex >= 0 && snapshot.party.size > 1
+            val titleRight = if (hasReorder) bounds.right - dp(43f) else bounds.right - dp(8f)
+            drawText(canvas, ellipsize(digimon.name.uppercase(), titleRight - detailX, dp(11f), true), detailX, bounds.top + dp(17f), dp(11f), WHITE, true)
+            drawText(canvas, "NV ${digimon.level} · TP ${digimon.trainingPoints}", detailX, bounds.top + dp(31f), dp(7.5f), MUTED, true)
+            val metricX = bounds.left + dp(9f)
+            val metricW = bounds.width() - dp(18f)
+            drawLabeledBar(canvas, "HP ${digimon.currentHp}/${digimon.maxHp}", metricX, bounds.top + dp(58f), metricW, digimon.hpFraction, GREEN)
+            drawLabeledBar(canvas, "MP ${digimon.currentMp}/${digimon.maxMp}", metricX, bounds.top + dp(82f), metricW, digimon.mpFraction, BLUE)
+            val next = digimon.nextLevelExperience
+            val exp = if (next == null) "EXP ${digimon.experience} · ${tr("MÁX.", "MAX")}" else "EXP ${digimon.experience}/$next"
+            drawLabeledBar(canvas, exp, metricX, bounds.top + dp(106f), metricW, digimon.experienceFraction, AMBER)
+            if (hasReorder) {
+                val up = RectF(bounds.right - dp(36f), bounds.top + dp(7f), bounds.right - dp(8f), bounds.top + dp(31f))
+                val down = RectF(bounds.right - dp(36f), bounds.top + dp(33f), bounds.right - dp(8f), bounds.top + dp(57f))
+                val enabled = snapshot.canReorderParty
+                paint.color = if (enabled) CYAN_DARK else Color.rgb(8, 28, 36)
+                canvas.drawRoundRect(up, dp(4f), dp(4f), paint)
+                canvas.drawRoundRect(down, dp(4f), dp(4f), paint)
+                drawText(canvas, "▲", up.centerX(), up.centerY() + dp(4f), dp(9f), if (enabled && partyIndex > 0) WHITE else MUTED, true, Paint.Align.CENTER)
+                drawText(canvas, "▼", down.centerX(), down.centerY() + dp(4f), dp(9f), if (enabled && partyIndex < snapshot.party.lastIndex) WHITE else MUTED, true, Paint.Align.CENTER)
+                if (enabled && partyIndex > 0) hitContent(up) { actions.onPartyMove(partyIndex, partyIndex - 1) }
+                if (enabled && partyIndex < snapshot.party.lastIndex) hitContent(down) { actions.onPartyMove(partyIndex, partyIndex + 1) }
+            }
+            var sectionY = bounds.top + dp(135f)
+            sectionY = drawBattleValueGroup(
+                canvas, bounds, sectionY, tr("PARÁMETROS", "PARAMETERS"),
+                listOf(tr("FUE", "STR"), tr("DEF", "DEF"), tr("ESP", "SPR"), tr("SAB", "WIS"), tr("VEL", "SPD"), tr("CAR", "CHA")),
+                listOf(digimon.totalStrength, digimon.totalDefense, digimon.totalSpirit, digimon.totalWisdom, digimon.totalSpeed, digimon.totalCharisma),
+                3, false, parameterBonuses(digimon)
+            )
+            sectionY = drawBattleValueGroup(
+                canvas, bounds, sectionY, tr("ELEMENTALES", "ELEMENTAL"), elementalShortNames(),
+                digimon.totalResistances, 4, true,
+                List(7) { digimon.equipmentBonuses.resistance(it) }
+            )
+            sectionY = drawBattleValueGroup(canvas, bounds, sectionY, tr("ESTADOS", "STATUS"), statusShortNames(), digimon.statusResistances, 3, true)
+            drawFormList(canvas, digimon, bounds.left + dp(9f), sectionY + dp(2f), bounds.right - dp(9f), bounds.bottom - dp(6f))
+            return
+        }
         drawText(canvas, digimon.name.uppercase(), badge.right + dp(8f), bounds.top + dp(24f), if (compact) dp(13f) else dp(12f), WHITE, true)
         drawText(canvas, "LV ${digimon.level} · TP ${digimon.trainingPoints}", badge.right + dp(8f), bounds.top + dp(43f), dp(9f), MUTED, true)
         if (partyIndex >= 0 && snapshot.party.size > 1) {
@@ -1075,9 +1223,60 @@ class DigiviceDashboardView(
 
     private fun drawParametersAndResists(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
         val gap = dp(7f)
-        val split = bounds.top + (bounds.height() - gap) / 2f
-        drawParameters(canvas, RectF(bounds.left, bounds.top, bounds.right, split), digimon)
-        drawResists(canvas, RectF(bounds.left, split + gap, bounds.right, bounds.bottom), digimon)
+        val paramsBottom = bounds.top + (bounds.height() - gap) * .48f
+        drawParameters(canvas, RectF(bounds.left, bounds.top, bounds.right, paramsBottom), digimon)
+        drawResists(canvas, RectF(bounds.left, paramsBottom + gap, bounds.right, bounds.bottom), digimon)
+    }
+
+    private fun elementalShortNames(): List<String> = listOf(
+        tr("FUE", "FIR"), tr("AGU", "WAT"), tr("HIE", "ICE"), tr("VIE", "WND"),
+        tr("RAY", "THD"), tr("MAQ", "MCH"), tr("OSC", "DRK")
+    )
+
+    private fun statusShortNames(): List<String> = listOf(
+        tr("VEN", "PSN"), tr("PAR", "PAR"), tr("CON", "CNF"), tr("SUE", "SLP"), "K.O."
+    )
+
+    private fun drawBattleValueGroup(
+        canvas: Canvas,
+        bounds: RectF,
+        top: Float,
+        title: String,
+        names: List<String>,
+        values: List<Int>,
+        columns: Int,
+        highlightExtremes: Boolean,
+        bonuses: List<Int> = emptyList()
+    ): Float {
+        if (values.isEmpty()) return top
+        drawText(canvas, title, bounds.left + dp(9f), top, dp(6.5f), CYAN, true)
+        val count = min(names.size, values.size)
+        val minimum = values.take(count).minOrNull()
+        val maximum = values.take(count).maxOrNull()
+        val spread = highlightExtremes && minimum != maximum
+        val inset = dp(9f)
+        val cellWidth = (bounds.width() - inset * 2) / columns
+        val rowHeight = dp(16f)
+        repeat(count) { index ->
+            val value = values[index]
+            val bonus = bonuses.getOrElse(index) { 0 }
+            val color = when {
+                bonus != 0 -> bonusColor(bonus)
+                spread && value == maximum -> GREEN
+                spread && value == minimum -> RED
+                else -> WHITE
+            }
+            val cellLeft = bounds.left + inset + (index % columns) * cellWidth
+            val y = top + dp(17f) + (index / columns) * rowHeight
+            drawNameValue(canvas, names[index], value.toString(), cellLeft, y, dp(7f), MUTED, color)
+        }
+        val rows = (count + columns - 1) / columns
+        return top + dp(20f) + rows * rowHeight
+    }
+
+    private fun parameterBonuses(digimon: DigimonState): List<Int> {
+        val bonuses = digimon.equipmentBonuses
+        return listOf(bonuses.strength, bonuses.defense, bonuses.spirit, bonuses.wisdom, bonuses.speed, bonuses.charisma)
     }
 
     private fun drawParameters(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
@@ -1109,7 +1308,22 @@ class DigiviceDashboardView(
         val values = names.mapIndexed { index, name ->
             Triple(name, totals.getOrElse(index) { 0 }, digimon.equipmentBonuses.resistance(index))
         }
-        drawBonusGrid(canvas, bounds, values, columns = 2, valueSize = dp(13f), labelSize = dp(7f))
+        drawBonusGrid(canvas, bounds, values, columns = 2, valueSize = dp(13f), labelSize = dp(7f), highlightExtremes = true)
+    }
+
+    private fun drawStatusResists(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
+        drawPanel(canvas, bounds, tr("RESISTENCIAS DE ESTADO", "STATUS RESISTS"))
+        val names = listOf(
+            tr("VENENO", "POISON"),
+            tr("PARÁLISIS", "PARALYSIS"),
+            tr("CONFUSIÓN", "CONFUSION"),
+            tr("SUEÑO", "SLEEP"),
+            "K.O."
+        )
+        val values = names.mapIndexed { index, name ->
+            Triple(name, digimon.statusResistances.getOrElse(index) { 0 }, 0)
+        }
+        drawBonusGrid(canvas, bounds, values, columns = 2, valueSize = dp(13f), labelSize = dp(7f), highlightExtremes = true)
     }
 
     private fun drawBonusGrid(
@@ -1118,18 +1332,32 @@ class DigiviceDashboardView(
         values: List<Triple<String, Int, Int>>,
         columns: Int,
         valueSize: Float,
-        labelSize: Float = dp(7.5f)
+        labelSize: Float = dp(7.5f),
+        highlightExtremes: Boolean = false
     ) {
         val rows = (values.size + columns - 1) / columns
         val cellW = (bounds.width() - dp(20f)) / columns
-        val cellH = (bounds.height() - dp(32f)) / rows
+        val headerHeight = dp(30f)
+        val cellH = max(dp(16f), (bounds.height() - headerHeight - dp(8f)) / rows)
+        val labelPx = min(labelSize, max(dp(6f), cellH * .42f))
+        val valuePx = min(valueSize, max(dp(8f), cellH * .55f))
+        val minimum = values.minOfOrNull { it.second }
+        val maximum = values.maxOfOrNull { it.second }
+        val hasSpread = highlightExtremes && minimum != maximum
+        canvas.save()
+        canvas.clipRect(bounds.left, bounds.top + headerHeight - dp(2f), bounds.right, bounds.bottom - dp(4f))
         values.forEachIndexed { index, value ->
-            val x = bounds.left + dp(10f) + (index % columns) * cellW
-            val y = bounds.top + dp(36f) + (index / columns) * cellH
-            val color = bonusColor(value.third)
-            drawText(canvas, value.first, x, y, labelSize, if (value.third == 0) MUTED else color, true)
-            drawText(canvas, value.second.toString(), x, y + dp(16f), valueSize, color, true)
+            val cellLeft = bounds.left + dp(10f) + (index % columns) * cellW
+            val y = bounds.top + headerHeight + (index / columns) * cellH + cellH * .62f
+            val color = when {
+                hasSpread && value.second == maximum -> GREEN
+                hasSpread && value.second == minimum -> RED
+                else -> bonusColor(value.third)
+            }
+            val labelColor = if (hasSpread && (value.second == maximum || value.second == minimum)) color else if (value.third == 0) MUTED else color
+            drawNameValue(canvas, value.first, value.second.toString(), cellLeft, y, labelPx, labelColor, color, valuePx)
         }
+        canvas.restore()
     }
 
     private fun drawActiveSkills(canvas: Canvas, bounds: RectF, digimon: DigimonState) {
@@ -1221,6 +1449,21 @@ class DigiviceDashboardView(
         drawBar(canvas, barX, baseline - dp(6f), barWidth, dp(5f), fraction, color)
     }
 
+    private fun drawNameValue(
+        canvas: Canvas,
+        name: String,
+        value: String,
+        x: Float,
+        y: Float,
+        nameSize: Float,
+        nameColor: Int,
+        valueColor: Int,
+        valueSize: Float = nameSize
+    ) {
+        drawText(canvas, name, x, y, nameSize, nameColor, true)
+        drawText(canvas, value, x + measureText(name, nameSize, true) + dp(5f), y, valueSize, valueColor, true)
+    }
+
     private fun drawLabeledBar(canvas: Canvas, label: String, x: Float, y: Float, width: Float, fraction: Float, color: Int) {
         drawText(canvas, label, x, y, dp(8f), WHITE, true)
         drawBar(canvas, x, y + dp(5f), width, dp(7f), fraction, color)
@@ -1255,6 +1498,7 @@ class DigiviceDashboardView(
                     .putString("selected_tab", tab.first)
                     .putString("selected_mode", selectedMode.name)
                     .apply()
+                noteCompanionActivity()
                 invalidate()
             }
         }
@@ -1615,7 +1859,13 @@ class DigiviceDashboardView(
     }
 
     private fun hitContent(bounds: RectF, action: () -> Unit) {
-        if (pageViewport != null) {
+        val localViewport = localHitViewport
+        if (localViewport != null) {
+            val screen = RectF(bounds.left, bounds.top - localHitOffset, bounds.right, bounds.bottom - localHitOffset)
+            if (screen.bottom > localViewport.top && screen.top < localViewport.bottom) {
+                hitTargets += RectF(screen.left, max(screen.top, localViewport.top), screen.right, min(screen.bottom, localViewport.bottom)) to action
+            }
+        } else if (pageViewport != null) {
             hitInPage(bounds, action)
         } else {
             hitTargets += bounds to action
@@ -1651,7 +1901,7 @@ class DigiviceDashboardView(
         dp(16f) + max(1, digimon.displayedForms.size) * dp(16f) + dp(8f)
 
     private fun battleCardHeight(digimon: DigimonState): Float =
-        dp(168f) + formListHeight(digimon)
+        dp(298f) + formListHeight(digimon)
 
     private fun identityPanelHeight(digimon: DigimonState): Float =
         dp(176f) + formListHeight(digimon)
@@ -1660,6 +1910,8 @@ class DigiviceDashboardView(
 
     private fun resistsPanelHeight(): Float = dp(36f) + 4 * dp(38f) + dp(12f)
 
+    private fun statusResistsPanelHeight(): Float = dp(36f) + 3 * dp(38f) + dp(12f)
+
     private fun skillsPanelHeight(digimon: DigimonState): Float {
         val rows = max(1, digimon.activeSkills.size)
         return dp(52f) + rows * dp(40f) + dp(12f)
@@ -1667,11 +1919,11 @@ class DigiviceDashboardView(
 
     private fun equipmentPanelHeight(): Float = dp(30f) + 6 * dp(40f) + dp(10f)
 
-    private fun drawScrollThumb(canvas: Canvas, viewport: RectF) {
+    private fun drawScrollThumb(canvas: Canvas, viewport: RectF, offset: Float = pageScroll, maximum: Float = pageScrollMax) {
         val trackHeight = viewport.height()
-        val thumbHeight = max(dp(24f), trackHeight * trackHeight / (trackHeight + pageScrollMax))
+        val thumbHeight = max(dp(24f), trackHeight * trackHeight / (trackHeight + maximum))
         val travel = trackHeight - thumbHeight
-        val thumbTop = viewport.top + if (pageScrollMax > 0f) travel * (pageScroll / pageScrollMax) else 0f
+        val thumbTop = viewport.top + if (maximum > 0f) travel * (offset / maximum) else 0f
         paint.color = Color.argb(170, 31, 213, 242)
         canvas.drawRoundRect(
             RectF(viewport.right - dp(4f), thumbTop, viewport.right - dp(1f), thumbTop + thumbHeight),
@@ -1806,6 +2058,11 @@ class DigiviceDashboardView(
                 gestureDragging = false
                 gestureStartY = event.y
                 lastTouchY = event.y
+                activeBattleScroll = when {
+                    selectedTab == GameMode.BATTLE.name && battleTeamViewport?.contains(event.x, event.y) == true -> 1
+                    selectedTab == GameMode.BATTLE.name && battleEnemyViewport?.contains(event.x, event.y) == true -> 2
+                    else -> 0
+                }
                 noteCompanionActivity()
             }
             MotionEvent.ACTION_MOVE -> {
@@ -1834,6 +2091,20 @@ class DigiviceDashboardView(
     private fun applyScroll(delta: Float): Boolean {
         if (delta == 0f) return false
         return when {
+            activeBattleScroll == 1 -> {
+                val next = (battleTeamScroll + delta).coerceIn(0f, battleTeamScrollMax)
+                if (next == battleTeamScroll) false else {
+                    battleTeamScroll = next
+                    true
+                }
+            }
+            activeBattleScroll == 2 -> {
+                val next = (battleEnemyScroll + delta).coerceIn(0f, battleEnemyScrollMax)
+                if (next == battleEnemyScroll) false else {
+                    battleEnemyScroll = next
+                    true
+                }
+            }
             travelMenuOpen -> {
                 val next = (travelScroll + delta).coerceAtLeast(0f)
                 if (next == travelScroll) false else {

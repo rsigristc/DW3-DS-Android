@@ -107,7 +107,8 @@ class GameStateReader {
             supportsWalkthrough = features.supportsWalkthrough,
             supportsFastTravel = features.supportsFastTravel,
             revealedMapIds = if (gameStarted) FlaweRevealedIcons.fromMain(main, story) else emptySet(),
-            isLive = true
+            isLive = true,
+            playTimeSeconds = if (gameStarted) u32(main, PLAY_TIME_SECONDS - MAIN_BASE) else 0
         )
     }
 
@@ -205,6 +206,7 @@ class GameStateReader {
         const val PLAYER_NAME = 0x48D88
         const val PLAYER_NAME_LENGTH = 12
         const val BITS = 0x48DA0
+        const val PLAY_TIME_SECONDS = 0x48D7C
         const val STATS = 0x4949C
         const val STORY_STAGE = 0x4B370
         const val MAP_ID = 0x4B3F8

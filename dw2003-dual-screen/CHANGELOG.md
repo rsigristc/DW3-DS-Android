@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+## 1.4.0
+
+- El menú de opciones se parte en dos pestañas. **Juego** es tu BIN, el BIOS y la Memory Card. **App** es mods, cómo se reparte la pantalla, el idioma del panel, el HUD, la imagen, el rendimiento, la protección OLED y Pocket Companion. Abajo siguen buscar actualización, el registro si la app se cierra y volver al juego.
+- En **Imagen** eliges **AA+** (más suave en 2D y 3D), **2× 3D solo en batalla** (más nítido en combate) o **Ninguno** si prefieres el look original y que el teléfono tire menos.
+- **Rendimiento automático** detecta móviles modestos (poca memoria o modelos como el Galaxy A03) y prioriza que se mueva bien. Si tu aparato va sobrado, puedes dejarlo en **Calidad**.
+- En batalla el panel marca en verde y en rojo los elementos que más y menos le duelen al enemigo. Los parámetros que sube (o baja) el equipo se ven en azul o en rojo.
+- En Gestión y en combate también ves resistencias a estados, no solo a elementos.
+- Si derrotas a un Digimon en una pelea de varios, su vida en la pantalla de abajo ya no “da la vuelta” como si siguiera en pie.
+- El pad virtual ya no suelta los botones solo porque el panel se actualice.
+- **Protección OLED**: además de atenuar o mover un poco la imagen, puedes **apagar el panel**. Se enciende otra vez al tocarlo o al cambiar de pestaña. Caminar y que cambie el nombre del mapa ya no reinicia la cuenta atrás.
+- **Pocket Companion**: en otra consola Android con botones (por ejemplo AYANEO) puedes ver el mismo panel y jugar con sus controles por Wi-Fi. El código de emparejamiento está en App → Pocket Companion. Los dos equipos tienen que estar en la misma red; no lo abras a Internet.
+
+Sigue haciendo falta tu ROM y BIOS.
+
+### English
+
+- Options are split into two tabs. **Game** is your BIN, BIOS and Memory Card. **App** is mods, screen layout, panel language, HUD, image, performance, OLED care and Pocket Companion. Check for updates, the crash log and return to the game stay at the bottom.
+- **Image** is now **AA+** (smoother 2D and 3D), **3D 2× in battle only**, or **None** for the original look and a lighter load.
+- **Automatic performance** spots modest phones (low memory or models such as Galaxy A03) and favours smoothness. Leave **Quality** on if your device has headroom.
+- In battle, green and red show the enemy’s worst and best elements. Stats boosted (or cut) by equipment appear in blue or red.
+- Management and battle also show status resistances, not only elements.
+- When you KO a Digimon in a multi-enemy fight, the lower pane no longer wraps its HP as if it were still up.
+- The virtual pad no longer drops buttons just because the companion pane refreshed.
+- **OLED protection** can **turn the pane off**, besides dim or pixel-shift. Touch or a tab change wakes it. Walking, and the map name ticking, no longer reset the timer.
+- **Pocket Companion**: on another Android handheld with buttons (such as an AYANEO) you can see the same pane and play with its controls over Wi-Fi. The pairing code is under App → Pocket Companion. Both devices need the same network; do not expose it to the internet.
+
+You still need your own ROM and BIOS.
+
 ## 1.3.0
 
 - El viaje rápido abre el mapa de Flawe y te lleva al sitio que elijas. Ya no se queda a medias ni abre menús de más.

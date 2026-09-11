@@ -23,10 +23,10 @@ enum class VideoFilter {
         )
     }
 
-    /** 2× battle mode is exclusive: native Sharp in the field, 2× Sharp in battle. */
+    /** 2× battle uses Sharp. None (SHARP + no scale) also uses Sharp. */
     @Suppress("UNUSED_PARAMETER")
     fun shaderFor(mode: GameMode, scale: BattleScale): ShaderConfig =
-        if (scale != BattleScale.OFF) ShaderConfig.Sharp else shader()
+        if (scale != BattleScale.OFF || this == SHARP) ShaderConfig.Sharp else shader()
 
     companion object {
         fun fromPreference(value: String?): VideoFilter = when (value) {

@@ -6,7 +6,14 @@ Prueba de concepto Android para ejecutar **Digimon World 2003 (Europa)** y aprov
 - Samsung Galaxy Z Fold y otros plegables compatibles con Jetpack WindowManager.
 - Tablets o pantallas grandes, con división lógica adaptable.
 
-La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.3.0** es la release actual. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.4.0** es la release actual. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+
+## Estado 1.4.0
+
+- Menú de opciones en pestañas Juego y App.
+- Imagen: AA+, 2× 3D solo en batalla, o ninguno. Rendimiento automático en móviles modestos.
+- Panel con ventajas elementales, bonus de equipo y resistencias a estados. OLED puede apagar la pantalla de abajo.
+- Pocket Companion por Wi-Fi para una AYANEO u otra consola Android con botones.
 
 ## Estado 1.3.0
 
@@ -80,6 +87,14 @@ Implementado y compilado:
 - Modo demostración sin ROM.
 
 La compilación, las pruebas unitarias y Android Lint pasan. Aún se requiere validación práctica en un AYN Thor y un Galaxy Z Fold para ajustar identificadores de pantalla, densidad, audio y distribución exacta.
+
+## Pocket Companion (MVP Wi-Fi)
+
+El proyecto incluye una segunda APK para usar una AYANEO u otra consola Android
+como mando físico y pantalla complementaria remota del Fold. El enlace Wi-Fi
+envía estados completos de botones/sticks con recuperación ante desconexión y
+devuelve ubicación, objetivo, Bits y estado del equipo. Consulta
+[`docs/REMOTE_COMPANION.md`](docs/REMOTE_COMPANION.md).
 
 ## ROM verificadas
 

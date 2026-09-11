@@ -30,6 +30,7 @@ data class GameSnapshot(
     val supportsFastTravel: Boolean = true,
     val revealedMapIds: Set<Int> = emptySet(),
     val isLive: Boolean,
+    val playTimeSeconds: Long = 0,
     val sampledAtMillis: Long = System.currentTimeMillis()
 ) {
     fun idleKey(): String = listOf(

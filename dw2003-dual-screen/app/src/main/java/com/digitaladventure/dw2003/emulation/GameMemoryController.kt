@@ -27,6 +27,17 @@ class GameMemoryController(private val view: GLRetroView) {
         view.writeMemory(LibretroDroid.MEMORY_SYSTEM_RAM, GameStateReader.ACTIVE_PARTY.first() and RAM_MASK, payload)
     }
 
+    fun writePlayTimeSeconds(value: Long) {
+        require(value in 0..0xFFFF_FFFFL) { "Tiempo de juego fuera de rango" }
+        val payload = ByteArray(4)
+        writeU32(payload, 0, value)
+        view.writeMemory(
+            LibretroDroid.MEMORY_SYSTEM_RAM,
+            GameStateReader.PLAY_TIME_SECONDS and RAM_MASK,
+            payload
+        )
+    }
+
     fun readAreaMap(): Pair<Int, Int> {
         val area = view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM, GameStateReader.AREA and RAM_MASK, 2)
         val map = view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM, GameStateReader.MAP_ID and RAM_MASK, 2)

@@ -112,6 +112,7 @@ object CompanionUiText {
         CompanionIdleMode.OFF -> pick(language, "Desactivado", "Off")
         CompanionIdleMode.DIM -> pick(language, "Atenuar panel", "Dim pane")
         CompanionIdleMode.PIXEL_SHIFT -> pick(language, "Desplazar píxeles", "Pixel shift")
+        CompanionIdleMode.SLEEP -> pick(language, "Apagar panel", "Turn pane off")
     }
 
     fun idleDelay(language: CompanionLanguage, delay: CompanionIdleDelay): String = when (delay) {
@@ -132,11 +133,11 @@ object CompanionUiText {
             pick(language, "AA+ (2D+3D)", "AA+ (2D+3D)")
     }
 
-    fun imageMode(language: CompanionLanguage, scale: BattleScale): String =
-        if (scale != BattleScale.OFF) {
-            pick(language, "2× 3D (solo batalla)", "3D 2× (battle only)")
-        } else {
-            pick(language, "AA+ (2D+3D)", "AA+ (2D+3D)")
+    fun imageMode(language: CompanionLanguage, scale: BattleScale, filter: VideoFilter = VideoFilter.ANTIALIAS_PLUS): String =
+        when {
+            scale != BattleScale.OFF -> pick(language, "2× 3D (solo batalla)", "3D 2× (battle only)")
+            filter == VideoFilter.SHARP -> pick(language, "Ninguno", "None")
+            else -> pick(language, "AA+ (2D+3D)", "AA+ (2D+3D)")
         }
 
     fun imageOptionsShort(
@@ -154,8 +155,13 @@ object CompanionUiText {
     fun imageOptions(
         language: CompanionLanguage,
         scale: BattleScale,
-        @Suppress("UNUSED_PARAMETER") filter: VideoFilter
-    ): String = imageMode(language, scale)
+        filter: VideoFilter
+    ): String = imageMode(language, scale, filter)
+
+    fun performanceMode(language: CompanionLanguage, mode: PerformanceMode): String = when (mode) {
+        PerformanceMode.AUTO -> pick(language, "Automático (gama baja)", "Automatic (low-end)")
+        PerformanceMode.QUALITY -> pick(language, "Calidad", "Quality")
+    }
 
     fun emptyEnemies(language: CompanionLanguage): String =
         pick(language, "Sin encuentros leídos", "No encounters read")

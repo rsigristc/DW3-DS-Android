@@ -16,7 +16,8 @@ data class BattleEnemy(
     val expMultiplier: Int,
     val attacks: List<String>,
     val loot: String = "",
-    val liveHp: Boolean
+    val liveHp: Boolean,
+    val statusResistances: List<Int> = emptyList()
 ) {
     val hpFraction: Float
         get() = if (maxHp <= 0) 0f else (currentHp.toFloat() / maxHp).coerceIn(0f, 1f)

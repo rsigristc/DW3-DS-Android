@@ -3,7 +3,8 @@ package com.digitaladventure.dw2003.ui
 enum class CompanionIdleMode {
     OFF,
     DIM,
-    PIXEL_SHIFT;
+    PIXEL_SHIFT,
+    SLEEP;
 
     companion object {
         fun fromPreference(value: String?): CompanionIdleMode =
