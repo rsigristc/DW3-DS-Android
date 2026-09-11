@@ -17,5 +17,7 @@ if match is None or not match.group(1).strip():
     raise SystemExit(f"No release notes found in CHANGELOG.md for {version}")
 print(f"## Novedades / What's new — {version}\n")
 print(match.group(1).strip())
-print("\n---\nOfficial signed APK: `com.digitaladventure.dw2003`.")
+print("\n---\nOfficial signed APKs:")
+print("- Dual Screen: `com.digitaladventure.dw2003` (`DW2003-Dual-Screen-vX.Y.Z.apk`)")
+print("- Pocket Companion: `com.digitaladventure.dw2003.remote` (`DW2003-Pocket-Companion-vX.Y.Z.apk`)")
 print("Updates preserve the app's existing data. ROM and BIOS are not included.")

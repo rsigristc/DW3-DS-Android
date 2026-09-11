@@ -10,14 +10,39 @@ android {
         applicationId 'com.digitaladventure.dw2003.remote'
         minSdk 26
         targetSdk 35
-        versionCode 7
-        versionName '0.5.1'
+        versionCode 8
+        versionName '1.4.0'
+    }
+
+    def keystoreProps = new Properties()
+    def keystorePropsFile = rootProject.file('keystore.properties')
+    if (keystorePropsFile.exists()) {
+        keystoreProps.load(new FileInputStream(keystorePropsFile))
+    }
+    def releaseStorePath = System.getenv('DW2003_STORE_FILE') ?: keystoreProps['storeFile']
+
+    signingConfigs {
+        release {
+            if (releaseStorePath) {
+                storeFile file(releaseStorePath)
+                storePassword System.getenv('DW2003_STORE_PASSWORD') ?: keystoreProps['storePassword']
+                keyAlias System.getenv('DW2003_KEY_ALIAS') ?: keystoreProps['keyAlias']
+                keyPassword System.getenv('DW2003_KEY_PASSWORD') ?: keystoreProps['keyPassword']
+            }
+        }
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (releaseStorePath) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 

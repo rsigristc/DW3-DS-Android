@@ -38,16 +38,20 @@ jobs:
           DW2003_STORE_PASSWORD: ${{ secrets.DW2003_STORE_PASSWORD }}
           DW2003_KEY_ALIAS: ${{ secrets.DW2003_KEY_ALIAS }}
           DW2003_KEY_PASSWORD: ${{ secrets.DW2003_KEY_PASSWORD }}
-        run: ./scripts/build.sh :app:testDebugUnitTest :app:lintRelease :app:assembleRelease
+        run: ./scripts/build.sh :app:testDebugUnitTest :app:lintRelease :app:assembleRelease :remote-controller:assembleRelease
 
       - name: Prepare release artifact
         run: |
-          apk="dw2003-dual-screen/app/build/outputs/apk/release/app-release.apk"
-          dest="dw2003-dual-screen/app/build/outputs/apk/release/DW2003-Dual-Screen-${GITHUB_REF_NAME}.apk"
+          out="dw2003-dual-screen/app/build/outputs/apk/release"
+          apk="$out/app-release.apk"
+          dest="$out/DW2003-Dual-Screen-${GITHUB_REF_NAME}.apk"
+          companion_apk="dw2003-dual-screen/remote-controller/build/outputs/apk/release/remote-controller-release.apk"
+          companion_dest="$out/DW2003-Pocket-Companion-${GITHUB_REF_NAME}.apk"
           cp "$apk" "$dest"
-          sha256sum "$dest" > dw2003-dual-screen/app/build/outputs/apk/release/SHA256SUMS.txt
+          cp "$companion_apk" "$companion_dest"
+          sha256sum "$dest" "$companion_dest" > "$out/SHA256SUMS.txt"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$dest" \
-            > dw2003-dual-screen/app/build/outputs/apk/release/CERT.txt
+            > "$out/CERT.txt"
           python3 scripts/release-notes.py "$GITHUB_REF_NAME" > "$RUNNER_TEMP/release-notes.md"
 
       - name: Publish GitHub release
@@ -57,5 +61,6 @@ jobs:
           body_path: ${{ runner.temp }}/release-notes.md
           files: |
             dw2003-dual-screen/app/build/outputs/apk/release/DW2003-Dual-Screen-${{ github.ref_name }}.apk
+            dw2003-dual-screen/app/build/outputs/apk/release/DW2003-Pocket-Companion-${{ github.ref_name }}.apk
             dw2003-dual-screen/app/build/outputs/apk/release/SHA256SUMS.txt
             dw2003-dual-screen/app/build/outputs/apk/release/CERT.txt
