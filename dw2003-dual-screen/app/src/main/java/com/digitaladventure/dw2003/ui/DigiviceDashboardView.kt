@@ -1057,17 +1057,21 @@ class DigiviceDashboardView(
             return
         }
         if (!isSideColumn()) {
-            val identity = RectF(bounds.left, bounds.top, bounds.left + bounds.width() * .26f, bounds.bottom)
-            val details = RectF(identity.right + dp(7f), bounds.top, bounds.right, bounds.bottom)
-            val stats = RectF(details.left, details.top, details.left + details.width() * .30f, details.bottom)
-            val skills = RectF(stats.right + dp(7f), details.top, stats.right + dp(7f) + details.width() * .30f, details.bottom)
-            val equipment = RectF(skills.right + dp(7f), details.top, details.right, details.bottom)
-            drawIdentity(canvas, identity, selected, vertical = true)
-            drawParametersAndResists(canvas, stats, selected)
-            val skillSplit = skills.top + (skills.height() - dp(7f)) / 2f
-            drawStatusResists(canvas, RectF(skills.left, skills.top, skills.right, skillSplit), selected)
-            drawActiveSkills(canvas, RectF(skills.left, skillSplit + dp(7f), skills.right, skills.bottom), selected)
-            drawEquipment(canvas, equipment, selected)
+            withScrollablePage(canvas, bounds) { markBottom ->
+                val bottom = max(bounds.bottom, bounds.top + max(identityPanelHeight(selected), dp(260f)))
+                val identity = RectF(bounds.left, bounds.top, bounds.left + bounds.width() * .26f, bottom)
+                val details = RectF(identity.right + dp(7f), bounds.top, bounds.right, bottom)
+                val stats = RectF(details.left, details.top, details.left + details.width() * .30f, details.bottom)
+                val skills = RectF(stats.right + dp(7f), details.top, stats.right + dp(7f) + details.width() * .30f, details.bottom)
+                val equipment = RectF(skills.right + dp(7f), details.top, details.right, details.bottom)
+                drawIdentity(canvas, identity, selected, vertical = true)
+                drawParametersAndResists(canvas, stats, selected)
+                val skillSplit = skills.top + (skills.height() - dp(7f)) / 2f
+                drawStatusResists(canvas, RectF(skills.left, skills.top, skills.right, skillSplit), selected)
+                drawActiveSkills(canvas, RectF(skills.left, skillSplit + dp(7f), skills.right, skills.bottom), selected)
+                drawEquipment(canvas, equipment, selected)
+                markBottom(bottom)
+            }
             return
         }
         withScrollablePage(canvas, bounds) { markBottom ->
@@ -1251,7 +1255,7 @@ class DigiviceDashboardView(
         if (bottom - top < dp(22f)) return
         val hasHarmony = digimon.harmonyData != null
         val title = if (hasHarmony) tr("DIGIEVOLUCIONES · VER RUTAS ›", "DIGIVOLUTIONS · VIEW ROUTES ›") else tr("DIGIEVOLUCIONES", "DIGIVOLUTIONS")
-        drawText(canvas, title, left, top, dp(7.5f), CYAN, true)
+        drawText(canvas, title, left, top, fitTextSize(title, dp(7.5f), right - left), CYAN, true)
         if (hasHarmony) hitContent(RectF(left, top - dp(12f), right, top + dp(3f))) {
             routeMember = digimon.profileId
             routeForm = digimon.activeDigievolutionId.takeIf { it != 0 && it != 0xFFFF }
@@ -1259,19 +1263,25 @@ class DigiviceDashboardView(
             pageScroll = 0f
             invalidate()
         }
-        val forms = listOf(digimon.currentForm)
+        val forms = digimon.equippedForms
+        if (forms.isEmpty()) {
+            val empty = tr("NINGUNA CARGADA", "NONE EQUIPPED")
+            drawText(canvas, ellipsize(empty, right - left, dp(8f), false), left, top + dp(16f), dp(8f), MUTED)
+        }
         val rowHeight = dp(16f)
         forms.forEachIndexed { index, form ->
             val y = top + dp(16f) + index * rowHeight
             if (y + dp(2f) > bottom) return
             val color = if (form.active) BLUE else WHITE
-            drawText(canvas, ellipsize(form.name.uppercase(), right - left - dp(50f), dp(8f), form.active), left, y, dp(8f), color, form.active)
+            val levelLabel = "${tr("NV", "LV")} ${form.level}"
+            val nameWidth = right - left - measureText(levelLabel, dp(8f), form.active) - dp(6f)
+            drawText(canvas, ellipsize(form.name.uppercase(), nameWidth, dp(8f), form.active), left, y, dp(8f), color, form.active)
             form.details?.let { detail ->
                 hitContent(RectF(left, y - dp(12f), right, y + dp(3f))) { actions.onFormDetails(form.name, detail) }
             }
             drawText(
                 canvas,
-                "NV ${form.level}",
+                levelLabel,
                 right,
                 y,
                 dp(8f),
@@ -1398,10 +1408,13 @@ class DigiviceDashboardView(
     ) {
         val rows = (values.size + columns - 1) / columns
         val cellW = (bounds.width() - dp(20f)) / columns
+        val textWidth = cellW - dp(6f)
+        if (textWidth <= 0f) return
         val headerHeight = dp(30f)
-        val cellH = max(dp(16f), (bounds.height() - headerHeight - dp(8f)) / rows)
-        val labelPx = min(labelSize, max(dp(6f), cellH * .42f))
-        val valuePx = min(valueSize, max(dp(8f), cellH * .55f))
+        val cellH = (bounds.height() - headerHeight - dp(8f)) / rows
+        if (cellH <= 0f) return
+        val labelPx = min(labelSize, cellH * .29f)
+        val valuePx = min(valueSize, cellH * .48f)
         val minimum = values.minOfOrNull { it.second }
         val maximum = values.maxOfOrNull { it.second }
         val hasSpread = highlightExtremes && minimum != maximum
@@ -1409,14 +1422,18 @@ class DigiviceDashboardView(
         canvas.clipRect(bounds.left, bounds.top + headerHeight - dp(2f), bounds.right, bounds.bottom - dp(4f))
         values.forEachIndexed { index, value ->
             val cellLeft = bounds.left + dp(10f) + (index % columns) * cellW
-            val y = bounds.top + headerHeight + (index / columns) * cellH + cellH * .62f
+            val cellTop = bounds.top + headerHeight + (index / columns) * cellH
             val color = when {
                 hasSpread && value.second == maximum -> GREEN
                 hasSpread && value.second == minimum -> RED
                 else -> bonusColor(value.third)
             }
             val labelColor = if (hasSpread && (value.second == maximum || value.second == minimum)) color else if (value.third == 0) MUTED else color
-            drawNameValue(canvas, value.first, value.second.toString(), cellLeft, y, labelPx, labelColor, color, valuePx)
+            val label = ellipsize(value.first, textWidth, labelPx, true)
+            val number = value.second.toString()
+            val fittedValuePx = fitTextSize(number, valuePx, textWidth)
+            drawText(canvas, label, cellLeft, cellTop + cellH * .28f, labelPx, labelColor, true)
+            drawText(canvas, number, cellLeft + textWidth, cellTop + cellH * .87f, fittedValuePx, color, true, Paint.Align.RIGHT)
         }
         canvas.restore()
     }
@@ -2077,7 +2094,7 @@ class DigiviceDashboardView(
     }
 
     private fun formListHeight(digimon: DigimonState): Float =
-        dp(40f)
+        dp(24f + 16f * max(1, digimon.equippedForms.size))
 
     private fun battleCardHeight(digimon: DigimonState): Float =
         dp(298f) + formListHeight(digimon)
@@ -2137,7 +2154,8 @@ class DigiviceDashboardView(
             Paint.Align.RIGHT -> bounds.right - dp(10f)
             else -> bounds.left + dp(10f)
         }
-        drawText(canvas, title, titleX, bounds.top + dp(19f), dp(9f), CYAN, true, titleAlign)
+        val titleSize = fitTextSize(title, dp(9f), bounds.width() - dp(20f))
+        drawText(canvas, title, titleX, bounds.top + dp(19f), titleSize, CYAN, true, titleAlign)
     }
 
     private fun drawBar(canvas: Canvas, x: Float, y: Float, width: Float, height: Float, fraction: Float, color: Int) {
@@ -2202,6 +2220,11 @@ class DigiviceDashboardView(
             end--
         }
         return if (end <= 0) ellipsis else text.substring(0, end) + ellipsis
+    }
+
+    private fun fitTextSize(text: String, size: Float, maxWidth: Float): Float {
+        val measured = measureText(text, size, true)
+        return if (measured > maxWidth && maxWidth > 0f) size * maxWidth / measured else size
     }
 
     private fun drawText(canvas: Canvas, text: String, x: Float, y: Float, size: Float, color: Int, bold: Boolean = false, align: Paint.Align = Paint.Align.LEFT) {

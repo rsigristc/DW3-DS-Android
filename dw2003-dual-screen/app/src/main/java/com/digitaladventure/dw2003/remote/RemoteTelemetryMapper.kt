@@ -76,7 +76,7 @@ fun GameSnapshot.toRemoteTelemetry(
             activeForm = member.activeDigievolutionName,
             profileId = member.profileId,
             trainingPoints = member.trainingPoints,
-            forms = listOf(member.currentForm).map { RemoteForm(it.name, it.level, it.active) },
+            forms = member.equippedForms.map { RemoteForm(it.name, it.level, it.active) },
             parameters = listOf(
                 RemoteValue("FUERZA", member.totalStrength, bonuses.strength),
                 RemoteValue("DEFENSA", member.totalDefense, bonuses.defense),

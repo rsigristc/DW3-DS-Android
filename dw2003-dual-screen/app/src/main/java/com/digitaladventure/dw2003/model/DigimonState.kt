@@ -45,7 +45,8 @@ data class DigimonState(
     val activeDigievolutionId: Int = 0,
     val activeDigievolutionLevel: Int = 1,
     val unlockedForms: List<DigievolutionForm> = emptyList(),
-    val harmonyData: HarmonyMemberData? = null
+    val harmonyData: HarmonyMemberData? = null,
+    val equippedForms: List<DigievolutionForm> = emptyList()
 ) {
     val hpFraction: Float get() = ratio(currentHp, maxHp)
     val mpFraction: Float get() = ratio(currentMp, maxMp)
@@ -60,10 +61,6 @@ data class DigimonState(
         get() = unlockedForms.ifEmpty {
             listOf(DigievolutionForm(0, name, level, isRookieForm))
         }
-    val currentForm: DigievolutionForm
-        get() = displayedForms.firstOrNull { it.active } ?: DigievolutionForm(
-            activeDigievolutionId, activeDigievolutionName, activeDigievolutionLevel, true
-        )
     val activeSkills: List<TechniqueInfo>
         get() = harmonyData?.activeSkills ?: if (activeDigievolutionId == 0 || activeDigievolutionId == 0xFFFF || (profileId == 8 && activeDigievolutionId == 0x6100)) {
             listOfNotNull(TechniqueCatalog.signatureInfo(profileId))

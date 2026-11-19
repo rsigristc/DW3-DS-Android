@@ -53,13 +53,22 @@ class HarmonyGameStateReaderTest {
         extra[entry + 3] = 0xD6.toByte()
         put(extra, entry + 8, 132)
         put(extra, entry + 10, 131 or 0x2000)
+        val secondEntry = entry + GameStateReader.DIGIEVOLUTION_STRIDE
+        put(extra, secondEntry, 0x6102)
+        extra[secondEntry + 2] = 5
+        val slots = 12 + GameStateReader.DIGIEVOLUTION_SLOTS_OFFSET
+        put(extra, slots, 0x6102)
+        put(extra, slots + 2, 0x6101)
+        put(extra, slots + 4, 0x6101)
         val partner = GameStateReader(catalog).parse(main(), 0, null,
             harmonyActive = true, harmonyPartner = extra).party.single()
         assertEquals("Gargomon", partner.activeDigievolutionName)
         assertEquals(10, partner.activeDigievolutionLevel)
-        assertEquals(listOf("Terriermon", "Gargomon"), partner.displayedForms.map { it.name })
+        assertEquals(listOf(0, 0x6101, 0x6102), partner.displayedForms.map { it.id })
+        assertEquals(listOf(0x6102, 0x6101), partner.equippedForms.map { it.id })
+        assertEquals(listOf(false, true), partner.equippedForms.map { it.active })
         assertEquals(listOf("Wing Buster", "Bug Buster"), partner.activeSkills.map { it.name })
         assertFalse(partner.activeSkills.any { it.name == "Gargo Laser" })
-        assertTrue(partner.displayedForms.last().details!!.contains("Gargo Laser"))
+        assertTrue(partner.equippedForms.last().details!!.contains("Gargo Laser"))
     }
 }

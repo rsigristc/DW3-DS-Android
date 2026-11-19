@@ -6,7 +6,12 @@ Prueba de concepto Android para ejecutar **Digimon World 2003 (Europa)** y aprov
 - Samsung Galaxy Z Fold y otros plegables compatibles con Jetpack WindowManager.
 - Tablets o pantallas grandes, con división lógica adaptable.
 
-La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.6.0** es la release actual. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.6.1** es la release actual. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+
+## Estado 1.6.1
+
+- Gestión mantiene cada valor de parámetros y resistencias dentro de su columna.
+- Gestión y Batalla muestran las digievoluciones cargadas de cada compañero y resaltan en azul la forma seleccionada. Pocket Companion recibe la misma lista.
 
 ## Estado 1.6.0
 
@@ -114,7 +119,7 @@ La USA `SLUS-01436` se reconoce por SHA-1 o por el serial del disco y arranca en
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v1.6.0.apk` en un dispositivo Android ARM64. Si ya tienes una versión oficial firmada, usa el actualizador de la app.
+1. Instala `DW2003-Dual-Screen-v1.6.1.apk` en un dispositivo Android ARM64. Si ya tienes una versión oficial firmada, usa el actualizador de la app.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada, la imagen original europea o Digimon World 3 USA (`SLUS-01436`). En USA no hay viaje rápido ni guía de Flawe.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.

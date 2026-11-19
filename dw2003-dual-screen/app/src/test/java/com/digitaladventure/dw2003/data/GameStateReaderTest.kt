@@ -31,6 +31,8 @@ class GameStateReaderTest {
         put16(ram, guilmon - 4, 367)
         put16(ram, guilmon + GameStateReader.DIGIEVOLUTION_OFFSET, 367)
         put16(ram, guilmon + GameStateReader.DIGIEVOLUTION_OFFSET + 2, 25)
+        put16(ram, guilmon + GameStateReader.DIGIEVOLUTION_SLOTS_OFFSET, 367)
+        put16(ram, guilmon + GameStateReader.DIGIEVOLUTION_SLOTS_OFFSET + 2, 0xFFFF)
         listOf(6, 3).forEach { profile ->
             val base = GameStateReader.STATS - GameStateReader.MAIN_BASE + profile * GameStateReader.PROFILE_STRIDE
             put16(ram, base + 0x1C, 1)
@@ -68,6 +70,8 @@ class GameStateReaderTest {
             snapshot.party.first().displayedForms.map { it.name to it.level }
         )
         assertEquals(listOf(false, true), snapshot.party.first().displayedForms.map { it.active })
+        assertEquals(listOf("Growlmon"), snapshot.party.first().equippedForms.map { it.name })
+        assertTrue(snapshot.party.first().equippedForms.single().active)
         assertEquals(listOf(42, 42, 18), snapshot.party.first().activeSkills.map { it.mp })
         assertEquals("divine_barrier", snapshot.auction?.id)
         assertTrue(snapshot.dri.isEmpty())
@@ -100,6 +104,7 @@ class GameStateReaderTest {
         assertEquals("Monmon", snapshot.party.first().activeDigievolutionName)
         assertEquals(listOf("Monmon" to 5, "Hookmon" to 1), forms.map { it.name to it.level })
         assertEquals(listOf(true, false), forms.map { it.active })
+        assertTrue(snapshot.party.first().equippedForms.isEmpty())
     }
 
     @Test

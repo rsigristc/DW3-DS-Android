@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.6.1
+
+Cambios desde la versión 1.6.0.
+
+- **Gestión.** Los valores de parámetros y resistencias elementales y de estado se alinean debajo de sus etiquetas y caben en su columna, incluso con cinco cifras.
+- **Digievoluciones.** Gestión y Batalla muestran las formas cargadas en el juego para cada compañero, en el orden de sus espacios. La forma seleccionada aparece en azul. El catálogo completo sigue disponible en Rutas para Harmony.
+- **Pocket Companion.** Recibe la misma lista de formas cargadas con la selección resaltada.
+
+### English
+
+Changes since version 1.6.0.
+
+- **Management.** Parameter values and elemental and status resistances sit below their labels and fit in their columns, including five-digit values.
+- **Digivolutions.** Management and Battle list each partner’s equipped forms in their in-game slot order. The selected form is highlighted in blue. The full Harmony catalog remains available in Routes.
+- **Pocket Companion.** Receives the same list of equipped forms and highlights the selection.
+
 ## 1.6.0
 
 Cambios desde la versión 1.4.0.

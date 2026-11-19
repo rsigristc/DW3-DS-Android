@@ -162,6 +162,11 @@ class GameStateReader(private val harmonyCatalog: HarmonyCatalog? = null) {
                 }.distinctBy { it.name }
             }
         } else emptyList()
+        val unlockedForms = parseUnlockedForms(main, base, rookieName, partnerLevel, activeDigievolutionId, catalog, profileId, spanish)
+        val equippedIds = List(3) { u16(main, base + DIGIEVOLUTION_SLOTS_OFFSET + it * 2) }.distinct()
+        val equippedForms = equippedIds.mapNotNull { id ->
+            unlockedForms.firstOrNull { it.id == id && it.id != 0 }
+        }
         return DigimonState(
             profileId = profileId,
             name = rookieName,
@@ -182,14 +187,8 @@ class GameStateReader(private val harmonyCatalog: HarmonyCatalog? = null) {
             equipmentIds = equipment,
             activeDigievolutionId = activeDigievolutionId,
             activeDigievolutionLevel = activeDigievolutionLevel,
-            unlockedForms = parseUnlockedForms(
-                main,
-                base,
-                rookieName,
-                partnerLevel,
-                activeDigievolutionId,
-                catalog, profileId, spanish
-            ),
+            unlockedForms = unlockedForms,
+            equippedForms = equippedForms,
             harmonyData = form?.let {
                 val detail = buildString {
                     append(if (spanish) "TÉCNICAS APRENDIDAS (equipo actual)\n" else "LEARNED TECHNIQUES (current equipment)\n")
@@ -264,6 +263,7 @@ class GameStateReader(private val harmonyCatalog: HarmonyCatalog? = null) {
         const val MAP_ID = 0x4B3F8
         const val PAL_LANGUAGE = PalLanguage.ADDRESS
         const val PROFILE_STRIDE = 0x3DC
+        const val DIGIEVOLUTION_SLOTS_OFFSET = 0x48
         const val DIGIEVOLUTION_OFFSET = 0x50
         const val DIGIEVOLUTION_STRIDE = 0x14
         const val DIGIEVOLUTION_RECORDS = 44
