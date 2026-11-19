@@ -1,8 +1,10 @@
 package com.digitaladventure.dw2003.data
 
+import com.digitaladventure.dw2003.model.AuctionNotice
 import com.digitaladventure.dw2003.model.GameMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -35,7 +37,12 @@ class GameStateReaderTest {
             put16(ram, base + 0x22, 1)
         }
 
-        val snapshot = GameStateReader().parse(ram, GameStateReader.FIGHTST2_SIGNATURE, "Objetivo de prueba")
+        val snapshot = GameStateReader().parse(
+            ram,
+            GameStateReader.FIGHTST2_SIGNATURE,
+            "Objetivo de prueba",
+            auction = AuctionNotice("divine_barrier", "Barrera Divina", "Divine Barrier", 800)
+        )
 
         assertEquals(GameMode.BATTLE, snapshot.mode)
         assertEquals("Central Park", snapshot.areaName)
@@ -62,6 +69,8 @@ class GameStateReaderTest {
         )
         assertEquals(listOf(false, true), snapshot.party.first().displayedForms.map { it.active })
         assertEquals(listOf(42, 42, 18), snapshot.party.first().activeSkills.map { it.mp })
+        assertEquals("divine_barrier", snapshot.auction?.id)
+        assertTrue(snapshot.dri.isEmpty())
         assertTrue(snapshot.gameStarted)
         assertTrue(snapshot.isLive)
     }
@@ -160,6 +169,7 @@ class GameStateReaderTest {
 
         assertEquals("Laboratorio Digimon", snapshot.locationTitle)
         assertEquals(WalkthroughCatalog.UNAVAILABLE_ES, snapshot.objective)
+        assertNull(snapshot.auction)
         assertFalse(snapshot.canFastTravel)
         assertFalse(snapshot.supportsFastTravel)
         assertFalse(snapshot.supportsWalkthrough)

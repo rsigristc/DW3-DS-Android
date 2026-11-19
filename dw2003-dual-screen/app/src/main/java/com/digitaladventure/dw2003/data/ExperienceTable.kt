@@ -95,7 +95,8 @@ object ExperienceTable {
     )
 
     fun cumulativeForLevel(profileId: Int, level: Int): Long {
-        val profile = thresholds.getOrNull(profileId) ?: return 0L
+        // Terriermon uses the same native EXP rate (9) and cap (100) as Agumon.
+        val profile = thresholds.getOrNull(if (profileId == 8) 3 else profileId) ?: return 0L
         return profile[(level.coerceIn(1, MAX_LEVEL) - 1)].toLong()
     }
 

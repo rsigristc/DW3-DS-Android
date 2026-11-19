@@ -28,6 +28,7 @@ class FlaweGuideSelectorTest {
         val catalog = FlaweGuideCatalog(program, json)
         val main = fixture()
         val unchanged = main.copyOf()
+        assertEquals("8084-8080", catalog.currentKey(main))
         assertEquals("Habla con Repeating Tom en la Torre Seiryu.", catalog.objective(main, 6))
         assertEquals("Talk to Repeating Tom in Seiryu Tower", catalog.objective(main, 2))
         assertTrue(catalog.objective(main, 3)!!.startsWith("Parle"))

@@ -1,51 +1,35 @@
 package com.digitaladventure.dw2003.data
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 
 class FlaweRevealedIconsTest {
-    private fun main(): ByteArray = ByteArray(GameStateReader.MAIN_LENGTH)
-
-    @Test
-    fun emptySaveYieldsNoIcons() {
+    private fun main() = ByteArray(GameStateReader.MAIN_LENGTH)
+    private fun visit(main: ByteArray, mapId: Int) {
+        val bit = mapId and 0xFF
+        val offset = FlaweRevealedIcons.FLAGS_20 - GameStateReader.MAIN_BASE + (bit ushr 3)
+        main[offset] = (main[offset].toInt() or (1 shl (bit and 7))).toByte()
+    }
+    @Test fun emptySaveAndTruncatedReadsUnlockNothing() {
         assertTrue(FlaweRevealedIcons.fromMain(main(), 4).isEmpty())
+        assertTrue(FlaweRevealedIcons.fromMain(ByteArray(5), 70).isEmpty())
     }
-
-    @Test
-    fun readsAsukaBytesAtMapIdOffset() {
-        val ram = main()
-        listOf(0x0200, 0x021D, 0x0227, 0x0229, 0x022E).forEach { mapId ->
-            ram[0x4B000 - GameStateReader.MAIN_BASE + mapId] = 1
-        }
-        ram[0x4B000 - GameStateReader.MAIN_BASE + 0x0264] = 1
-        val icons = FlaweRevealedIcons.fromMain(ram, 4)
-        assertTrue(icons.containsAll(setOf(0x0200, 0x021D, 0x0227, 0x0229, 0x022E)))
-        assertFalse(icons.contains(0x0264))
-        assertFalse(icons.contains(0x0780))
+    @Test fun nativeVisitsSeparateTheTwoServers() {
+        val main = main()
+        listOf(0x0203, 0x021D, 0x0270, 0x029C).forEach { visit(main, it) }
+        assertEquals(setOf(0x0200, 0x021D, 0x0270, 0x029C), FlaweRevealedIcons.fromMain(main, 40))
     }
-
-    @Test
-    fun readsAskmapIconCodeBits() {
-        val ram = main()
-        fun setBit(index: Int) {
-            val offset = FlaweRevealedIcons.ICON_BITS - GameStateReader.MAIN_BASE + (index ushr 3)
-            ram[offset] = (ram[offset].toInt() or (1 shl (index and 7))).toByte()
-        }
-        setBit(0x14)
-        setBit(0x1E)
-        setBit(0x0F)
-        val icons = FlaweRevealedIcons.fromMain(ram, 4)
-        assertEquals(setOf(0x0200, 0x021D, 0x022E), icons)
+    @Test fun storyDoesNotHideRealVisitsAndThereIsNoTwentyFourIconLimit() {
+        val main = main()
+        FlaweFastTravelTable.allIcons.forEach { visit(main, it.mapId) }
+        val icons = FlaweRevealedIcons.fromMain(main, 4)
+        assertTrue(icons.size > 24)
+        assertTrue(0x0264 in icons)
+        assertTrue(0x02D6 in icons)
     }
-
-    @Test
-    fun rejectsAFullAtlasAsOverlayGarbage() {
-        val ram = main()
-        FlaweFastTravelTable.asukaMapIds.forEach { mapId ->
-            ram[0x4B000 - GameStateReader.MAIN_BASE + mapId] = 1
-        }
-        assertTrue(FlaweRevealedIcons.fromMain(ram, 4).isEmpty())
+    @Test fun oldHeuristicOffsetsCannotUnlockGhostIcons() {
+        val main = main()
+        for (offset in 0x4B200..0x4B36F) main[offset - GameStateReader.MAIN_BASE] = 1
+        assertTrue(FlaweRevealedIcons.fromMain(main, 70).isEmpty())
     }
 }

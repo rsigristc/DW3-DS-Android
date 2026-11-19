@@ -17,6 +17,8 @@ data class GameSnapshot(
     val tamerName: String,
     val storyStage: Int,
     val objective: String,
+    val auction: AuctionNotice? = null,
+    val dri: List<DriNotice> = emptyList(),
     val party: List<DigimonState>,
     val enemies: List<BattleEnemy> = emptyList(),
     val ramProbe: RamProbe? = null,
@@ -28,11 +30,16 @@ data class GameSnapshot(
     val canFastTravel: Boolean,
     val supportsWalkthrough: Boolean = true,
     val supportsFastTravel: Boolean = true,
+    val supportsHarmony: Boolean = false,
+    val harmonyRevision: String? = null,
     val revealedMapIds: Set<Int> = emptySet(),
     val isLive: Boolean,
     val playTimeSeconds: Long = 0,
     val sampledAtMillis: Long = System.currentTimeMillis()
 ) {
+    fun wantsAlertPermission(): Boolean =
+        auction != null || dri.any { it.ready }
+
     fun idleKey(): String = listOf(
         mode.name,
         scene.name,

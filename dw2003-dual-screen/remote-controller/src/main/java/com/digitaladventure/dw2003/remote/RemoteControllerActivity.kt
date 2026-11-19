@@ -98,8 +98,8 @@ class RemoteControllerActivity : ComponentActivity() {
         if (hatX > .5f) addAxisButton(KeyEvent.KEYCODE_DPAD_RIGHT)
         if (hatY < -.5f) addAxisButton(KeyEvent.KEYCODE_DPAD_UP)
         if (hatY > .5f) addAxisButton(KeyEvent.KEYCODE_DPAD_DOWN)
-        if (event.getAxisValue(MotionEvent.AXIS_LTRIGGER) > .25f) addAxisButton(KeyEvent.KEYCODE_BUTTON_L2)
-        if (event.getAxisValue(MotionEvent.AXIS_RTRIGGER) > .25f) addAxisButton(KeyEvent.KEYCODE_BUTTON_R2)
+        if (maxOf(event.getAxisValue(MotionEvent.AXIS_LTRIGGER), event.getAxisValue(MotionEvent.AXIS_BRAKE)) > .25f) addAxisButton(KeyEvent.KEYCODE_BUTTON_L2)
+        if (maxOf(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_GAS)) > .25f) addAxisButton(KeyEvent.KEYCODE_BUTTON_R2)
         sendControllerState()
         return true
     }

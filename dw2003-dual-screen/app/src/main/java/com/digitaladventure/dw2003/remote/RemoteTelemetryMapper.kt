@@ -34,7 +34,13 @@ fun GameSnapshot.toRemoteTelemetry(
     locationTitle = locationTitle,
     locationDetail = locationDetail,
     tamerName = tamerName,
-    objective = objective,
+    objective = listOfNotNull(
+        objective.takeIf { it.isNotBlank() },
+        auction?.label(true),
+        dri.filter { it.ready }.ifEmpty { dri.take(2) }
+            .joinToString("\n") { it.label(true) }
+            .takeIf { it.isNotBlank() }
+    ).joinToString("\n\n"),
     bits = bits,
     storyStage = storyStage,
     serverName = serverName,
@@ -70,7 +76,7 @@ fun GameSnapshot.toRemoteTelemetry(
             activeForm = member.activeDigievolutionName,
             profileId = member.profileId,
             trainingPoints = member.trainingPoints,
-            forms = member.displayedForms.map { RemoteForm(it.name, it.level, it.active) },
+            forms = listOf(member.currentForm).map { RemoteForm(it.name, it.level, it.active) },
             parameters = listOf(
                 RemoteValue("FUERZA", member.totalStrength, bonuses.strength),
                 RemoteValue("DEFENSA", member.totalDefense, bonuses.defense),

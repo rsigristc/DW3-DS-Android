@@ -74,7 +74,18 @@ object AreaCatalog {
     )
     private val blockingEvents = setOf(0x0500, 0x0600, 0x0A00, 0x0C01, 0x0D00, 0x0E03, 0x1400)
 
-    fun knownName(areaId: Int): String? = names[areaId]
+    fun knownName(areaId: Int): String? = names[areaId] ?: when (areaId) {
+        0x0270 -> "Ciudad Amaterasu"
+        0x029C -> "Ciudad Qing Long"
+        0x02AB -> "Ciudad Zhu Que"
+        0x02C6 -> "Ciudad Bai Hu"
+        0x02D6 -> "Ciudad Xuan Wu"
+        else -> FlaweFastTravelTable.asukaCounterpart[areaId]?.let { names[it]?.plus(" · Amaterasu") }
+            ?: if (areaId in 0x0270..0x02D6) {
+                FlaweFastTravelTable.fieldIcon(areaId)?.takeIf { it != areaId }
+                    ?.let { knownName(it)?.plus(" · 0x${hex(areaId)}") }
+            } else null
+    }
     fun name(areaId: Int): String = knownName(areaId) ?: "Área 0x${hex(areaId)}"
     fun supportsFishing(areaId: Int): Boolean = areaId in fishingSpots
     fun isOverlay(areaId: Int): Boolean = areaId in overlayIds

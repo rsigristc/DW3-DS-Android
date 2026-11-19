@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import com.digitaladventure.dw2003.data.HarmonyCatalog
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
@@ -54,6 +55,9 @@ class DigiviceDashboardView(
         ?.let { stored -> GameMode.entries.firstOrNull { it.name == stored } }
         ?: GameMode.EXPLORATION
     private var selectedPartyIndex = 0
+    private var routeMember: Int? = null
+    private var routeForm: Int? = null
+    private val routesCatalogs by lazy { HarmonyCatalog.loadAll(context.assets).associateBy { it.revision } }
     private var fishingPreview = false
     private var travelMenuOpen = false
     private var travelScroll = 0f
@@ -168,7 +172,8 @@ class DigiviceDashboardView(
             4 to transparentSprite(R.drawable.digimon_veemon),
             5 to transparentSprite(R.drawable.digimon_guilmon),
             6 to transparentSprite(R.drawable.digimon_renamon),
-            7 to transparentSprite(R.drawable.digimon_patamon)
+            7 to transparentSprite(R.drawable.digimon_patamon),
+            8 to transparentSprite(R.drawable.digimon_terriermon)
         )
     }
     private val radarBitmaps: Map<Pair<ServerRegion, SectorRegion>, Bitmap> by lazy {
@@ -303,6 +308,7 @@ class DigiviceDashboardView(
             when (selectedTab) {
                 TAB_MODS -> drawMods(canvas, content)
                 TAB_RAM -> drawRamProbe(canvas, content)
+                TAB_ROUTES -> drawRoutes(canvas, content)
                 GameMode.BATTLE.name -> drawBattle(canvas, content)
                 GameMode.MANAGEMENT.name -> drawManagement(canvas, content)
                 else -> drawExploration(canvas, content)
@@ -377,6 +383,7 @@ class DigiviceDashboardView(
         val tabLabel = when (selectedTab) {
             TAB_MODS -> "Mods"
             TAB_RAM -> "RAM"
+            TAB_ROUTES -> tr("Rutas", "Routes")
             else -> CompanionUiText.mode(language, selectedMode)
         }.let(::displayCase)
         val tabWidth = measureText(tabLabel, dp(10f), true)
@@ -590,8 +597,50 @@ class DigiviceDashboardView(
             objectiveLines.size
         )
 
-        val tamerBottom = max(if (fillRemaining) bounds.bottom else 0f, objective.bottom + dp(7f) + dp(178f))
-        val tamerBounds = RectF(bounds.left, objective.bottom + dp(7f), bounds.right, tamerBottom)
+        var nextTop = objective.bottom + dp(7f)
+        snapshot.auction?.let { notice ->
+            val spanish = language == CompanionLanguage.SPANISH
+            val auctionText = notice.label(spanish)
+            val auctionLines = wrappedLines(auctionText, bounds.width() - dp(24f), dp(11f))
+            val auctionHeight = max(dp(72f), dp(44f) + auctionLines.size * dp(11f) * 1.35f)
+            val auctionBox = RectF(bounds.left, nextTop, bounds.right, nextTop + auctionHeight)
+            drawPanel(canvas, auctionBox, tr("SUBASTA · EL DORADO", "AUCTION · EL DORADO"))
+            drawWrapped(
+                canvas,
+                auctionText,
+                auctionBox.left + dp(12f),
+                auctionBox.top + dp(38f),
+                auctionBox.width() - dp(24f),
+                dp(11f),
+                AMBER,
+                auctionLines.size
+            )
+            nextTop = auctionBox.bottom + dp(7f)
+        }
+
+        val driNotices = snapshot.dri.filter { it.ready }.ifEmpty { snapshot.dri.take(2) }
+        if (driNotices.isNotEmpty()) {
+            val spanish = language == CompanionLanguage.SPANISH
+            val driText = driNotices.joinToString("\n") { it.label(spanish) }
+            val driLines = wrappedLines(driText, bounds.width() - dp(24f), dp(10f))
+            val driHeight = max(dp(72f), dp(44f) + driLines.size * dp(10f) * 1.35f)
+            val driBox = RectF(bounds.left, nextTop, bounds.right, nextTop + driHeight)
+            drawPanel(canvas, driBox, tr("DRI · AGENTES", "DRI · AGENTS"))
+            drawWrapped(
+                canvas,
+                driText,
+                driBox.left + dp(12f),
+                driBox.top + dp(38f),
+                driBox.width() - dp(24f),
+                dp(10f),
+                if (driNotices.any { it.ready }) CYAN else MUTED,
+                driLines.size
+            )
+            nextTop = driBox.bottom + dp(7f)
+        }
+
+        val tamerBottom = max(if (fillRemaining) bounds.bottom else 0f, nextTop + dp(178f))
+        val tamerBounds = RectF(bounds.left, nextTop, bounds.right, tamerBottom)
         drawPanel(canvas, tamerBounds, tr("ESTADO DEL TAMER", "TAMER STATUS"))
         val showFishing = snapshot.isFishing || fishingPreview
         val sprite = if (showFishing) tamerFishing else tamerIdle
@@ -1200,14 +1249,26 @@ class DigiviceDashboardView(
         bottom: Float
     ) {
         if (bottom - top < dp(22f)) return
-        drawText(canvas, tr("DIGIEVOLUCIONES", "DIGIVOLUTIONS"), left, top, dp(7.5f), CYAN, true)
-        val forms = digimon.displayedForms
+        val hasHarmony = digimon.harmonyData != null
+        val title = if (hasHarmony) tr("DIGIEVOLUCIONES · VER RUTAS ›", "DIGIVOLUTIONS · VIEW ROUTES ›") else tr("DIGIEVOLUCIONES", "DIGIVOLUTIONS")
+        drawText(canvas, title, left, top, dp(7.5f), CYAN, true)
+        if (hasHarmony) hitContent(RectF(left, top - dp(12f), right, top + dp(3f))) {
+            routeMember = digimon.profileId
+            routeForm = digimon.activeDigievolutionId.takeIf { it != 0 && it != 0xFFFF }
+            selectedTab = TAB_ROUTES
+            pageScroll = 0f
+            invalidate()
+        }
+        val forms = listOf(digimon.currentForm)
         val rowHeight = dp(16f)
         forms.forEachIndexed { index, form ->
             val y = top + dp(16f) + index * rowHeight
             if (y + dp(2f) > bottom) return
             val color = if (form.active) BLUE else WHITE
-            drawText(canvas, form.name.uppercase(), left, y, dp(8f), color, form.active)
+            drawText(canvas, ellipsize(form.name.uppercase(), right - left - dp(50f), dp(8f), form.active), left, y, dp(8f), color, form.active)
+            form.details?.let { detail ->
+                hitContent(RectF(left, y - dp(12f), right, y + dp(3f))) { actions.onFormDetails(form.name, detail) }
+            }
             drawText(
                 canvas,
                 "NV ${form.level}",
@@ -1371,6 +1432,9 @@ class DigiviceDashboardView(
             CYAN,
             true
         )
+        digimon.harmonyData?.details?.let { detail ->
+            hitContent(bounds) { actions.onFormDetails(digimon.activeDigievolutionName, detail) }
+        }
         val skills = digimon.activeSkills
         if (skills.isEmpty()) {
             drawWrapped(
@@ -1385,8 +1449,13 @@ class DigiviceDashboardView(
             )
             return
         }
+        val capacity = ((bounds.height() - dp(66f)) / dp(36f)).toInt().coerceAtLeast(0)
+        val visibleSkills = if (digimon.harmonyData != null) skills.take(capacity) else skills
         val rowHeight = max(dp(36f), (bounds.height() - dp(46f)) / max(3, skills.size))
-        skills.forEachIndexed { index, skill ->
+        if (visibleSkills.size < skills.size) {
+            drawText(canvas, tr("TOCA PARA VER TODAS ›", "TAP TO VIEW ALL ›"), bounds.left + dp(10f), bounds.bottom - dp(8f), dp(7.5f), CYAN, true)
+        }
+        visibleSkills.forEachIndexed { index, skill ->
             val top = bounds.top + dp(46f) + index * rowHeight
             if (index > 0) {
                 paint.color = Color.rgb(8, 49, 61)
@@ -1495,7 +1564,7 @@ class DigiviceDashboardView(
                 pageScrollKey = tab.first
                 GameMode.entries.firstOrNull { it.name == tab.first }?.let { selectedMode = it }
                 dashboardPreferences.edit()
-                    .putString("selected_tab", tab.first)
+                    .putString("selected_tab", if (tab.first == TAB_ROUTES) GameMode.MANAGEMENT.name else tab.first)
                     .putString("selected_mode", selectedMode.name)
                     .apply()
                 noteCompanionActivity()
@@ -1506,9 +1575,119 @@ class DigiviceDashboardView(
 
     private fun visibleTabs(): List<Pair<String, String>> {
         val tabs = GameMode.entries.map { it.name to CompanionUiText.mode(language, it) }.toMutableList()
+        if (snapshot.supportsHarmony) tabs += TAB_ROUTES to tr("Rutas", "Routes")
         if (ramProbeEnabled) tabs += TAB_RAM to "RAM"
         if (modsEnabled) tabs += TAB_MODS to "Mods"
         return tabs
+    }
+
+    private fun drawRoutes(canvas: Canvas, bounds: RectF) {
+        val catalog = routesCatalogs[snapshot.harmonyRevision] ?: return
+        val partner = snapshot.party.firstOrNull { it.profileId == routeMember }
+            ?: snapshot.party.getOrNull(selectedPartyIndex) ?: return
+        val rookie = catalog.rookieId(partner.profileId)?.let(catalog::profile) ?: return
+        val routes = (listOf(rookie) + catalog.routes(partner.profileId) +
+            partner.displayedForms.mapNotNull { catalog.profile(it.id) }).distinctBy { it.id }
+        val byId = routes.associateBy { it.id }
+        val learned = partner.displayedForms.associateBy { if (it.id == 0) rookie.id else it.id }
+        val selected = byId[routeForm] ?: routes.drop(1).firstOrNull() ?: rookie
+        val prerequisites = routes.associate { profile ->
+            profile.id to profile.rules[partner.profileId].orEmpty()
+                .filter { it.kind % 4 == 1 || it.kind in 24..31 }
+                .map { it.id }.filter { it != profile.id && it in byId }.distinct()
+                .ifEmpty { if (profile == rookie) emptyList() else listOf(rookie.id) }
+        }
+        val ranks = mutableMapOf(rookie.id to 0)
+        repeat(routes.size) {
+            routes.forEach { profile ->
+                if (profile.id !in ranks && prerequisites.getValue(profile.id).all { it in ranks }) {
+                    ranks[profile.id] = 1 + prerequisites.getValue(profile.id).maxOf { ranks.getValue(it) }
+                }
+            }
+        }
+        val levels = routes.groupBy { ranks[it.id] ?: 1 }.toSortedMap()
+        val spanish = language == CompanionLanguage.SPANISH
+        withScrollablePage(canvas, bounds) { markBottom ->
+            val wide = bounds.width() >= dp(460f)
+            val gap = dp(8f)
+            val split = if (wide) bounds.left + bounds.width() * .61f else bounds.right
+            val heading = RectF(bounds.left, bounds.top, bounds.right, bounds.top + dp(38f))
+            drawPanel(canvas, heading, "${partner.name.uppercase()} · ${tr("DIGIEVOLUCIONES", "DIGIVOLUTIONS")}")
+            val members = snapshot.party
+            val switch = RectF(heading.right - dp(48f), heading.top, heading.right, heading.bottom)
+            if (members.size > 1) {
+                drawText(canvas, "›", switch.centerX(), switch.top + dp(24f), dp(19f), CYAN, true, Paint.Align.CENTER)
+                hitContent(switch) {
+                    routeMember = members[(members.indexOf(partner) + 1) % members.size].profileId
+                    routeForm = null
+                    pageScroll = 0f
+                    invalidate()
+                }
+            }
+            var y = heading.bottom + gap
+            val columns = if (split - bounds.left >= dp(260f)) 2 else 1
+            val cardWidth = (split - bounds.left - gap * (columns - 1)) / columns
+            val cards = mutableMapOf<Int, RectF>()
+            levels.forEach { (depth, forms) ->
+                drawText(canvas, if (depth == 0) tr("COMPAÑERO", "PARTNER") else "↓  ${tr("ETAPA", "STAGE")} $depth",
+                    bounds.left + dp(3f), y + dp(11f), dp(8f), CYAN, true)
+                y += dp(17f)
+                forms.forEachIndexed { index, profile ->
+                    val left = bounds.left + (index % columns) * (cardWidth + gap)
+                    val top = y + (index / columns) * dp(51f)
+                    cards[profile.id] = RectF(left, top, left + cardWidth, top + dp(44f))
+                }
+                y += ((forms.size + columns - 1) / columns) * dp(51f) + gap
+            }
+            paint.color = CYAN_DARK
+            paint.strokeWidth = dp(1f)
+            prerequisites.forEach { (id, sources) ->
+                val to = cards.getValue(id)
+                sources.forEach source@{ source ->
+                    val from = cards[source] ?: return@source
+                    if (from.bottom >= to.top) return@source
+                    canvas.drawLine(from.centerX(), from.bottom, to.centerX(), to.top, paint)
+                }
+            }
+            routes.forEach { profile ->
+                val rect = cards.getValue(profile.id)
+                val form = learned[profile.id]
+                drawPanel(canvas, rect, "")
+                val color = when {
+                    selected.id == profile.id -> CYAN
+                    form != null -> WHITE
+                    else -> MUTED
+                }
+                drawText(canvas, ellipsize(profile.name, rect.width() - dp(16f), dp(10f), true),
+                    rect.left + dp(8f), rect.top + dp(16f), dp(10f), color, true)
+                val state = when {
+                    form?.active == true -> tr("Activa", "Active")
+                    form != null -> "DV ${form.level}"
+                    else -> catalog.requirementSummary(profile, partner.profileId, spanish)
+                        ?: tr("Por desbloquear", "Locked")
+                }
+                drawText(canvas, ellipsize(state, rect.width() - dp(16f), dp(8f), false), rect.left + dp(8f), rect.top + dp(32f), dp(8f), color)
+                hitContent(rect) {
+                    routeForm = profile.id
+                    if (!wide || pageScroll > dp(70f)) catalog.details(partner.profileId, profile.id, spanish)?.let { actions.onFormDetails(profile.name, it) }
+                    invalidate()
+                }
+            }
+            if (wide) {
+                val left = split + gap
+                val rows = catalog.details(partner.profileId, selected.id, spanish).orEmpty().lineSequence()
+                    .drop(2).filter { it.isNotBlank() }.toList()
+                val detail = RectF(left, heading.bottom + gap, bounds.right,
+                    heading.bottom + gap + dp(42f + rows.size * 31f))
+                drawPanel(canvas, detail, selected.name.uppercase())
+                rows.forEachIndexed { index, row ->
+                    drawWrapped(canvas, row, detail.left + dp(9f), detail.top + dp(32f + index * 31f),
+                        detail.width() - dp(18f), dp(8.5f), if (row.startsWith("•")) WHITE else CYAN, 3)
+                }
+                y = max(y, detail.bottom + gap)
+            }
+            markBottom(y)
+        }
     }
 
     private fun drawRamProbe(canvas: Canvas, bounds: RectF) {
@@ -1898,7 +2077,7 @@ class DigiviceDashboardView(
     }
 
     private fun formListHeight(digimon: DigimonState): Float =
-        dp(16f) + max(1, digimon.displayedForms.size) * dp(16f) + dp(8f)
+        dp(40f)
 
     private fun battleCardHeight(digimon: DigimonState): Float =
         dp(298f) + formListHeight(digimon)
@@ -2151,6 +2330,7 @@ class DigiviceDashboardView(
         private val AMBER = Color.rgb(244, 181, 61)
         private const val TAB_MODS = "MODS"
         private const val TAB_RAM = "RAM"
+        private const val TAB_ROUTES = "ROUTES"
         private const val PANE_TEAM = "TEAM"
         private const val PANE_ENEMIES = "ENEMIES"
     }

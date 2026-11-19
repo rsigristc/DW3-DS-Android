@@ -53,7 +53,8 @@ class RemoteDashboardView(context: Context) : View(context) {
             0 to transparentSprite(bitmap(R.drawable.digimon_kotemon)), 1 to transparentSprite(bitmap(R.drawable.digimon_kumamon)),
             2 to transparentSprite(bitmap(R.drawable.digimon_monmon)), 3 to transparentSprite(bitmap(R.drawable.digimon_agumon)),
             4 to transparentSprite(bitmap(R.drawable.digimon_veemon)), 5 to transparentSprite(bitmap(R.drawable.digimon_guilmon)),
-            6 to transparentSprite(bitmap(R.drawable.digimon_renamon)), 7 to transparentSprite(bitmap(R.drawable.digimon_patamon))
+            6 to transparentSprite(bitmap(R.drawable.digimon_renamon)), 7 to transparentSprite(bitmap(R.drawable.digimon_patamon)),
+            8 to transparentSprite(bitmap(R.drawable.digimon_terriermon))
         )
     }
     private val tamerSprite: Bitmap by lazy { transparentSprite(bitmap(R.drawable.tamer_idle)) }

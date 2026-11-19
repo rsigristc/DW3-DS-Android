@@ -13,7 +13,15 @@ data class DigievolutionForm(
     val id: Int,
     val name: String,
     val level: Int,
-    val active: Boolean
+    val active: Boolean,
+    val details: String? = null
+)
+
+data class HarmonyMemberData(
+    val activeFormName: String,
+    val activeSkills: List<TechniqueInfo>,
+    val statusResistances: List<Int>,
+    val details: String? = null
 )
 
 data class DigimonState(
@@ -36,7 +44,8 @@ data class DigimonState(
     val equipmentIds: List<Int>,
     val activeDigievolutionId: Int = 0,
     val activeDigievolutionLevel: Int = 1,
-    val unlockedForms: List<DigievolutionForm> = emptyList()
+    val unlockedForms: List<DigievolutionForm> = emptyList(),
+    val harmonyData: HarmonyMemberData? = null
 ) {
     val hpFraction: Float get() = ratio(currentHp, maxHp)
     val mpFraction: Float get() = ratio(currentMp, maxMp)
@@ -44,15 +53,19 @@ data class DigimonState(
     val experienceRemaining: Long get() = (nextLevelExperience?.minus(experience) ?: 0L).coerceAtLeast(0L)
     val experienceFraction: Float get() = ExperienceTable.progress(profileId, level, experience)
     val isRookieForm: Boolean
-        get() = activeDigievolutionId == 0 || activeDigievolutionId == 0xFFFF
+        get() = activeDigievolutionId == 0 || activeDigievolutionId == 0xFFFF || (profileId == 8 && activeDigievolutionId == 0x6100)
     val activeDigievolutionName: String
-        get() = if (isRookieForm) name else DigievolutionCatalog.name(activeDigievolutionId) ?: "Forma $activeDigievolutionId"
+        get() = harmonyData?.activeFormName ?: if (isRookieForm) name else DigievolutionCatalog.name(activeDigievolutionId) ?: "Forma $activeDigievolutionId"
     val displayedForms: List<DigievolutionForm>
         get() = unlockedForms.ifEmpty {
             listOf(DigievolutionForm(0, name, level, isRookieForm))
         }
+    val currentForm: DigievolutionForm
+        get() = displayedForms.firstOrNull { it.active } ?: DigievolutionForm(
+            activeDigievolutionId, activeDigievolutionName, activeDigievolutionLevel, true
+        )
     val activeSkills: List<TechniqueInfo>
-        get() = if (activeDigievolutionId == 0 || activeDigievolutionId == 0xFFFF) {
+        get() = harmonyData?.activeSkills ?: if (activeDigievolutionId == 0 || activeDigievolutionId == 0xFFFF || (profileId == 8 && activeDigievolutionId == 0x6100)) {
             listOfNotNull(TechniqueCatalog.signatureInfo(profileId))
         } else {
             DigievolutionCatalog.techniques(activeDigievolutionId, activeDigievolutionLevel)
@@ -70,7 +83,7 @@ data class DigimonState(
             (tolerances.getOrNull(index) ?: 0) + equipmentBonuses.resistance(index)
         }
     val statusResistances: List<Int>
-        get() = StatusResistanceCatalog.forPartner(profileId, activeDigievolutionId)
+        get() = harmonyData?.statusResistances ?: StatusResistanceCatalog.forPartner(profileId, activeDigievolutionId)
 
     private fun ratio(value: Int, maximum: Int): Float =
         if (maximum <= 0) 0f else (value.toFloat() / maximum).coerceIn(0f, 1f)

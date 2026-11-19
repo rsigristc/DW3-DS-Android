@@ -6,6 +6,17 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FastTravelCatalogTest {
+    @Test fun nativeAmaterasuVisitsStaySeparateFromAsuka() {
+        val groups = FastTravelCatalog.groups(40, setOf(0x0270, 0x029C, 0x02D6), 0x0200)
+        val amaterasu = groups.filter { it.server == ServerRegion.AMATERASU }
+        assertEquals(setOf(0x0270, 0x029C, 0x02D6), amaterasu.flatMap { it.destinations }.map { it.areaId }.toSet())
+        assertFalse(groups.flatMap { it.destinations }.any { it.areaId == 0x026F })
+        assertEquals("Ciudad Amaterasu", AreaCatalog.name(0x0270))
+        assertEquals(0x0270, FastTravelCatalog.iconId(0x0272))
+        assertTrue(AreaCatalog.knownName(0x0272) != null)
+        assertEquals(MapRegion(ServerRegion.AMATERASU, SectorRegion.NORTH), MapRegionCatalog.resolve(0x02D6))
+    }
+
     @Test
     fun recoversFlaweIconsFromLegacyPrefsWithoutAtlasGhosts() {
         val recovered = FastTravelCatalog.fromLegacyPrefs(
@@ -73,13 +84,13 @@ class FastTravelCatalogTest {
 
     @Test
     fun treatsConfirmedNorthInteriorsAsNearbyFlaweIcons() {
-        assertEquals(0x026F, FastTravelCatalog.iconId(0x026D))
+        assertEquals(0x0268, FastTravelCatalog.iconId(0x026D))
         assertEquals(0x0268, FastTravelCatalog.iconId(0x0269))
         assertEquals(0x026F, FastTravelCatalog.iconId(0x02DA))
         val whileInside = FastTravelCatalog.groups(99, setOf(0x026D), 0x026D)
-        assertTrue(whileInside.any { group -> group.destinations.any { it.areaId == 0x026F } })
+        assertTrue(whileInside.any { group -> group.destinations.any { it.areaId == 0x0268 } })
         val afterLeaving = FastTravelCatalog.groups(99, setOf(0x026D), 0x0200)
-        assertFalse(afterLeaving.any { group -> group.destinations.any { it.areaId == 0x026F } })
+        assertFalse(afterLeaving.any { group -> group.destinations.any { it.areaId == 0x0268 } })
     }
 
     @Test

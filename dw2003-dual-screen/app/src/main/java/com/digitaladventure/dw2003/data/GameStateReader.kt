@@ -1,12 +1,14 @@
 package com.digitaladventure.dw2003.data
 
+import com.digitaladventure.dw2003.model.AuctionNotice
 import com.digitaladventure.dw2003.model.DigievolutionForm
 import com.digitaladventure.dw2003.model.DigimonState
 import com.digitaladventure.dw2003.model.GameMode
+import com.digitaladventure.dw2003.model.HarmonyMemberData
 import com.digitaladventure.dw2003.model.GameSnapshot
 import com.digitaladventure.dw2003.model.RamProbe
 
-class GameStateReader {
+class GameStateReader(private val harmonyCatalog: HarmonyCatalog? = null) {
     private val locationTracker = LocationTracker()
 
     fun parse(
@@ -22,7 +24,11 @@ class GameStateReader {
         ramProbe: RamProbe? = null,
         overlaySlot: Long = overlaySignature,
         fieldMenuVisible: Boolean? = null,
-        flaweMapLoaded: Boolean = false
+        flaweMapLoaded: Boolean = false,
+        auction: AuctionNotice? = null,
+        guideKey: String? = null,
+        harmonyActive: Boolean = false,
+        harmonyPartner: ByteArray? = null
     ): GameSnapshot {
         require(main.size >= MAIN_LENGTH) { "Incomplete DW2003 RAM window" }
 
@@ -50,9 +56,11 @@ class GameStateReader {
         val location = LocationResolver.resolve(areaId, mapId, publicMapId)
         val mapRegion = MapRegionCatalog.resolve(location.publicMapId)
         val region = if (mapRegion.server == ServerRegion.UNKNOWN) MapRegionCatalog.resolve(areaId) else mapRegion
+        val catalog = harmonyCatalog.takeIf { harmonyActive && features.ramBase == CompanionRomFeatures.PAL_RAM_BASE }
+        val hasNinth = catalog?.validPartner(harmonyPartner) == true
         val activeProfiles = ACTIVE_PARTY.mapNotNull { address ->
             val profile = u32(main, address - MAIN_BASE).toInt()
-            profile.takeIf { it in DIGIMON_NAMES.indices }
+            profile.takeIf { it in 0..7 || (it == 8 && hasNinth) }
         }.distinct()
 
         val story = if (sessionLooksValid) rawStory else 0
@@ -61,7 +69,10 @@ class GameStateReader {
         // interpreting those pointers as a formation.
         val gameStarted = sessionLooksValid && (areaId != 0 || story != 0)
         val party = if (gameStarted) {
-            activeProfiles.map { parseDigimon(main, it) }.filter(::isPlausiblePartyMember)
+            activeProfiles.map { profile ->
+                if (profile == 8) parseDigimon(harmonyPartner!!, profile, catalog, spanishNames, 12)
+                else parseDigimon(main, profile, catalog, spanishNames)
+            }.filter(::isPlausiblePartyMember)
         } else {
             emptyList()
         }
@@ -86,6 +97,12 @@ class GameStateReader {
                 !features.supportsWalkthrough -> WalkthroughCatalog.UNAVAILABLE_ES
                 else -> objective?.takeIf { it.length >= 4 } ?: WalkthroughCatalog.SYNC_PROMPT_ES
             },
+            auction = auction.takeIf { gameStarted && features.supportsWalkthrough },
+            dri = if (gameStarted && features.supportsWalkthrough) {
+                DriCatalog.forParty(guideKey, party)
+            } else {
+                emptyList()
+            },
             party = party,
             enemies = if (mode == GameMode.BATTLE) {
                 BattleSetupReader.parse(battleSetup ?: ByteArray(0), battleArena, battleScan, spanishNames)
@@ -106,6 +123,8 @@ class GameStateReader {
                 LocationResolver.canFastTravel(areaId, mapId, mode, gameStarted),
             supportsWalkthrough = features.supportsWalkthrough,
             supportsFastTravel = features.supportsFastTravel,
+            supportsHarmony = catalog != null,
+            harmonyRevision = catalog?.revision,
             revealedMapIds = if (gameStarted) FlaweRevealedIcons.fromMain(main, story) else emptySet(),
             isLive = true,
             playTimeSeconds = if (gameStarted) u32(main, PLAY_TIME_SECONDS - MAIN_BASE) else 0
@@ -116,16 +135,36 @@ class GameStateReader {
         value.level in 1..99 && value.maxHp in 1..9999 && value.maxMp in 0..9999 &&
             value.currentHp in 0..value.maxHp && value.currentMp in 0..value.maxMp
 
-    private fun parseDigimon(main: ByteArray, profileId: Int): DigimonState {
-        val base = STATS - MAIN_BASE + profileId * PROFILE_STRIDE
+    private fun parseDigimon(
+        main: ByteArray, profileId: Int, catalog: HarmonyCatalog? = null,
+        spanish: Boolean = true, base: Int = STATS - MAIN_BASE + profileId * PROFILE_STRIDE
+    ): DigimonState {
         val activeDigievolutionId = u16(main, base - 4)
         val activeDigievolutionLevel = findDigievolutionLevel(main, base, activeDigievolutionId)
         val partnerLevel = u16(main, base + 0x1C)
         val maxHp = u16(main, base + 0x22)
         val maxMp = u16(main, base + 0x26)
+        val rookieId = catalog?.rookieId(profileId)
+        val rookieName = rookieId?.let { catalog?.profile(it)?.name } ?: DIGIMON_NAMES[profileId]
+        val formId = if (activeDigievolutionId == 0 || activeDigievolutionId == 0xFFFF) rookieId else activeDigievolutionId
+        val form = formId?.let { catalog?.profile(it) }
+        val equipment = (0 until 6).map { u16(main, base + 0x3C0 + it * 2) }
+        val harmonySkills = if (catalog != null && form != null) {
+            if (formId == rookieId) {
+                form.skills.filter { it.signature }.mapNotNull { catalog.technique(form.id, it.id, 0, equipment, spanish) }
+            } else {
+                val record = (0 until DIGIEVOLUTION_RECORDS).map { base + DIGIEVOLUTION_OFFSET + it * DIGIEVOLUTION_STRIDE }
+                    .firstOrNull { u16(main, it) == activeDigievolutionId }
+                if (record == null) emptyList() else (0 until 6).mapNotNull { index ->
+                    val encoded = u16(main, record + 8 + index * 2)
+                    val id = encoded and 0x1FFF
+                    if (id == 0) null else catalog.technique(form.id, id, encoded, equipment, spanish)
+                }.distinctBy { it.name }
+            }
+        } else emptyList()
         return DigimonState(
             profileId = profileId,
-            name = DIGIMON_NAMES[profileId],
+            name = rookieName,
             experience = u32(main, base + 0x18),
             level = partnerLevel,
             trainingPoints = u16(main, base + 0x1E),
@@ -140,16 +179,27 @@ class GameStateReader {
             speed = u16(main, base + 0x30),
             charisma = u16(main, base + 0x32),
             tolerances = (0 until 7).map { u16(main, base + 0x34 + it * 2) },
-            equipmentIds = (0 until 6).map { u16(main, base + 0x3C0 + it * 2) },
+            equipmentIds = equipment,
             activeDigievolutionId = activeDigievolutionId,
             activeDigievolutionLevel = activeDigievolutionLevel,
             unlockedForms = parseUnlockedForms(
                 main,
                 base,
-                DIGIMON_NAMES[profileId],
+                rookieName,
                 partnerLevel,
-                activeDigievolutionId
-            )
+                activeDigievolutionId,
+                catalog, profileId, spanish
+            ),
+            harmonyData = form?.let {
+                val detail = buildString {
+                    append(if (spanish) "TÉCNICAS APRENDIDAS (equipo actual)\n" else "LEARNED TECHNIQUES (current equipment)\n")
+                    harmonySkills.forEach { skill ->
+                        append("• ${skill.name} · MP ${skill.mp ?: "—"} · ${if (spanish) "Poder" else "Power"} ${skill.power ?: "—"}\n")
+                    }
+                    append("\n").append(catalog?.details(profileId, it.id, spanish).orEmpty())
+                }
+                HarmonyMemberData(it.name, harmonySkills, it.status, detail)
+            }
         )
     }
 
@@ -157,7 +207,7 @@ class GameStateReader {
         if (activeId == 0 || activeId == 0xFFFF) return 1
         repeat(DIGIEVOLUTION_RECORDS) { index ->
             val record = base + DIGIEVOLUTION_OFFSET + index * DIGIEVOLUTION_STRIDE
-            if (u16(main, record) == activeId) return u16(main, record + 2).coerceIn(1, 99)
+            if (u16(main, record) == activeId) return (main[record + 2].toInt() and 0xFF).coerceIn(1, 99)
         }
         return 1
     }
@@ -167,22 +217,24 @@ class GameStateReader {
         base: Int,
         rookieName: String,
         partnerLevel: Int,
-        activeId: Int
+        activeId: Int,
+        catalog: HarmonyCatalog? = null, member: Int = 0, spanish: Boolean = true
     ): List<DigievolutionForm> {
-        val rookieActive = activeId == 0 || activeId == 0xFFFF
-        val forms = mutableListOf(DigievolutionForm(0, rookieName, partnerLevel, rookieActive))
+        val rookieActive = activeId == 0 || activeId == 0xFFFF || (member == 8 && activeId == 0x6100)
+        val forms = mutableListOf(DigievolutionForm(0, rookieName, partnerLevel, rookieActive, catalog?.rookieId(member)?.let { catalog?.details(member, it, spanish) }))
         val seen = mutableSetOf<Int>()
         repeat(DIGIEVOLUTION_RECORDS) { index ->
             val record = base + DIGIEVOLUTION_OFFSET + index * DIGIEVOLUTION_STRIDE
             val id = u16(main, record)
-            val skillLevel = u16(main, record + 2)
+            val skillLevel = main[record + 2].toInt() and 0xFF
             if (id == 0 || id == 0xFFFF || skillLevel !in 1..99 || !seen.add(id)) return@repeat
-            val name = DigievolutionCatalog.name(id) ?: "Forma 0x${id.toString(16).uppercase()}"
+            val name = catalog?.profile(id)?.name ?: DigievolutionCatalog.name(id) ?: "Forma 0x${id.toString(16).uppercase()}"
             forms += DigievolutionForm(
                 id = id,
                 name = name,
                 level = skillLevel,
-                active = !rookieActive && id == activeId
+                active = !rookieActive && id == activeId,
+                details = catalog?.details(member, id, spanish)
             )
         }
         return forms
@@ -216,7 +268,7 @@ class GameStateReader {
         const val DIGIEVOLUTION_STRIDE = 0x14
         const val DIGIEVOLUTION_RECORDS = 44
         val ACTIVE_PARTY = listOf(0x48DA4, 0x48DA8, 0x48DAC)
-        val DIGIMON_NAMES = listOf("Kotemon", "Kumamon", "Monmon", "Agumon", "Veemon", "Guilmon", "Renamon", "Patamon")
+        val DIGIMON_NAMES = listOf("Kotemon", "Kumamon", "Monmon", "Agumon", "Veemon", "Guilmon", "Renamon", "Patamon", "Terriermon")
         const val FIGHTST2_SIGNATURE = 0x80085390L
         const val STSTATUS_SIGNATURE = 0x8008428CL
 

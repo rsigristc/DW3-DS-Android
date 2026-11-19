@@ -31,6 +31,18 @@ Artefactos:
 - Fold: `app/build/outputs/apk/debug/app-debug.apk`
 - AYANEO: `remote-controller/build/outputs/apk/debug/remote-controller-debug.apk`
 
+## Nox u otro emulador en el PC
+
+Por defecto Nox da a Dual Screen una IP `172.16.x.x` que solo existe dentro del emulador.
+La AYANEO, en tu Wi-Fi `192.168.x.x`, no puede llegar ahí.
+
+1. En Nox: **Ajustes → modelo de teléfono e internet → modo puente (bridge)**, DHCP, guardar y reiniciar.
+2. Vuelve a abrir Dual Screen. Pocket Companion debe mostrar una IP `192.168…` o `10…`.
+3. En la AYANEO escribe esa IP, el puerto `37603` y el código de 6 dígitos.
+4. En Windows permite UDP **37603** de entrada (firewall).
+
+No uses `172.16.21.15` aunque Dual Screen la enseñe. Esa red no sale al Wi-Fi.
+
 ## Probar
 
 1. Instala la APK principal en el Fold y Pocket Companion en la AYANEO.

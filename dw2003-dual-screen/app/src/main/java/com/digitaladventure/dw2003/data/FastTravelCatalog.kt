@@ -14,8 +14,7 @@ data class FastTravelGroup(
 )
 
 object FastTravelCatalog {
-    /** Amaterasu city icons. Square swaps server; Flawe's IPS table only encodes Asuka MAP_IDs. */
-    private val amaterasuIcons = setOf(0x0780, 0x0810, 0x0825, 0x0845, 0x0855)
+    private val amaterasuIcons = FlaweFastTravelTable.amaterasuMapIds
 
     val askmapIcons: Set<Int> = FlaweFastTravelTable.asukaMapIds + amaterasuIcons
     private val flaweIcons: Set<Int> = askmapIcons
@@ -34,7 +33,7 @@ object FastTravelCatalog {
         0x023E to (0x023E..0x0241).toSet(),
         0x0242 to setOf(0x0242, 0x0243, 0x0244, 0x0245, 0x0246),
         0x024D to (0x024D..0x0257).toSet(),
-        0x025B to setOf(0x025A, 0x025B, 0x025C),
+        0x025A to setOf(0x025A, 0x025B, 0x025C),
         0x025D to (0x025D..0x0260).toSet(),
         0x0268 to setOf(0x0268, 0x0269),
         0x026F to setOf(
@@ -63,6 +62,7 @@ object FastTravelCatalog {
     fun iconId(areaId: Int, mapId: Int = areaId): Int {
         val stage = LocationResolver.stageId(areaId, mapId)
         if (stage in flaweIcons) return stage
+        FlaweFastTravelTable.fieldIcon(stage)?.let { return it }
         return iconGroups.entries.firstOrNull { stage in it.value }?.key ?: 0
     }
 

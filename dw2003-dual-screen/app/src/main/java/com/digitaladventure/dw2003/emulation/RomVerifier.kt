@@ -11,6 +11,9 @@ object RomVerifier {
     const val FLAWES_MOD_2_SHA1 = "5277dfd1b7b6b237ea93bfca2723c9b4baaa75d1"
     const val USA_SHA1 = "f0b022f9be53cbce14640abd8f01beaadcb35208"
 
+    const val HARMONY_PUBLIC_SHA1 = "297a02a7e594e1995a755f1de45c1633c28a2ea0"
+    const val HARMONY_TERRIERMON_SHA1 = "229fd42f63c1173dd497b02fc5e1419b2c44615b"
+
     const val SERIAL_PAL = "SLES_039.36"
     const val SERIAL_USA = "SLUS_014.36"
 
@@ -18,6 +21,7 @@ object RomVerifier {
         ORIGINAL("Digimon World 2003 Europa"),
         FLAWES_MOD_2("Flawe's Mod 2.0 combinado"),
         USA("Digimon World 3 USA"),
+        HARMONY("Digimon World 2003: Harmony"),
         UNKNOWN("Imagen no verificada");
 
         val features: CompanionRomFeatures
@@ -72,6 +76,7 @@ object RomVerifier {
     fun identify(sha1: String, serial: String? = null): Variant {
         val normalized = normalizeSerial(serial)
         return when {
+            sha1 == HARMONY_PUBLIC_SHA1 || sha1 == HARMONY_TERRIERMON_SHA1 -> Variant.HARMONY
             sha1 == ORIGINAL_SHA1 -> Variant.ORIGINAL
             sha1 == FLAWES_MOD_2_SHA1 -> Variant.FLAWES_MOD_2
             sha1 == USA_SHA1 || normalized == SERIAL_USA -> Variant.USA

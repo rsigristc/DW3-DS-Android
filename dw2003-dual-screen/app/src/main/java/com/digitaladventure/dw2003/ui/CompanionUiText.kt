@@ -48,6 +48,23 @@ object CompanionUiText {
     fun area(language: CompanionLanguage, areaId: Int): String {
         if (areaId == 0) return pick(language, "Área desconocida", "Unknown area")
         if (language == CompanionLanguage.SPANISH) return AreaCatalog.name(areaId)
+        val amaterasuCity = when (areaId) {
+            0x0270 -> "Amaterasu City"
+            0x029C -> "Qing Long City"
+            0x02AB -> "Zhu Que City"
+            0x02C6 -> "Bai Hu City"
+            0x02D6 -> "Xuan Wu City"
+            else -> null
+        }
+        if (amaterasuCity != null) return amaterasuCity
+        com.digitaladventure.dw2003.data.FlaweFastTravelTable.asukaCounterpart[areaId]?.let {
+            return "${area(language, it)} · Amaterasu"
+        }
+        if (areaId in 0x0270..0x02D6) {
+            com.digitaladventure.dw2003.data.FlaweFastTravelTable.fieldIcon(areaId)?.takeIf { it != areaId }?.let {
+                return "${area(language, it)} · 0x${AreaCatalog.hex(areaId)}"
+            }
+        }
         return englishAreas[areaId]
             ?: AreaCatalog.knownName(areaId)
             ?: "Area 0x${AreaCatalog.hex(areaId)}"

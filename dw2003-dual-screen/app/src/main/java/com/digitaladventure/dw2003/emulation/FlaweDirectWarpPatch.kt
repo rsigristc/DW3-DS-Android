@@ -71,7 +71,7 @@ object FlaweDirectWarpPatch {
 
     fun prepare(original: ByteArray, areaId: Int): ByteArray? {
         val iconCode = iconCode(areaId) ?: return null
-        if (!matchesPreferred(original)) return null
+        if (areaId !in FlaweFastTravelTable.asukaMapIds || !matchesPreferred(original)) return null
 
         return original.copyOf().also { patched ->
             GameMemoryController.writeU32(patched, VALIDATION_BRANCH_OFFSET, NOP)
@@ -93,6 +93,8 @@ object FlaweDirectWarpPatch {
         val isV2 = site.branchOffset == 8 && site.iconLoadOffset == 0x38 && matchesV2(window)
         if (!isV2 && !(site.branchOffset == VALIDATION_BRANCH_OFFSET &&
                 site.iconLoadOffset == ICON_LOAD_OFFSET && matchesPreferred(window))) return null
+
+        if (!isV2 && areaId !in FlaweFastTravelTable.asukaMapIds) return null
 
         return window.copyOf().also { patched ->
             GameMemoryController.writeU32(patched, site.branchOffset, NOP)

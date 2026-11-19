@@ -125,6 +125,15 @@ class FlaweDirectWarpPatchTest {
         assertEquals(0x4000, FlaweDirectWarpPatch.selectActiveSite(ram)!!.ramOffset)
     }
 
+    @Test
+    fun amaterasuRequiresThePairedTableDispatcher() {
+        val original = v2Window()
+        val patched = FlaweDirectWarpPatch.prepare(original, 0x0270, FlaweDirectWarpPatch.v2Site(0))!!
+        assertEquals(0x34070014L, GameStateReader.u32(patched, 0x38))
+        assertNull(FlaweDirectWarpPatch.prepare(dispatcherWindow(), 0x0270))
+        assertTrue(original.contentEquals(v2Window()))
+    }
+
     private fun v2Window(): ByteArray =
         ("8001828c000000004c004010000000000180023c14b2428cd0ffbd272800b0af" +
             "2c00bfaf3c00401025808000020042380100422c0a80033c8401078e")

@@ -6,7 +6,13 @@ Prueba de concepto Android para ejecutar **Digimon World 2003 (Europa)** y aprov
 - Samsung Galaxy Z Fold y otros plegables compatibles con Jetpack WindowManager.
 - Tablets o pantallas grandes, con división lógica adaptable.
 
-La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.4.0** es la release actual. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.6.0** es la release actual. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+
+## Estado 1.6.0
+
+- En **⚙ APP → Instalar o actualizar Harmony**, selecciona un BIN original de Digimon World 2003 PAL. La app descarga el BPS oficial, muestra el changelog y crea una copia jugable con el parche aplicado.
+- **Rutas** reúne requisitos, formas desbloqueadas y técnicas de Harmony. En Gestión y Batalla aparece la forma activa. El catálogo distingue la Beta 1.5 pública del BIN experimental de Terriermon v50.
+- L2/R2 están disponibles en el pad táctil y en mandos físicos. El viaje rápido de Flawe 2.0 admite destinos visitados en Asuka y Amaterasu.
 
 ## Estado 1.4.0
 
@@ -108,7 +114,7 @@ La USA `SLUS-01436` se reconoce por SHA-1 o por el serial del disco y arranca en
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v1.0.6.apk` (release `v1.0.6`) en un dispositivo Android ARM64. Si tenías la POC debug, desinstálala antes. Si ya tienes 1.0.0–1.0.4, el actualizador de la app puede reemplazarla.
+1. Instala `DW2003-Dual-Screen-v1.6.0.apk` en un dispositivo Android ARM64. Si ya tienes una versión oficial firmada, usa el actualizador de la app.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada, la imagen original europea o Digimon World 3 USA (`SLUS-01436`). En USA no hay viaje rápido ni guía de Flawe.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.
@@ -123,7 +129,7 @@ La aplicación conserva permiso de lectura del archivo mediante Storage Access F
 ## Limitaciones conocidas
 
 - El radar selecciona una imagen regional real según servidor/sector y muestra el nombre del mapa local. La coordenada exacta del jugador dentro de esa imagen todavía no se extrae de RAM.
-- Flawe no expone una entrada directa documentada a su mapa; la app abre START, ancla la lista en Ítems con ↑↑↑↑ y baja a Mapa con ↓↓ ×. No escribe el índice del widget. Si el destino está en el otro servidor, pulsa □. Amaterasu no tiene códigos ASKMAP en el IPS.
+- Flawe no expone una entrada directa documentada a su mapa; la app abre START, ancla la lista en Ítems con ↑↑↑↑ y baja a Mapa con ↓↓ ×. No escribe el índice del widget. Si el destino está en el otro servidor, pulsa □. El viaje automático a Amaterasu usa la tabla de destinos de Flawe 2.0.
 - En Flawe 2.0 la lista prueba `0x8000C000` y, si difiere, busca una copia reubicada referenciada por el overlay. Fuerza el icono interno solo durante × y lo restaura antes de salir con △△. Si no hay una firma activa única, vuelve a la cruceta.
 - El objetivo usa el selector y el catálogo empaquetados de Flawe. El texto en vivo de START se muestra cuando el menú localizado lo tiene; si no, el panel sigue las condiciones de misión offline.
 - La detección automática de Batalla/Gestión usa firmas del mod combinado. La imagen original continúa funcionando, pero puede requerir firmas adicionales.
@@ -134,7 +140,7 @@ La aplicación conserva permiso de lectura del archivo mediante Storage Access F
 - Las técnicas activas muestran MP y poder cuando el catálogo los tiene. Las de apoyo (cura, campos, Double Power/Guard) dejan el poder en `—`.
 - El sprite de pesca está integrado y puede previsualizarse tocando el panel del Tamer en un punto de pesca conocido. ddw3 no publica un overlay de pesca; sigue haciendo falta un dump de RAM de pie vs. pescando para activar `isFishing`.
 - Si la app se cierra de forma inesperada, ⚙ APP → **Ver último crash** muestra `last-crash.log` (traza Java/Kotlin, no abortos nativos del núcleo).
-- ⚙ APP → **Buscar actualización** compara esta instalación con el último release **público** de GitHub e instala el APK firmado de release. Si el repo es privado, GitHub responde 404 y la app lo muestra como error, no como «ya actualizado». La primera vez hay que desinstalar la POC debug.
+- ⚙ APP → **Actualizar DS Companion** compara esta instalación con el último release **público** de GitHub e instala el APK firmado de release. Si el repo es privado, GitHub responde 404 y la app lo muestra como error, no como «ya actualizado». La primera vez hay que desinstalar la POC debug.
 - Los nombres del equipo corresponden al catálogo inglés de referencia; parámetros y bonificaciones sí se muestran con abreviaturas españolas.
 
 ## Compilación

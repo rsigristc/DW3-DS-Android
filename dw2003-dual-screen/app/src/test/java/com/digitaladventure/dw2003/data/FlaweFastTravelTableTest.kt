@@ -21,9 +21,18 @@ class FlaweFastTravelTableTest {
     }
 
     @Test
-    fun doesNotInventAmaterasuAskmapCodes() {
-        listOf(0x0780, 0x0810, 0x0825, 0x0845, 0x0855).forEach { mapId ->
-            assertNull(FlaweFastTravelTable.iconCode(mapId))
+    fun nativeAmaterasuIdsShareTheirAsukaIconCodes() {
+        assertEquals(45, FlaweFastTravelTable.amaterasuIcons.size)
+        assertEquals(0x14, FlaweFastTravelTable.iconCode(0x0270))
+        assertEquals(0x1E, FlaweFastTravelTable.iconCode(0x028C))
+        assertEquals(0x0F, FlaweFastTravelTable.iconCode(0x029C))
+        assertEquals(0x2A, FlaweFastTravelTable.iconCode(0x02AB))
+        assertEquals(0x22, FlaweFastTravelTable.iconCode(0x02C6))
+        assertEquals(0x06, FlaweFastTravelTable.iconCode(0x02D6))
+        assertEquals(0x27, FlaweFastTravelTable.iconCode(0x025A))
+        assertNull(FlaweFastTravelTable.iconCode(0x0780))
+        FlaweFastTravelTable.amaterasuIcons.forEach {
+            assertEquals(it.iconCode, FlaweFastTravelTable.iconCode(FlaweFastTravelTable.asukaCounterpart.getValue(it.mapId)))
         }
     }
 }

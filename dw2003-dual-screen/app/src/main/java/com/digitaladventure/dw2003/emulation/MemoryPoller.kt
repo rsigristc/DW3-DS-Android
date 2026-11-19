@@ -7,6 +7,7 @@ import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.data.BattleSetupReader
 import com.digitaladventure.dw2003.data.RamWatch
 import com.digitaladventure.dw2003.data.GameStateReader
+import com.digitaladventure.dw2003.data.HarmonyCatalog
 import com.digitaladventure.dw2003.data.FlaweMenuStateReader
 import com.digitaladventure.dw2003.data.FlaweOverlayWatch
 import com.digitaladventure.dw2003.data.OverlaySceneResolver
@@ -21,6 +22,7 @@ import com.digitaladventure.dw2003.data.CompanionRomFeatures
 import com.digitaladventure.dw2003.data.OverlayLocationFinder
 import com.digitaladventure.dw2003.data.WalkthroughTextFinder
 import com.digitaladventure.dw2003.data.FlaweWalkthroughReader
+import com.digitaladventure.dw2003.data.AuctionCatalog
 import com.digitaladventure.dw2003.data.FlaweGuideCatalog
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.LibretroDroid
@@ -46,7 +48,11 @@ class MemoryPoller(
             view.context.assets.open("guide/objectives.json").bufferedReader().use { it.readText() }
         )
     }
+    private val harmonyReaders by lazy {
+        HarmonyCatalog.loadAll(view.context.assets).associateWith(::GameStateReader)
+    }
     private val reader = GameStateReader()
+    private var detectedHarmony: HarmonyCatalog? = null
     private var job: Job? = null
     private var cachedObjective: String? = null
     private var cachedStoryStage = -1
@@ -143,6 +149,12 @@ class MemoryPoller(
         } else {
             null
         }
+        val guideKey = if (features.supportsWalkthrough) {
+            runCatching { guide.currentKey(main) }.getOrNull()
+        } else {
+            null
+        }
+        val auction = AuctionCatalog.forGuideKey(guideKey)
         val battleSetup = runCatching {
             read(BattleSetupReader.SETUP_BASE, BattleSetupReader.SETUP_LENGTH)
         }.getOrNull()
@@ -198,7 +210,12 @@ class MemoryPoller(
         if (ramCaptures != null && ramProbe != null) {
             ramCaptures.maybeCapture(ramProbe, changes, force = sceneEntered)
         }
-        val snapshot = reader.parse(
+        if (detectedHarmony == null && areaId != 0 && features.ramBase == CompanionRomFeatures.PAL_RAM_BASE) {
+            detectedHarmony = harmonyReaders.keys.firstOrNull { it.matches(::read) }
+        }
+        val harmony = detectedHarmony
+        val harmonyPartner = if (harmony?.ninthPartner == true) read(HarmonyCatalog.PARTNER_OFFSET, HarmonyCatalog.RECORD_LENGTH) else null
+        val snapshot = (harmonyReaders[harmony] ?: reader).parse(
             main,
             signature,
             objective,
@@ -211,7 +228,11 @@ class MemoryPoller(
             ramProbe,
             slotWord,
             fieldMenuVisible,
-            flaweMapLoaded
+            flaweMapLoaded,
+            auction,
+            guideKey,
+            harmony != null,
+            harmonyPartner
         )
         if (snapshot.enemies.isNotEmpty()) {
             cachedEnemies = snapshot.enemies

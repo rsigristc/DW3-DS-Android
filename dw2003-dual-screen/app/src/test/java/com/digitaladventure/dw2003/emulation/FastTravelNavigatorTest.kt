@@ -1,10 +1,18 @@
 package com.digitaladventure.dw2003.emulation
 
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FastTravelNavigatorTest {
+    @Test fun hoveredIconAndStaleAreaCannotConfirmArrival() {
+        assertFalse(FastTravelNavigator.hasArrived(0x0270, 0x1000, 0x0270))
+        assertFalse(FastTravelNavigator.hasArrived(0x0270, 0x0200, 0x0270))
+        assertTrue(FastTravelNavigator.hasArrived(0x0200, 0x0270, 0x0270))
+        assertFalse(FastTravelNavigator.hasArrived(0x1000, 0x0270, 0x0270))
+    }
+
     @Test
     fun statusMenuUsesOverlaySignatureNotAreaWord() {
         assertTrue(FastTravelNavigator.isStatusMenu(0x8008428CL, 0x0202, 0x0202))

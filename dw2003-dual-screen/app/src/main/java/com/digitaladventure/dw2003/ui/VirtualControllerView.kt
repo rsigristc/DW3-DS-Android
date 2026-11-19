@@ -140,6 +140,10 @@ class VirtualControllerView(
         addRectKey(canvas, RectF(dp(12f), shoulderTop, dp(92f), shoulderTop + dp(34f)), KeyEvent.KEYCODE_BUTTON_L1, "L1")
         addRectKey(canvas, RectF(width - dp(92f), shoulderTop, width - dp(12f), shoulderTop + dp(34f)), KeyEvent.KEYCODE_BUTTON_R1, "R1")
 
+        val triggerTop = shoulderTop + dp(40f)
+        addRectKey(canvas, RectF(dp(12f), triggerTop, dp(92f), triggerTop + dp(34f)), KeyEvent.KEYCODE_BUTTON_L2, "L2")
+        addRectKey(canvas, RectF(width - dp(92f), triggerTop, width - dp(12f), triggerTop + dp(34f)), KeyEvent.KEYCODE_BUTTON_R2, "R2")
+
         val centerY = height - dp(34f)
         addRectKey(canvas, RectF(width / 2f - dp(96f), centerY - dp(18f), width / 2f - dp(8f), centerY + dp(14f)), KeyEvent.KEYCODE_BUTTON_SELECT, "SELECT")
         addRectKey(canvas, RectF(width / 2f + dp(8f), centerY - dp(18f), width / 2f + dp(96f), centerY + dp(14f)), KeyEvent.KEYCODE_BUTTON_START, "START")

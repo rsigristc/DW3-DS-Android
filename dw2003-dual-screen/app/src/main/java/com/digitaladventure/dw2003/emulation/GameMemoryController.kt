@@ -9,7 +9,8 @@ import com.swordfish.libretrodroid.LibretroDroid
 
 data class FlaweDirectWarpToken(
     val dispatcherRamOffset: Int,
-    val originalDispatcher: ByteArray
+    val originalDispatcher: ByteArray,
+    val patchedDispatcher: ByteArray
 )
 
 class GameMemoryController(private val view: GLRetroView) {
@@ -17,9 +18,9 @@ class GameMemoryController(private val view: GLRetroView) {
         view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM, offset, length)
     }
 
-    fun reorderParty(profileIds: List<Int>) {
+    fun reorderParty(profileIds: List<Int>, supportsHarmony: Boolean = false) {
         require(profileIds.size in 1..3) { "La formación activa solo tiene tres ranuras" }
-        require(profileIds.all { it in 0..7 }) { "Perfil de compañero fuera de rango" }
+        require(profileIds.all { it in 0..7 || (it == 8 && supportsHarmony) }) { "Perfil de compañero fuera de rango" }
         val payload = ByteArray(GameStateReader.ACTIVE_PARTY.size * 4)
         GameStateReader.ACTIVE_PARTY.indices.forEach { index ->
             writeU32(payload, index * 4, (profileIds.getOrNull(index) ?: 0).toLong())
@@ -93,7 +94,7 @@ class GameMemoryController(private val view: GLRetroView) {
         if (FlaweDirectWarpPatch.matchesV2(v2)) {
             val patched = FlaweDirectWarpPatch.prepare(v2, areaId, FlaweDirectWarpPatch.v2Site(0)) ?: return null
             view.writeMemory(LibretroDroid.MEMORY_SYSTEM_RAM, FlaweDirectWarpPatch.V2_RAM_OFFSET, patched)
-            return FlaweDirectWarpToken(FlaweDirectWarpPatch.V2_RAM_OFFSET, v2)
+            return FlaweDirectWarpToken(FlaweDirectWarpPatch.V2_RAM_OFFSET, v2, patched)
         }
         val preferred = view.readMemory(
             LibretroDroid.MEMORY_SYSTEM_RAM,
@@ -108,7 +109,8 @@ class GameMemoryController(private val view: GLRetroView) {
             )
             return FlaweDirectWarpToken(
                 FlaweDirectWarpPatch.DISPATCHER_RAM_OFFSET,
-                preferred
+                preferred,
+                patched
             )
         }
 
@@ -125,10 +127,19 @@ class GameMemoryController(private val view: GLRetroView) {
             site.copy(ramOffset = 0)
         ) ?: return null
         view.writeMemory(LibretroDroid.MEMORY_SYSTEM_RAM, site.ramOffset, patched)
-        return FlaweDirectWarpToken(site.ramOffset, original)
+        return FlaweDirectWarpToken(site.ramOffset, original, patched)
     }
 
+    /** 0 = automatic, 1 = Asuka, 2 = Amaterasu, as used by Flawe STSTATUS. */
+    fun readFlaweMapServer(): Int = GameStateReader.u32(
+        view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM, 0xB214, 4), 0
+    ).toInt()
+
     fun restoreDirectFlaweWarp(token: FlaweDirectWarpToken) {
+        // A field overlay may have replaced STSTATUS before the trip finishes.
+        val current = view.readMemory(LibretroDroid.MEMORY_SYSTEM_RAM,
+            token.dispatcherRamOffset, token.patchedDispatcher.size)
+        if (!current.contentEquals(token.patchedDispatcher)) return
         view.writeMemory(
             LibretroDroid.MEMORY_SYSTEM_RAM,
             token.dispatcherRamOffset,

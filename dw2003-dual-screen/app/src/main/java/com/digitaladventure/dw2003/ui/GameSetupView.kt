@@ -52,6 +52,7 @@ class GameSetupView(
     hasCrashLog: Boolean = false,
     onViewCrashLog: (() -> Unit)? = null,
     onCheckUpdate: (() -> Unit)? = null,
+    onHarmonyUpdate: (() -> Unit)? = null,
     initialTab: Tab = lastSelectedTab
 ) : LinearLayout(context) {
     enum class Tab { GAME, APP }
@@ -119,8 +120,17 @@ class GameSetupView(
         showTab(initialTab)
 
         addView(Space(context), LayoutParams(1, dp(10)))
-        if (onCheckUpdate != null) {
-            addView(actionButton(pick(language, "Buscar actualización", "Check for update"), onCheckUpdate, outlined = true))
+        if (onCheckUpdate != null || onHarmonyUpdate != null) {
+            val updates = LinearLayout(context).apply { orientation = HORIZONTAL }
+            if (onCheckUpdate != null) {
+                updates.addView(actionButton(pick(language, "Actualizar DS Companion", "Update DS Companion"), onCheckUpdate, outlined = true),
+                    LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply { if (onHarmonyUpdate != null) marginEnd = dp(8) })
+            }
+            if (onHarmonyUpdate != null) {
+                updates.addView(actionButton(pick(language, "Instalar o actualizar Harmony", "Install or update Harmony"), onHarmonyUpdate, outlined = true),
+                    LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
+            }
+            addView(updates)
             addView(Space(context), LayoutParams(1, dp(8)))
         }
         if (onViewCrashLog != null) {
@@ -393,8 +403,8 @@ class GameSetupView(
             page.addView(hint(
                 pick(
                     language,
-                    "Conecta una AYANEO por Wi-Fi para usar sus controles físicos y mostrar la telemetría del juego.",
-                    "Connect an AYANEO over Wi-Fi to use its physical controls and show game telemetry."
+                    "Conecta una AYANEO por Wi-Fi. Si Dual Screen corre en Nox, activa el modo puente; no uses la IP 172.16 del emulador.",
+                    "Connect an AYANEO over Wi-Fi. If Dual Screen runs in Nox, enable network bridge; do not use the emulator’s 172.16 IP."
                 )
             ))
         }

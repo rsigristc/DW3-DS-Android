@@ -12,6 +12,7 @@ data class MapRegion(val server: ServerRegion, val sector: SectorRegion)
 object MapRegionCatalog {
     fun resolve(mapId: Int): MapRegion {
         val server = when (mapId) {
+            in 0x0270..0x02D6 -> ServerRegion.AMATERASU
             in 0x0200..0x02FF -> ServerRegion.ASUKA
             in 0x0780..0x089F -> ServerRegion.AMATERASU
             else -> ServerRegion.UNKNOWN
@@ -30,6 +31,11 @@ object MapRegionCatalog {
             else -> SectorRegion.UNKNOWN
         }
         ServerRegion.AMATERASU -> when (mapId) {
+            in 0x0270..0x028F -> SectorRegion.CENTRAL
+            in 0x0290..0x029F -> SectorRegion.EAST
+            in 0x02A0..0x02B0 -> SectorRegion.SOUTH
+            in 0x02B1..0x02C8 -> SectorRegion.WEST
+            in 0x02C9..0x02D6 -> SectorRegion.NORTH
             in 0x0780..0x080F -> SectorRegion.CENTRAL
             in 0x0810..0x0824 -> SectorRegion.EAST
             in 0x0825..0x0844 -> SectorRegion.SOUTH

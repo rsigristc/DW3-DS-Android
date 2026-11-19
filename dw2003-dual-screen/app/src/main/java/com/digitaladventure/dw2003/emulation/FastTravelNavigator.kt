@@ -1,6 +1,8 @@
 package com.digitaladventure.dw2003.emulation
 
 import com.digitaladventure.dw2003.data.GameStateReader
+import com.digitaladventure.dw2003.data.FastTravelCatalog
+import com.digitaladventure.dw2003.data.LocationResolver
 
 /**
  * START opens a vertical list (Items, Sort, Map, Techniques, Status)
@@ -77,6 +79,10 @@ object FastTravelNavigator {
         )
 
     fun closeMenu(): List<PadStep> = listOf(PadStep(RetroPadButton.TRIANGLE, 260))
+
+    fun hasArrived(areaId: Int, mapId: Int, destination: Int): Boolean =
+        !LocationResolver.isOverlay(areaId) && !LocationResolver.isOverlay(mapId) &&
+            FastTravelCatalog.iconId(mapId) == destination
 
     fun isWorldMapOpen(areaId: Int, mapId: Int): Boolean =
         areaId == MENU_OVERLAY || mapId == MENU_OVERLAY

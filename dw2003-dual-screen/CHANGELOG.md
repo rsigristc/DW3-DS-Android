@@ -1,6 +1,44 @@
 # Changelog
 
-## Unreleased
+## 1.6.0
+
+Cambios desde la versión 1.4.0.
+
+- **Harmony desde la app.** Descarga el parche oficial de GitHub, muestra su historial de cambios y aplica el BPS a una copia de tu BIN PAL original. La barra muestra la descarga, la aplicación y la verificación.
+- **Rutas de digievolución.** La pestaña Rutas muestra formas activas, aprendidas y pendientes con sus conexiones, requisitos y técnicas. Gestión y Batalla muestran la forma activa de cada compañero.
+- **Versiones de Harmony.** El instalador descarga la versión pública de GitHub. La Beta 1.5 (r48) y el BIN experimental de Terriermon v50 tienen sus propios catálogos. DS Companion y Harmony muestran sus actualizaciones por separado.
+
+- **Harmony / Terriermon:** lectura segura del noveno compañero desde su registro separado, sprite diagonal, EXP y soporte de Gargomon, Rapidmon, MegaGargomon y BK MegaGargomon. Reordenar el equipo admite Terriermon solo en Harmony reconocido.
+- **Catálogo de Harmony v50:** 115 perfiles y 592 asignaciones de técnicas extraídos de la BIN con sus rutinas MIPS reales. Nombres nuevos, firmas, aprendizaje, dominio, requisitos y resistencias coinciden con esa versión. Tocar «Digievoluciones · Ver rutas» abre sus rutas; tocar una forma o las habilidades abre el detalle completo.
+- **Técnicas aprendidas:** el panel usa los seis slots reales de la partida, incluidos los IDs nuevos y las técnicas cargadas. El MP considera forma activa, accesorios y recargo por carga; el detalle separa lo aprendido del repertorio futuro.
+- **Niveles DV:** se corrige la lectura del byte de nivel para no confundirlo con el marcador de curva de Harmony (`0xD6`). Los datos originales se mantienen para otras ROM.
+
+- **Controles L2/R2:** botones táctiles y gatillos analógicos (LTRIGGER/RTRIGGER y BRAKE/GAS). Se combinan los eventos de eje y botón para no soltar un gatillo mientras siga pulsado. Se liberan al salir de la app.
+- **Viaje rápido:** se integra la columna Amaterasu de la tabla de Flawe 2.0 auditada en Harmony, se corrigen los IDs nativos y el icono de Torre de los Espejismos. El selector conserva los destinos visitados, verifica el servidor del mapa y confirma la llegada fuera del menú. Amaterasu requiere el dispatcher de Flawe 2.0; los dispatchers antiguos siguen limitados a Asuka.
+
+- Si Flawe está en un punto de la historia con subasta en El Dorado (Torre de Carga), el panel muestra esa subasta **además** del objetivo de historia, no en su lugar. También avisa una vez por subasta (en Android 13+ hay que permitir notificaciones).
+- Pocket Companion recibe el mismo aviso debajo de la guía.
+- Si Flawe ya pasó el punto del agente y el **nivel total del equipo** entra en el rango, el panel avisa un **DRI** (dónde está el agente, el Ultimate para el DDNA y si hace falta dejar Digimon en el laboratorio). No sustituye la historia. Una notificación por agente listo.
+
+### English
+
+Changes since version 1.4.0.
+
+- **Harmony in-app installer.** Downloads the official GitHub patch, shows release notes and applies the BPS to a copy of your original PAL BIN. Progress covers download, patching and verification.
+- **Digivolution routes.** The Routes tab shows active, unlocked and locked forms with links, requirements and skills. Management and Battle show each partner's current form.
+- **Harmony versions.** The installer downloads the public GitHub release. Beta 1.5 (r48) and the experimental Terriermon v50 BIN have separate catalogs. DS Companion and Harmony check for updates separately.
+
+- **Harmony / Terriermon:** safely reads the ninth partner from its separate record, with a diagonal sprite, EXP and Gargomon, Rapidmon, MegaGargomon and BK MegaGargomon support. Party reorder accepts Terriermon only in recognized Harmony.
+- **Harmony v50 catalog:** 115 profiles and 592 skill assignments extracted from the BIN through its real MIPS routines. New names, signatures, learning/mastery levels, requirements and status resistance match that revision. Tap “Digivolutions · View routes”, a form or the skill panel for details.
+- **Learned skills:** uses the save’s six real skill slots, including new IDs and loaded techniques. MP considers active form, accessories and loaded-skill surcharge; details distinguish learned skills from the future repertoire.
+- **DV levels:** reads the level byte without mixing in Harmony’s `0xD6` curve marker. Other ROMs retain their original catalog.
+
+- **L2/R2 controls:** touch buttons and analog triggers (LTRIGGER/RTRIGGER and BRAKE/GAS). Axis and button events are merged to avoid premature releases; held triggers release when leaving the app.
+- **Fast travel:** adds the Amaterasu column from the Flawe 2.0 table audited in Harmony, corrects native map IDs and the Mirage Tower icon. Only visited destinations are listed, map server changes are checked, and arrival is confirmed outside the menu. Amaterasu requires the Flawe 2.0 dispatcher; older dispatchers remain Asuka-only.
+
+- When Flawe’s story hits an El Dorado (Cargo Tower) auction, the pane shows that auction **in addition to** the story objective. It also notifies once per auction (Android 13+ needs notification permission).
+- Pocket Companion gets the same note under the guide.
+- When Flawe has passed a DRI agent’s story beat and your **combined party level** fits, the pane shows that **DRI** (agent location, Ultimate for the DDNA, and when to store Digimon in the lab). It does not replace the story. One notification per ready agent.
 
 ## 1.4.0
 

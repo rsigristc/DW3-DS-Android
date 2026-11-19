@@ -21,6 +21,9 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.ProgressBar
+import com.digitaladventure.dw2003.emulation.HarmonyInstaller
+import kotlinx.coroutines.ensureActive
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.ComponentActivity
@@ -52,6 +55,7 @@ import com.digitaladventure.dw2003.model.GameSnapshot
 import com.digitaladventure.dw2003.ui.CompanionUiText
 import com.digitaladventure.dw2003.emulation.BiosManager
 import com.digitaladventure.dw2003.emulation.CrashLogStore
+import com.digitaladventure.dw2003.emulation.TriggerInputState
 import com.digitaladventure.dw2003.emulation.FastTravelNavigator
 import com.digitaladventure.dw2003.emulation.GameMemoryController
 import com.digitaladventure.dw2003.emulation.MemoryPoller
@@ -148,6 +152,27 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private var lastEnhancementEnabled: Boolean? = null
     private var lastAppliedShader: ShaderConfig? = null
     private val analogDpadKeys = mutableSetOf<Int>()
+    private val triggerInput = TriggerInputState()
+    private val auctionNotifier by lazy { AuctionNotifier(this) }
+    private val driNotifier by lazy { DriNotifier(this) }
+
+    private val notificationPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+        val latest = repository.snapshot.value
+        val spanish = resolvedLanguage() == CompanionLanguage.SPANISH
+        auctionNotifier.maybeNotify(latest, spanish)
+        driNotifier.maybeNotify(latest, spanish)
+    }
+
+    private val harmonyInstaller by lazy { HarmonyInstaller(File(filesDir, "harmony")) }
+    private var harmonyJob: Job? = null
+    private var pendingHarmony: HarmonyInstaller.Release? = null
+    private val openHarmonyBase = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val release = pendingHarmony
+        pendingHarmony = null
+        if (uri != null && release != null) installHarmony(release, uri)
+    }
 
     private val openRom = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(::acceptRom)
@@ -264,6 +289,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                         }
                     }
                     persistMemoryCardAfterSave(snapshot.areaId, snapshot.mapId)
+                    notifyAuctionIfNeeded(snapshot)
                     localDashboard?.submitSnapshot(snapshot)
                     presentation?.submitSnapshot(snapshot)
                     syncDashboardExtras()
@@ -276,6 +302,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         val stored = getPreferences(MODE_PRIVATE).getString(PREF_ROM_URI, null)
         if (stored != null) bootRom(Uri.parse(stored)) else showSetup()
         checkForAppUpdate(manual = false)
+        checkHarmony(manual = false)
     }
 
     override fun onStart() {
@@ -307,6 +334,12 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     }
 
     override fun onPause() {
+        val releasedTriggers = triggerInput.releaseAll()
+        retroView?.let { view ->
+            releasedTriggers.forEach { sendTrigger(view, it) }
+            analogDpadKeys.forEach { view.sendKeyEvent(KeyEvent.ACTION_UP, it, 0) }
+        }
+        analogDpadKeys.clear()
         resetPlayClockAnchor()
         if (!skipNextAutoSave) persistMemoryCardIfSafe()
         skipNextAutoSave = false
@@ -444,6 +477,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         hasCrashLog = crashLog.hasLog(),
         onViewCrashLog = ::showCrashLog,
         onCheckUpdate = { checkForAppUpdate(manual = true) },
+        onHarmonyUpdate = { checkHarmony(manual = true) },
         initialTab = GameSetupView.lastSelectedTab
     )
 
@@ -463,15 +497,30 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     private fun showRemoteCompanionInfo() {
         val language = resolvedLanguage()
+        val emulator = remoteServer.usesEmulatorNetwork()
+        val spanish = buildString {
+            append("En la AYANEO abre DW2003 Pocket Companion e introduce:\n\n")
+            append(remoteServer.connectionLabel())
+            append("\n\nUsa la IP que empiece por 192.168 o 10., no una 172.16 (eso es red interna de un emulador).")
+            if (emulator) {
+                append("\n\nNox u otro emulador en el PC: activa el modo puente (bridge) en Ajustes → teléfono e internet, reinicia Nox y vuelve a abrir Dual Screen. La etiqueta debe mostrar una IP de tu Wi-Fi. En Companion escribe esa IP y este código. En el PC deja pasar UDP 37603 en el firewall.")
+            } else {
+                append("\n\nAmbos dispositivos deben estar en la misma red Wi-Fi. No abras el puerto a Internet.")
+            }
+        }
+        val english = buildString {
+            append("On the AYANEO open DW2003 Pocket Companion and enter:\n\n")
+            append(remoteServer.connectionLabel())
+            append("\n\nUse an IP that starts with 192.168 or 10., not 172.16 (that is an emulator’s private NAT).")
+            if (emulator) {
+                append("\n\nNox or another PC emulator: turn on network bridge in Settings → phone & internet, restart Nox, and reopen Dual Screen. The label should show a Wi-Fi IP. Type that IP and this code on Companion. Allow UDP 37603 through the PC firewall.")
+            } else {
+                append("\n\nBoth devices must be on the same Wi-Fi network. Do not expose the port to the internet.")
+            }
+        }
         AlertDialog.Builder(this)
             .setTitle(CompanionUiText.pick(language, "Pocket Companion", "Pocket Companion"))
-            .setMessage(
-                CompanionUiText.pick(
-                    language,
-                    "En la AYANEO abre DW2003 Pocket Companion e introduce:\n\n${remoteServer.connectionLabel()}\n\nAmbos dispositivos deben estar en la misma red Wi-Fi. El código protege la entrada remota durante este MVP.",
-                    "On the AYANEO open DW2003 Pocket Companion and enter:\n\n${remoteServer.connectionLabel()}\n\nBoth devices must be on the same Wi-Fi network. The code protects remote input during this MVP."
-                )
-            )
+            .setMessage(CompanionUiText.pick(language, spanish, english))
             .setPositiveButton("OK", null)
             .show()
     }
@@ -529,6 +578,17 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     private fun resolvedLanguage(): CompanionLanguage =
         CompanionLanguageResolver.resolve(languageSetting, detectedLanguage)
+
+    private fun notifyAuctionIfNeeded(snapshot: GameSnapshot) {
+        val spanish = resolvedLanguage() == CompanionLanguage.SPANISH
+        if (auctionNotifier.shouldRequestPermission(snapshot)) {
+            auctionNotifier.markPermissionAsked()
+            notificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            return
+        }
+        auctionNotifier.maybeNotify(snapshot, spanish)
+        driNotifier.maybeNotify(snapshot, spanish)
+    }
 
     private fun storedRomVariant(): RomVerifier.Variant =
         RomVerifier.Variant.fromStored(
@@ -668,7 +728,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         quickStateManager = states
         val controller = VirtualControllerView(
             this,
-            keySink = { action, keyCode -> view.sendKeyEvent(action, keyCode, 0) },
+            keySink = { action, keyCode -> sendGameKey(view, "touch", action, keyCode) },
             quickActionSink = ::handleQuickAction
         ).apply {
             gamepadVisible = virtualControlsVisible()
@@ -912,7 +972,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         val view = retroView
         if (view != null && keyCode in GAME_KEYS) {
-            view.sendKeyEvent(KeyEvent.ACTION_DOWN, mapPhysicalButton(keyCode), 0)
+            sendGameKey(view, "keys:${event.deviceId}", KeyEvent.ACTION_DOWN, mapPhysicalButton(keyCode))
             return true
         }
         return super.onKeyDown(keyCode, event)
@@ -921,7 +981,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
         val view = retroView
         if (view != null && keyCode in GAME_KEYS) {
-            view.sendKeyEvent(KeyEvent.ACTION_UP, mapPhysicalButton(keyCode), 0)
+            sendGameKey(view, "keys:${event.deviceId}", KeyEvent.ACTION_UP, mapPhysicalButton(keyCode))
             return true
         }
         return super.onKeyUp(keyCode, event)
@@ -938,6 +998,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             view.sendMotionEvent(1, leftX, leftY, 0)
             view.sendMotionEvent(2, event.getAxisValue(MotionEvent.AXIS_Z), event.getAxisValue(MotionEvent.AXIS_RZ), 0)
             applyAnalogToDpad(view, hatX, hatY, leftX, leftY)
+            val leftTrigger = maxOf(event.getAxisValue(MotionEvent.AXIS_LTRIGGER), event.getAxisValue(MotionEvent.AXIS_BRAKE))
+            val rightTrigger = maxOf(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_GAS))
+            triggerInput.axes(event.deviceId, leftTrigger, rightTrigger).forEach { sendTrigger(view, it) }
             return true
         }
         return super.dispatchGenericMotionEvent(event)
@@ -996,10 +1059,26 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     override fun onDisplayChanged(displayId: Int) = Unit
 
     private fun displayName(uri: Uri): String {
+        if (uri.scheme == "file") return uri.lastPathSegment ?: "Harmony.bin"
         contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
             if (cursor.moveToFirst()) return cursor.getString(0).let { if (it.endsWith(".bin", true)) it else "$it.bin" }
         }
         return "Digimon World 2003.bin"
+    }
+
+    private fun sendTrigger(view: GLRetroView, change: TriggerInputState.Change) {
+        val key = if (change.button == TriggerInputState.Button.L2) KeyEvent.KEYCODE_BUTTON_L2 else KeyEvent.KEYCODE_BUTTON_R2
+        view.sendKeyEvent(if (change.pressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP, key, 0)
+    }
+
+    private fun sendGameKey(view: GLRetroView, source: String, action: Int, key: Int) {
+        val trigger = when (key) {
+            KeyEvent.KEYCODE_BUTTON_L2 -> TriggerInputState.Button.L2
+            KeyEvent.KEYCODE_BUTTON_R2 -> TriggerInputState.Button.R2
+            else -> null
+        }
+        if (trigger == null) view.sendKeyEvent(action, key, 0)
+        else triggerInput.digital(source, trigger, action == KeyEvent.ACTION_DOWN)?.let { sendTrigger(view, it) }
     }
 
     private fun mapPhysicalButton(keyCode: Int) = when (keyCode) {
@@ -1016,6 +1095,10 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun gameHudVisible(): Boolean =
         getPreferences(MODE_PRIVATE).getBoolean(PREF_GAME_HUD, false)
 
+    private fun showFormDetails(title: String, detail: String) {
+        AlertDialog.Builder(this).setTitle(title).setMessage(detail).setPositiveButton("OK", null).show()
+    }
+
     private fun dashboardActions() = DashboardActions(
         onAppSettings = ::showAppSettings,
         onToggleControls = ::toggleVirtualControls,
@@ -1023,6 +1106,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         onQuickAction = ::handleQuickAction,
         onFastTravel = ::requestFastTravel,
         onOpenGameMap = ::openInGameMap,
+        onFormDetails = ::showFormDetails,
         onPartyMove = ::movePartyMember,
         onCheatToggle = ::toggleCheat,
         onAddCustomCheat = ::showAddCustomCheat,
@@ -1150,12 +1234,15 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         )
     }
 
-    private fun listedVisited(): Set<Int> = visitedMaps + lastRevealedMaps
+    // The native save is authoritative: app-global history may belong to
+    // another save or contain icons recorded by the old atlas heuristic.
+    private fun listedVisited(): Set<Int> = lastRevealedMaps
 
     private fun rememberVisited(areaId: Int, mapId: Int) {
         var changed = false
         FastTravelCatalog.visitTiles(areaId, mapId).forEach { id ->
-            if (id in FastTravelCatalog.askmapIcons && visitedMaps.add(id)) changed = true
+            val icon = FastTravelCatalog.iconId(id)
+            if (icon in FastTravelCatalog.askmapIcons && visitedMaps.add(icon)) changed = true
         }
         if (changed) {
             getPreferences(MODE_PRIVATE).edit()
@@ -1201,7 +1288,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         }
         if (areaId == currentIcon) return
         val destinationServer = MapRegionCatalog.resolve(areaId).server
-        val currentServer = MapRegionCatalog.resolve(currentIcon).server
+        val currentServer = MapRegionCatalog.resolve(snapshot.publicMapId).server
         crashLog.note("fast-travel dest=0x${areaId.toString(16)} from=0x${currentIcon.toString(16)}")
         Log.i(TRAVEL_TAG, "start dest=0x${areaId.toString(16)} from=0x${currentIcon.toString(16)}")
         runTravelSequence {
@@ -1216,14 +1303,24 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 return@runTravelSequence
             }
             delay(400)
-            if (currentServer != ServerRegion.UNKNOWN &&
-                destinationServer != ServerRegion.UNKNOWN &&
-                currentServer != destinationServer
-            ) {
+            val selectedServer = when (controller.readFlaweMapServer()) {
+                1 -> ServerRegion.ASUKA
+                2 -> ServerRegion.AMATERASU
+                else -> currentServer
+            }
+            if (destinationServer == ServerRegion.UNKNOWN || selectedServer == ServerRegion.UNKNOWN) {
+                toast("No se pudo identificar el servidor del mapa", "Could not identify the map server")
+                return@runTravelSequence
+            }
+            if (selectedServer != destinationServer) {
                 playPadSteps(FastTravelNavigator.switchServer())
                 delay(450)
-                if (!waitUntil(2500) { worldMapOpen(controller) }) {
-                    Log.i(TRAVEL_TAG, "lost world map after server switch ${travelRam(controller)}")
+                val expectedServer = if (destinationServer == ServerRegion.AMATERASU) 2 else 1
+                if (!waitUntil(2500) {
+                        worldMapOpen(controller) && controller.readFlaweMapServer() == expectedServer
+                    }) {
+                    toast("No se confirmó el cambio de servidor", "Server change could not be confirmed")
+                    return@runTravelSequence
                 }
             }
             val dispatcherReady = waitUntil(5000) {
@@ -1235,13 +1332,6 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 toast(
                     "El mapa mundial no llegó a cargar. Inténtalo otra vez.",
                     "The world map did not finish loading. Try again."
-                )
-                return@runTravelSequence
-            }
-            if (destinationServer != ServerRegion.ASUKA) {
-                toast(
-                    "Mapa de Amaterasu abierto. El IPS de Flawe no publica esos iconos; elige el destino con la cruceta y ×.",
-                    "Amaterasu map opened. Flawe's IPS does not publish those icons; pick the destination with the D-pad and ×."
                 )
                 return@runTravelSequence
             }
@@ -1270,8 +1360,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             } finally {
                 if (directToken != null) controller.restoreDirectFlaweWarp(directToken)
             }
-            val arrived = warpSelected(controller, areaId) ||
-                waitUntil(2000) { arrivedAt(controller, areaId) }
+            val arrived = waitUntil(8000) { arrivedAt(controller, areaId) }
             Log.i(TRAVEL_TAG, "arrived=$arrived ${travelRam(controller)}")
             val destination = CompanionUiText.area(resolvedLanguage(), areaId)
             toast(
@@ -1399,8 +1488,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     private fun arrivedAt(controller: GameMemoryController, areaId: Int): Boolean {
         val ram = controller.readAreaMap()
-        if (ram.first == areaId || ram.second == areaId) return true
-        return FastTravelCatalog.iconId(ram.first, ram.second) == areaId
+        return FastTravelNavigator.hasArrived(ram.first, ram.second, areaId)
     }
 
     private fun travelRam(controller: GameMemoryController): String {
@@ -1469,7 +1557,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             toast("Reordenar requiere una partida en emulación", "Reordering needs an emulated game session")
             return
         }
-        runCatching { controller.reorderParty(party) }
+        runCatching { controller.reorderParty(party, snapshot.supportsHarmony) }
             .onSuccess { toast("Orden de salida actualizado", "Battle order updated", Toast.LENGTH_SHORT) }
             .onFailure { toast("No se pudo reordenar: ${it.message}", "Could not reorder: ${it.message}") }
     }
@@ -1579,6 +1667,117 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
 
     private fun installedVersionName(): String =
         packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+
+    private fun checkHarmony(manual: Boolean) {
+        if (harmonyJob?.isActive == true) return
+        val prefs = getPreferences(MODE_PRIVATE)
+        val spanish = resolvedLanguage() == CompanionLanguage.SPANISH
+        fun label(es: String, en: String) = if (spanish) es else en
+        harmonyJob = lifecycleScope.launch {
+            val release = try {
+                withContext(Dispatchers.IO) { harmonyInstaller.latest(spanish) }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                if (manual) toast("No se pudo consultar Harmony: ${error.message}", "Could not check Harmony: ${error.message}")
+                return@launch
+            }
+            val installed = prefs.getString("harmony_tag", null)
+            val installedFile = prefs.getString("harmony_file", null)?.let(::File)?.takeIf { it.isFile }
+            val current = installed == release.tag && installedFile != null
+            if (!manual) {
+                if (installed != null && !current) {
+                    toast("Harmony ${release.tag} disponible en APP", "Harmony ${release.tag} available in APP")
+                }
+                return@launch
+            }
+            val notes = withContext(Dispatchers.IO) { harmonyInstaller.notes(release) }
+            val dialog = AlertDialog.Builder(this@MainActivity)
+                .setTitle("Harmony · ${release.tag}")
+                .setMessage((if (current) label("Harmony está al día.", "Harmony is up to date.") else
+                    label("Selecciona tu BIN original de DW2003 PAL. Se guardará una copia con el parche aplicado.",
+                        "Select your original PAL DW2003 BIN. A patched copy will be saved.")) + "\n\n" + notes)
+                .setNegativeButton(label("Cerrar", "Close"), null)
+            if (current && installedFile != null) {
+                dialog.setPositiveButton(label("Jugar Harmony", "Play Harmony")) { _, _ ->
+                    rememberAndRestart(Uri.fromFile(installedFile),
+                        RomVerifier.Result(RomVerifier.Variant.HARMONY, prefs.getString("harmony_sha1", "").orEmpty()))
+                }
+            } else {
+                dialog.setPositiveButton(label("Descargar e instalar", "Download and install")) { _, _ ->
+                    val previousSource = prefs.getString("harmony_base", null)?.let(Uri::parse)
+                    if (previousSource != null) {
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle(label("BIN original de Harmony", "Harmony source BIN"))
+                            .setPositiveButton(label("Usar BIN guardado", "Use saved BIN")) { _, _ ->
+                                installHarmony(release, previousSource)
+                            }
+                            .setNeutralButton(label("Elegir BIN", "Select BIN")) { _, _ -> selectHarmonyBase(release) }
+                            .setNegativeButton(label("Cancelar", "Cancel"), null).show()
+                    } else selectHarmonyBase(release)
+                }
+            }
+            dialog.show()
+        }
+    }
+
+    private fun selectHarmonyBase(release: HarmonyInstaller.Release) {
+        pendingHarmony = release
+        openHarmonyBase.launch(arrayOf("application/octet-stream", "*/*"))
+    }
+
+    private fun installHarmony(release: HarmonyInstaller.Release, source: Uri) {
+        if (harmonyJob?.isActive == true) return
+        runCatching { contentResolver.takePersistableUriPermission(source, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+        val spanish = resolvedLanguage() == CompanionLanguage.SPANISH
+        val stages = if (spanish) listOf("Descargando parche", "Verificando BIN original", "Aplicando parche", "Verificando Harmony")
+            else listOf("Downloading patch", "Verifying original BIN", "Applying patch", "Verifying Harmony")
+        val bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply { max = 100 }
+        val status = TextView(this)
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            val padding = (24 * resources.displayMetrics.density).toInt()
+            setPadding(padding, padding, padding, padding)
+            addView(status)
+            addView(bar, LinearLayout.LayoutParams(-1, -2))
+        }
+        val dialog = AlertDialog.Builder(this).setTitle("Harmony · ${release.tag}")
+            .setView(content).setCancelable(false).setNegativeButton(if (spanish) "Cancelar" else "Cancel", null).create()
+        dialog.show()
+        status.text = stages.first()
+        harmonyJob = lifecycleScope.launch {
+            try {
+                val installed = withContext(Dispatchers.IO) {
+                    val work = coroutineContext
+                    var lastStage = -1
+                    var lastPercent = -1
+                    harmonyInstaller.install(release, { requireNotNull(contentResolver.openInputStream(source)) }) { stage, percent ->
+                        work.ensureActive()
+                        if (stage != lastStage || percent != lastPercent) {
+                            lastStage = stage
+                            lastPercent = percent
+                            runOnUiThread {
+                                status.text = "${stages[stage]} · $percent%"
+                                bar.progress = percent
+                            }
+                        }
+                    }
+                }
+                getPreferences(MODE_PRIVATE).edit().putString("harmony_tag", release.tag)
+                    .putString("harmony_file", installed.file.absolutePath).putString("harmony_sha1", installed.sha1)
+                    .putString("harmony_base", source.toString()).apply()
+                dialog.dismiss()
+                rememberAndRestart(Uri.fromFile(installed.file), RomVerifier.Result(RomVerifier.Variant.HARMONY, installed.sha1))
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                toast("No se pudo instalar Harmony: ${error.message}", "Could not install Harmony: ${error.message}", Toast.LENGTH_LONG)
+            } finally {
+                dialog.dismiss()
+            }
+        }
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { harmonyJob?.cancel() }
+    }
 
     private fun checkForAppUpdate(manual: Boolean) {
         lifecycleScope.launch {

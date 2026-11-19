@@ -50,7 +50,10 @@ class RemoteCompanionServer(
     }
 
     fun connectionLabel(): String =
-        "${localIpv4Address() ?: "IP local"}:${RemoteProtocol.PORT} · código $pairingCode"
+        RemoteNetworkAddresses.formatLabel(localIpv4Addresses(), RemoteProtocol.PORT, pairingCode)
+
+    fun usesEmulatorNetwork(): Boolean =
+        localIpv4Addresses().isNotEmpty() && localIpv4Addresses().all(RemoteNetworkAddresses::looksVirtual)
 
     private fun runLoop() {
         val datagramSocket = runCatching { DatagramSocket(RemoteProtocol.PORT) }.getOrNull() ?: run {
@@ -135,14 +138,18 @@ class RemoteCompanionServer(
         private const val RECEIVE_TIMEOUT_MS = 40
         private const val INPUT_TIMEOUT_NANOS = 750_000_000L
 
-        fun localIpv4Address(): String? = runCatching {
+        fun localIpv4Addresses(): List<String> = runCatching {
             Collections.list(NetworkInterface.getNetworkInterfaces())
                 .asSequence()
                 .filter { it.isUp && !it.isLoopback }
                 .flatMap { Collections.list(it.inetAddresses).asSequence() }
                 .filterIsInstance<Inet4Address>()
-                .firstOrNull { it.isSiteLocalAddress }
-                ?.hostAddress
-        }.getOrNull()
+                .filter { it.isSiteLocalAddress }
+                .mapNotNull { it.hostAddress }
+                .toList()
+                .let(RemoteNetworkAddresses::sortForDisplay)
+        }.getOrElse { emptyList() }
+
+        fun localIpv4Address(): String? = localIpv4Addresses().firstOrNull()
     }
 }
