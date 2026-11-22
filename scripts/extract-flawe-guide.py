@@ -86,7 +86,7 @@ if json_path.exists():
     for key, value in entries.items():
         old = previous.get(key, {})
         if old.get("en") == value["en"]:
-            value.update({k:v for k,v in old.items() if k in ("es", "fr", "de", "it")})
+            value.update({k:v for k,v in old.items() if k in ("es", "fr", "de", "it", "pt", "zh")})
 json_path.write_text(json.dumps(entries,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
 (args.output / "selector.bin").write_bytes(blob[0xc68:0x2724])
 print(f"Extracted {len(entries)} objective pairs and {0x2724-0xc68} selector bytes")

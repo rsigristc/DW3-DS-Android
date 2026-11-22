@@ -301,8 +301,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         crashLog.note("activity-create")
         val stored = getPreferences(MODE_PRIVATE).getString(PREF_ROM_URI, null)
         if (stored != null) bootRom(Uri.parse(stored)) else showSetup()
-        checkForAppUpdate(manual = false)
-        checkHarmony(manual = false)
+        checkForAppUpdate(manual = false) { checkHarmony(manual = false) }
     }
 
     override fun onStart() {
@@ -459,6 +458,11 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             CompanionUiText.pick(resolvedLanguage(), "HUD en el juego: oculto", "Game HUD: hidden")
         },
         onGameHud = ::toggleGameHud,
+        accelerateMemoryCard = getPreferences(MODE_PRIVATE).getBoolean(PREF_ACCELERATE_MEMORY_CARD, false),
+        onAccelerateMemoryCard = { enabled ->
+            getPreferences(MODE_PRIVATE).edit().putBoolean(PREF_ACCELERATE_MEMORY_CARD, enabled).apply()
+            retroView?.updateVariables(memoryCardAccelerationVariable(enabled))
+        },
         imageOptionsLabel = CompanionUiText.imageOptions(resolvedLanguage(), battleScale, videoFilter),
         onImageOptions = ::showImageOptionsMenu,
         performanceLabel = CompanionUiText.performanceMode(resolvedLanguage(), performanceMode),
@@ -691,6 +695,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                 Variable("pcsx_rearmed_bios", "auto"),
                 Variable("pcsx_rearmed_memcard1", "libretro"),
                 Variable("pcsx_rearmed_memcard2", "none"),
+                memoryCardAccelerationVariable(getPreferences(MODE_PRIVATE).getBoolean(PREF_ACCELERATE_MEMORY_CARD, false)),
                 Variable("pcsx_rearmed_drc", "enabled"),
                 Variable("pcsx_rearmed_drc_thread", "auto"),
                 Variable("pcsx_rearmed_spu_thread", "disabled"),
@@ -762,13 +767,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             } else {
                 null
             },
-            objectiveLanguageOverride = {
-                when (languageSetting) {
-                    CompanionLanguageSetting.ENGLISH -> 2
-                    CompanionLanguageSetting.SPANISH -> 6
-                    CompanionLanguageSetting.AUTO -> null
-                }
-            },
+            objectiveLanguageOverride = { languageSetting.language },
             onLanguageDetected = { detected ->
                 if (detectedLanguage != detected) {
                     detectedLanguage = detected
@@ -1669,41 +1668,59 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
 
     private fun checkHarmony(manual: Boolean) {
-        if (harmonyJob?.isActive == true) return
+        if (isFinishing || isDestroyed || harmonyJob?.isActive == true) return
         val prefs = getPreferences(MODE_PRIVATE)
-        val spanish = resolvedLanguage() == CompanionLanguage.SPANISH
-        fun label(es: String, en: String) = if (spanish) es else en
+        val installedFile = prefs.getString("harmony_file", null)?.let(::File)?.takeIf { it.isFile }
+        val managedTag = installedFile?.let { prefs.getString("harmony_tag", null) }
+        val hasActiveRom = prefs.contains(PREF_ROM_URI)
+        val activeTag = if (hasActiveRom) RomVerifier.harmonyReleaseTag(prefs.getString(PREF_ROM_SHA1, null)) else null
+        val installedTag = if (activeTag != null && (managedTag == null || HarmonyInstaller.isNewer(activeTag, managedTag))) {
+            activeTag
+        } else managedTag
+        val isPlayingHarmony = hasActiveRom && storedRomVariant() == RomVerifier.Variant.HARMONY
+        if (!manual && installedTag == null && !isPlayingHarmony) return
+
+        val language = resolvedLanguage()
+        fun label(es: String, en: String) = CompanionUiText.pick(language, es, en)
         harmonyJob = lifecycleScope.launch {
             val release = try {
-                withContext(Dispatchers.IO) { harmonyInstaller.latest(spanish) }
+                withContext(Dispatchers.IO) { harmonyInstaller.latest(language == CompanionLanguage.SPANISH) }
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error
             } catch (error: Exception) {
                 if (manual) toast("No se pudo consultar Harmony: ${error.message}", "Could not check Harmony: ${error.message}")
                 return@launch
             }
-            val installed = prefs.getString("harmony_tag", null)
-            val installedFile = prefs.getString("harmony_file", null)?.let(::File)?.takeIf { it.isFile }
-            val current = installed == release.tag && installedFile != null
-            if (!manual) {
-                if (installed != null && !current) {
-                    toast("Harmony ${release.tag} disponible en APP", "Harmony ${release.tag} available in APP")
-                }
-                return@launch
-            }
+            val current = installedTag != null && !HarmonyInstaller.isNewer(release.tag, installedTag)
+            if (!manual && (current || prefs.getString(PREF_HARMONY_DISMISSED_UPDATE, null) == release.tag)) return@launch
             val notes = withContext(Dispatchers.IO) { harmonyInstaller.notes(release) }
-            val dialog = AlertDialog.Builder(this@MainActivity)
-                .setTitle("Harmony · ${release.tag}")
-                .setMessage((if (current) label("Harmony está al día.", "Harmony is up to date.") else
+            if (isFinishing || isDestroyed) return@launch
+            val versionDetails = buildList {
+                if (installedTag != null) {
+                    add(label("Instalada", "Installed") + " · " + installedTag.removePrefix("harmony-"))
+                }
+                add(label("En GitHub", "On GitHub") + " · " + release.tag.removePrefix("harmony-"))
+                add(if (current) label("Harmony está al día.", "Harmony is up to date.") else
                     label("Selecciona tu BIN original de DW2003 PAL. Se guardará una copia con el parche aplicado.",
-                        "Select your original PAL DW2003 BIN. A patched copy will be saved.")) + "\n\n" + notes)
-                .setNegativeButton(label("Cerrar", "Close"), null)
-            if (current && installedFile != null) {
+                        "Select your original PAL DW2003 BIN. A patched copy will be saved."))
+            }.joinToString("\n")
+            val dialog = AlertDialog.Builder(this@MainActivity)
+                .setTitle(when {
+                    current -> "Harmony"
+                    installedTag != null -> label("Actualización de Harmony disponible", "Harmony update available")
+                    else -> label("Versión pública de Harmony disponible", "Public Harmony release available")
+                })
+                .setMessage(versionDetails + "\n\n" + label("NOVEDADES", "WHAT'S NEW") + "\n\n" +
+                    notes.ifBlank { label("Esta versión no incluye notas de cambios.", "No release notes were provided for this version.") })
+                .setNegativeButton(if (manual) label("Cerrar", "Close") else label("Después", "Later")) { _, _ ->
+                    if (!manual) prefs.edit().putString(PREF_HARMONY_DISMISSED_UPDATE, release.tag).apply()
+                }
+            if (current && installedFile != null && managedTag == installedTag) {
                 dialog.setPositiveButton(label("Jugar Harmony", "Play Harmony")) { _, _ ->
                     rememberAndRestart(Uri.fromFile(installedFile),
                         RomVerifier.Result(RomVerifier.Variant.HARMONY, prefs.getString("harmony_sha1", "").orEmpty()))
                 }
-            } else {
+            } else if (!current) {
                 dialog.setPositiveButton(label("Descargar e instalar", "Download and install")) { _, _ ->
                     val previousSource = prefs.getString("harmony_base", null)?.let(Uri::parse)
                     if (previousSource != null) {
@@ -1779,7 +1796,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { harmonyJob?.cancel() }
     }
 
-    private fun checkForAppUpdate(manual: Boolean) {
+    private fun checkForAppUpdate(manual: Boolean, afterCheck: (() -> Unit)? = null) {
         lifecycleScope.launch {
             val installed = installedVersionName()
             val status = withContext(Dispatchers.IO) {
@@ -1791,6 +1808,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
             when (status) {
                 is AppUpdateStatus.Available -> {
                     val release = status.release
+                    var updatingApp = false
                     AlertDialog.Builder(this@MainActivity)
                         .setTitle(CompanionUiText.pick(resolvedLanguage(), "Actualización disponible", "Update available"))
                         .setMessage(
@@ -1806,10 +1824,13 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                                 }
                         )
                         .setPositiveButton(CompanionUiText.pick(resolvedLanguage(), "Actualizar", "Update")) { _, _ ->
+                            updatingApp = true
                             downloadAndInstall(release)
                         }
                         .setNegativeButton(CompanionUiText.pick(resolvedLanguage(), "Después", "Later"), null)
+                        .setOnDismissListener { if (!updatingApp) afterCheck?.invoke() }
                         .show()
+                    return@launch
                 }
                 is AppUpdateStatus.Current -> {
                     if (manual) {
@@ -1829,6 +1850,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
                     }
                 }
             }
+            afterCheck?.invoke()
         }
     }
 
@@ -2059,6 +2081,9 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
     private fun useLowEndPerformance(): Boolean =
         performanceMode == PerformanceMode.AUTO && DevicePerformance.isLowEnd(this)
 
+    private fun memoryCardAccelerationVariable(enabled: Boolean) =
+        Variable("dw2003_accelerate_memory_card", if (enabled) "enabled" else "disabled")
+
     private fun enhancementVariables(enabled: Boolean): Array<Variable> = arrayOf(
         Variable("pcsx_rearmed_neon_enhancement_enable", if (enabled) "enabled" else "disabled"),
         Variable("pcsx_rearmed_neon_enhancement_tex_adj_v2", if (enabled) "enabled" else "disabled"),
@@ -2072,6 +2097,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         private const val PREF_ROM_NAME = "rom_name"
         private const val PREF_ROM_VARIANT = "rom_variant"
         private const val PREF_ROM_SHA1 = "rom_sha1"
+        private const val PREF_HARMONY_DISMISSED_UPDATE = "harmony_dismissed_update"
         private const val PREF_MUTED = "muted"
         private const val PREF_VIRTUAL_GAMEPAD = "virtual_gamepad"
         private const val PREF_MODS_ENABLED = "mods_enabled"
@@ -2083,6 +2109,7 @@ class MainActivity : ComponentActivity(), DisplayManager.DisplayListener {
         private const val PREF_PANE_ARRANGEMENT = "pane_arrangement"
         private const val PREF_LANGUAGE = "companion_language"
         private const val PREF_GAME_HUD = "game_hud"
+        private const val PREF_ACCELERATE_MEMORY_CARD = "accelerate_memory_card"
         private const val PREF_BATTLE_SCALE = "battle_scale"
         private const val PREF_VIDEO_FILTER = "video_filter"
         private const val PREF_PERFORMANCE = "performance_mode"

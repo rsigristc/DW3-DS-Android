@@ -10,8 +10,8 @@ android {
         applicationId 'com.digitaladventure.dw2003.remote'
         minSdk 26
         targetSdk 35
-        versionCode 12
-        versionName '1.6.1'
+        versionCode 13
+        versionName '1.7'
     }
 
     def keystoreProps = new Properties()

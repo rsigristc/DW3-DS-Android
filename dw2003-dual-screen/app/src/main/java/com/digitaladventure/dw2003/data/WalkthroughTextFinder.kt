@@ -1,14 +1,23 @@
 package com.digitaladventure.dw2003.data
 
-enum class CompanionLanguage(val label: String) {
-    SPANISH("Español"),
-    ENGLISH("English")
+import java.util.Locale
+
+enum class CompanionLanguage(val label: String, val guideKey: String, val locale: Locale) {
+    SPANISH("Español", "es", Locale.forLanguageTag("es-MX")),
+    ENGLISH("English", "en", Locale.US),
+    FRENCH("Français", "fr", Locale.FRANCE),
+    ITALIAN("Italiano", "it", Locale.ITALY),
+    GERMAN("Deutsch", "de", Locale.GERMANY),
+    PORTUGUESE("Português (Brasil)", "pt", Locale.forLanguageTag("pt-BR")),
+    CHINESE("简体中文", "zh", Locale.SIMPLIFIED_CHINESE)
 }
 
-enum class CompanionLanguageSetting(val label: String) {
-    AUTO("Automático / Auto"),
-    SPANISH("Español"),
-    ENGLISH("English");
+enum class CompanionLanguageSetting(val language: CompanionLanguage?) {
+    AUTO(null),
+    SPANISH(CompanionLanguage.SPANISH),
+    ENGLISH(CompanionLanguage.ENGLISH),
+    PORTUGUESE(CompanionLanguage.PORTUGUESE),
+    CHINESE(CompanionLanguage.CHINESE);
 
     companion object {
         fun fromPreference(value: String?): CompanionLanguageSetting =
@@ -18,11 +27,7 @@ enum class CompanionLanguageSetting(val label: String) {
 
 object CompanionLanguageResolver {
     fun resolve(setting: CompanionLanguageSetting, detected: CompanionLanguage?): CompanionLanguage =
-        when (setting) {
-            CompanionLanguageSetting.SPANISH -> CompanionLanguage.SPANISH
-            CompanionLanguageSetting.ENGLISH -> CompanionLanguage.ENGLISH
-            CompanionLanguageSetting.AUTO -> detected ?: CompanionLanguage.SPANISH
-        }
+        setting.language ?: detected ?: CompanionLanguage.SPANISH
 }
 
 /**
@@ -470,25 +475,16 @@ object WalkthroughCatalog {
         mapId: Int = 0
     ): String {
         if (raw == UNAVAILABLE_ES || raw == UNAVAILABLE_EN) {
-            return when (language) {
-                CompanionLanguage.SPANISH -> UNAVAILABLE_ES
-                CompanionLanguage.ENGLISH -> UNAVAILABLE_EN
-            }
+            return CompanionTranslations.pick(language, UNAVAILABLE_ES, UNAVAILABLE_EN)
         }
         val live = raw.takeUnless { it == START_PROMPT_ES || it == SYNC_PROMPT_ES || it == START_PROMPT_EN || it == SYNC_PROMPT_EN }
         if (live != null) {
             return translateKnown(live, language)
         }
         if (!raw.gameStartedHint()) {
-            return when (language) {
-                CompanionLanguage.SPANISH -> START_PROMPT_ES
-                CompanionLanguage.ENGLISH -> START_PROMPT_EN
-            }
+            return CompanionTranslations.pick(language, START_PROMPT_ES, START_PROMPT_EN)
         }
-        return when (language) {
-            CompanionLanguage.SPANISH -> SYNC_PROMPT_ES
-            CompanionLanguage.ENGLISH -> SYNC_PROMPT_EN
-        }
+        return CompanionTranslations.pick(language, SYNC_PROMPT_ES, SYNC_PROMPT_EN)
     }
 
     private fun String.gameStartedHint(): Boolean =

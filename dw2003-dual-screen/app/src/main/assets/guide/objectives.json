@@ -5,7 +5,9 @@
     "es": "La guía termina aquí. ¡Buena suerte! Creada por Flawe.",
     "fr": "Le guide se termine ici. Bonne chance ! Créé par Flawe.",
     "de": "Hier endet der Leitfaden. Viel Glück! Erstellt von Flawe.",
-    "it": "La guida termina qui. Buona fortuna! Creata da Flawe."
+    "it": "La guida termina qui. Buona fortuna! Creata da Flawe.",
+    "pt": "Este guia termina aqui, boa sorte! Criado por Flawe",
+    "zh": "这个向导到此为止,祝你好运! Flawe制作"
   },
   "28fc-28f8": {
     "title": "Control Room",
@@ -13,7 +15,9 @@
     "es": "Toma el portal de la izquierda, el último.",
     "fr": "Prends le portail de gauche, le dernier.",
     "de": "Nimm das linke und letzte Portal.",
-    "it": "Prendi il portale a sinistra, l'ultimo."
+    "it": "Prendi il portale a sinistra, l'ultimo.",
+    "pt": "Pegue o portal da esquerda e final.",
+    "zh": "左边和最后的入口"
   },
   "295c-2958": {
     "title": "Gunslinger",
@@ -21,7 +25,9 @@
     "es": "Entra en el portal y sube la escalera.",
     "fr": "Entre dans le portail et monte l'escalier.",
     "de": "Betritt das Portal und geh die Treppe hinauf.",
-    "it": "Entra nel portale e sali le scale."
+    "it": "Entra nel portale e sali le scale.",
+    "pt": "Entre no portal e suba as escadas.",
+    "zh": "输入传送门并爬上楼梯"
   },
   "29cc-29c8": {
     "title": "Gunslinger 2F",
@@ -29,7 +35,9 @@
     "es": "Sube la escalera y derrota a Lord Megadeath.",
     "fr": "Monte l'escalier et bats Lord Megadeath.",
     "de": "Geh die Treppe hinauf und besiege Lord Megadeath.",
-    "it": "Sali le scale e sconfiggi Lord Megadeath."
+    "it": "Sali le scale e sconfiggi Lord Megadeath.",
+    "pt": "Suba as escadas e derrote Lord Megadeath.",
+    "zh": "上楼击败Lord Megadeath"
   },
   "2a48-2a44": {
     "title": "Gunslinger 2F",
@@ -37,7 +45,9 @@
     "es": "Derrota al Metal Soldier y continúa.",
     "fr": "Bats le Metal Soldier et continue.",
     "de": "Besiege den Metal Soldier und geh weiter.",
-    "it": "Sconfiggi il Metal Soldier e prosegui."
+    "it": "Sconfiggi il Metal Soldier e prosegui.",
+    "pt": "Derrote o Soldado de Metal e prossiga.",
+    "zh": "击败金属士兵后继续前进"
   },
   "2ab4-2ab0": {
     "title": "Gunslinger 1F",
@@ -45,7 +55,9 @@
     "es": "Regresa por el portal azul y toma el azul de arriba a la izquierda.",
     "fr": "Reviens par le portail bleu, puis prends le bleu en haut à gauche.",
     "de": "Geh durch das blaue Portal zurück, dann durch das blaue oben links.",
-    "it": "Torna dal portale blu, poi prendi quello blu in alto a sinistra."
+    "it": "Torna dal portale blu, poi prendi quello blu in alto a sinistra.",
+    "pt": "Retorno (azul), então superior esquerdo portal azul",
+    "zh": "返回( 蓝色), 然后是左上方的蓝色传送门"
   },
   "2b28-2b24": {
     "title": "Gunslinger 1F",
@@ -53,7 +65,9 @@
     "es": "Accede a la computadora.",
     "fr": "Utilise l'ordinateur.",
     "de": "Benutze den Computer.",
-    "it": "Accedi al computer."
+    "it": "Accedi al computer.",
+    "pt": "Acesse o computador.",
+    "zh": "访问计算机"
   },
   "2bd0-2b6c": {
     "title": "Gunslinger 1F",
@@ -61,7 +75,9 @@
     "es": "Regresa por el azul; luego arriba a la derecha antes de la caja, arriba a la izquierda, cruza recto, arriba a la izquierda, abajo a la derecha y arriba a la izquierda.",
     "fr": "Reviens par le bleu ; puis en haut à droite avant la caisse, en haut à gauche, tout droit, en haut à gauche, en bas à droite et en haut à gauche.",
     "de": "Geh durch Blau zurück; dann oben rechts vor der Kiste, oben links, geradeaus hinüber, oben links, unten rechts und oben links.",
-    "it": "Torna dal blu; poi in alto a destra prima della cassa, in alto a sinistra, dritto di fronte, in alto a sinistra, in basso a destra e in alto a sinistra."
+    "it": "Torna dal blu; poi in alto a destra prima della cassa, in alto a sinistra, dritto di fronte, in alto a sinistra, in basso a destra e in alto a sinistra.",
+    "pt": "Volte (azul), sup. dir. antes da caixa, sup. esq., reto, sup. esq., inf. dir., sup. esq.",
+    "zh": "从蓝门返回，箱前右上门，再走左上门， 直走、左上、右下、左上"
   },
   "2c50-2c4c": {
     "title": "Gunslinger 1F",
@@ -69,7 +85,9 @@
     "es": "Accede a la computadora.",
     "fr": "Utilise l'ordinateur.",
     "de": "Benutze den Computer.",
-    "it": "Accedi al computer."
+    "it": "Accedi al computer.",
+    "pt": "Acesse o computador.",
+    "zh": "访问计算机"
   },
   "2cf8-2c94": {
     "title": "Gunslinger 1F",
@@ -77,7 +95,9 @@
     "es": "Toma el azul; luego arriba a la derecha frente a la caja, arriba a la izquierda, abajo a la derecha, abajo a la izquierda y abajo a la derecha.",
     "fr": "Prends le bleu ; puis en haut à droite devant la caisse, en haut à gauche, en bas à droite, en bas à gauche et en bas à droite.",
     "de": "Nimm Blau; dann oben rechts vor der Kiste, oben links, unten rechts, unten links und unten rechts.",
-    "it": "Prendi il blu; poi in alto a destra davanti alla cassa, in alto a sinistra, in basso a destra, in basso a sinistra e in basso a destra."
+    "it": "Prendi il blu; poi in alto a destra davanti alla cassa, in alto a sinistra, in basso a destra, in basso a sinistra e in basso a destra.",
+    "pt": "Portal azul, depois o de cima à direita da caixa, sup. esq., inf. dir., inf. esq., inf. dir.",
+    "zh": "走蓝色传送门，再走箱子前的右上传送门， 左上、右下、左下、右下"
   },
   "2dc8-2d78": {
     "title": "Gunslinger 1F",
@@ -85,7 +105,9 @@
     "es": "Toma el portal de abajo a la derecha, otra vez abajo a la derecha y luego arriba a la izquierda. Accede a la computadora.",
     "fr": "Prends le portail en bas à droite, encore en bas à droite, puis en haut à gauche. Utilise l'ordinateur.",
     "de": "Nimm das Portal unten rechts, erneut unten rechts und dann oben links. Benutze den Computer.",
-    "it": "Prendi il portale in basso a destra, di nuovo in basso a destra e poi in alto a sinistra. Accedi al computer."
+    "it": "Prendi il portale in basso a destra, di nuovo in basso a destra e poi in alto a sinistra. Accedi al computer.",
+    "pt": "Use o portal inferior direito duas vezes. Acesse o computador.",
+    "zh": "连续两次走右下传送门 然后左上。访问计算机"
   },
   "2e44-2e40": {
     "title": "AOA Headquarters",
@@ -93,7 +115,9 @@
     "es": "Entra en el portal cuando estés listo.",
     "fr": "Entre dans le portail quand tu es prêt.",
     "de": "Betritt das Portal, wenn du bereit bist.",
-    "it": "Entra nel portale quando sei pronto."
+    "it": "Entra nel portale quando sei pronto.",
+    "pt": "Entre no portal quando estiver pronto.",
+    "zh": "准备好就输入门户"
   },
   "2eb8-2eb4": {
     "title": "Master Room AM",
@@ -101,7 +125,9 @@
     "es": "Regresa a la Master Room de Ciudad Amaterasu.",
     "fr": "Retourne à la Master Room d'Amaterasu City.",
     "de": "Kehre zum Master Room in Amaterasu City zurück.",
-    "it": "Torna alla Master Room di Amaterasu City."
+    "it": "Torna alla Master Room di Amaterasu City.",
+    "pt": "Volte para o quarto principal na cidade de Amaterasu.",
+    "zh": "回到阿马泰拉苏城的主人房"
   },
   "2f34-2f30": {
     "title": "AOA Headquarters",
@@ -109,7 +135,9 @@
     "es": "Cruza la puerta hacia el cuartel general de la AOA.",
     "fr": "Passe la porte du quartier général de l'AOA.",
     "de": "Geh durch die Tür ins AOA-Hauptquartier.",
-    "it": "Attraversa la porta del quartier generale AOA."
+    "it": "Attraversa la porta del quartier generale AOA.",
+    "pt": "Entre na porta da sede da A.O.A.",
+    "zh": "将门输入自动取款机总部"
   },
   "2ff8-2fac": {
     "title": "Master Room AS",
@@ -117,7 +145,9 @@
     "es": "Kurt dice que algo causa interferencias. Ve a la Master Room de Ciudad Asuka.",
     "fr": "Kurt dit que quelque chose provoque des interférences. Va à la Master Room d'Asuka City.",
     "de": "Kurt sagt, dass etwas stört. Geh zum Master Room in Asuka City.",
-    "it": "Kurt dice che qualcosa causa interferenze. Vai alla Master Room di Asuka City."
+    "it": "Kurt dice che qualcosa causa interferenze. Vai alla Master Room di Asuka City.",
+    "pt": "Kurt disse que algo está interferindo. Vá para o quarto principal em Asuka City.",
+    "zh": "库尔特说有东西在干涉 前往阿苏卡市主房"
   },
   "3090-3064": {
     "title": "Gale Tower",
@@ -125,7 +155,9 @@
     "es": "Ve a Gale Tower en Ciudad Seiryu y habla con Airdramon.",
     "fr": "Va à Gale Tower dans Seiryu City et parle à Airdramon.",
     "de": "Geh zum Gale Tower in Seiryu City und sprich mit Airdramon.",
-    "it": "Vai alla Gale Tower di Seiryu City e parla con Airdramon."
+    "it": "Vai alla Gale Tower di Seiryu City e parla con Airdramon.",
+    "pt": "Vá para a Torre Gale dentro da cidade de Seiryu. e falar com Airdramon.",
+    "zh": "去塞琉古城内的盖尔塔 和Airdramon谈谈"
   },
   "3148-30f0": {
     "title": "Qing Long City",
@@ -133,7 +165,9 @@
     "es": "Nick dice que Keith está experimentando en Ciudad Qing Long. Búscalo en Qing Long Tower.",
     "fr": "Nick dit que Keith fait des expériences à Qing Long City. Trouve-le dans Qing Long Tower.",
     "de": "Nick sagt, dass Keith in Qing Long City experimentiert. Suche ihn im Qing Long Tower.",
-    "it": "Nick dice che Keith sta facendo esperimenti a Qing Long City. Cercalo nella Qing Long Tower."
+    "it": "Nick dice che Keith sta facendo esperimenti a Qing Long City. Cercalo nella Qing Long Tower.",
+    "pt": "Nick disse que Keith está experimentando Encontre-o na Torre Qing Long.",
+    "zh": "Nick说Keith正在试验 青龙城,在青龙塔找到他"
   },
   "31e4-31bc": {
     "title": "Amaterasu City",
@@ -141,7 +175,9 @@
     "es": "Entra en el Admin Center y lucha hasta llegar a la Master Room.",
     "fr": "Entre dans l'Admin Center et combats jusqu'à la Master Room.",
     "de": "Betritt das Admin Center und kämpfe dich bis zum Master Room durch.",
-    "it": "Entra nell'Admin Center e combatti fino alla Master Room."
+    "it": "Entra nell'Admin Center e combatti fino alla Master Room.",
+    "pt": "Entre no Centro de Administração e lute até Para a Sala Mestre.",
+    "zh": "进入行政中心，一路战斗到 到主房间"
   },
   "32a8-3258": {
     "title": "Central Park AM",
@@ -149,7 +185,9 @@
     "es": "Ve a Central Park del servidor Amaterasu y camina al norte hacia el Puente Amaterasu.",
     "fr": "Va à Central Park sur le serveur Amaterasu et marche vers le nord jusqu'à Amaterasu Bridge.",
     "de": "Geh zum Central Park auf dem Amaterasu-Server und nach Norden zur Amaterasu Bridge.",
-    "it": "Vai a Central Park nel server Amaterasu e cammina a nord verso Amaterasu Bridge."
+    "it": "Vai a Central Park nel server Amaterasu e cammina a nord verso Amaterasu Bridge.",
+    "pt": "Vá para o Central Park em Amaterasu Server. e caminhe para o norte em direção à ponte Amaterasu",
+    "zh": "前往中央公园的 Amaterasu 服务器 向北走向阿马泰拉苏桥"
   },
   "3368-331c": {
     "title": "Xuan Wu City",
@@ -157,7 +195,9 @@
     "es": "Entra en Ciudad Xuan Wu y sube hasta lo más alto para encontrar y derrotar al jefe Xuan Wu.",
     "fr": "Entre dans Xuan Wu City et monte au sommet pour trouver et battre le chef Xuan Wu.",
     "de": "Betritt Xuan Wu City und steige ganz hinauf, um den Xuan-Wu-Chef zu finden und zu besiegen.",
-    "it": "Entra a Xuan Wu City e sali fino in cima per trovare e sconfiggere il capo Xuan Wu."
+    "it": "Entra a Xuan Wu City e sali fino in cima per trovare e sconfiggere il capo Xuan Wu.",
+    "pt": "Entre em Xuan Wu City e suba até o topo. Encontrar e derrotar o Chefe Xuan Wu.",
+    "zh": "进入湘吴城,爬到最顶端 找到并打败了 ⁇ 武首领"
   },
   "3420-33e0": {
     "title": "Xuan Wu City",
@@ -165,7 +205,9 @@
     "es": "Ve al este a Snow Mountain; luego al norte por Freeze Mountain hasta Ciudad Xuan Wu.",
     "fr": "Va à l'est vers Snow Mountain, puis au nord par Freeze Mountain jusqu'à Xuan Wu City.",
     "de": "Geh nach Osten zum Snow Mountain, dann nach Norden durch Freeze Mountain bis Xuan Wu City.",
-    "it": "Vai a est verso Snow Mountain, poi a nord attraverso Freeze Mountain fino a Xuan Wu City."
+    "it": "Vai a est verso Snow Mountain, poi a nord attraverso Freeze Mountain fino a Xuan Wu City.",
+    "pt": "Vá para a montanha de neve, depois para o norte. Da Montanha Gelada até a Cidade de Xuan Wu",
+    "zh": "东到雪山,然后北过 从冰冻山前往玄武城"
   },
   "3500-349c": {
     "title": "Xuan Wu City",
@@ -173,7 +215,9 @@
     "es": "Ve a Plug Cape en Amaterasu y entra en el mismo agujero que en Asuka: sube la escalera y cruza el puente.",
     "fr": "Va à Plug Cape dans Amaterasu et entre dans le même trou que dans Asuka : monte l'échelle et traverse le pont.",
     "de": "Geh zu Plug Cape in Amaterasu und in dasselbe Loch wie in Asuka: Leiter hinauf, über die Brücke.",
-    "it": "Vai a Plug Cape ad Amaterasu ed entra nello stesso buco di Asuka: sali la scala e attraversa il ponte."
+    "it": "Vai a Plug Cape ad Amaterasu ed entra nello stesso buco di Asuka: sali la scala e attraversa il ponte.",
+    "pt": "Vá para o Cabo Plug em Amaterasu e entre no O mesmo buraco que em Asuka.",
+    "zh": "前往阿马泰拉苏的插座角并进入 和Asuka的相同(上梯子,跨桥)"
   },
   "35cc-3578": {
     "title": "Bai Hu City",
@@ -181,7 +225,9 @@
     "es": "Regresa a Noise Desert y entra en Ciudad Bai Hu. Entra en el Dome y derrota al jefe.",
     "fr": "Retourne à Noise Desert et entre dans Bai Hu City, puis dans le Dome pour battre le chef.",
     "de": "Kehre zur Noise Desert zurück und betrete Bai Hu City. Geh in den Dome und besiege den Chef.",
-    "it": "Torna a Noise Desert ed entra a Bai Hu City, poi nel Dome, e sconfiggi il capo."
+    "it": "Torna a Noise Desert ed entra a Bai Hu City, poi nel Dome, e sconfiggi il capo.",
+    "pt": "Volte para o deserto do ruído e entre em Bai Hu City Então entre na cúpula e derrote o chefe.",
+    "zh": "回到噪音沙漠,进入白虎城 然后进入穹顶,打败宰相,"
   },
   "3674-3640": {
     "title": "Master Room",
@@ -189,7 +235,9 @@
     "es": "Habla con Lisa para ver si puede ayudarnos a entrar en Ciudad Bai Hu.",
     "fr": "Parle à Lisa pour voir si elle peut nous aider à entrer dans Bai Hu City.",
     "de": "Frag Lisa, ob sie uns Zugang zu Bai Hu City verschaffen kann.",
-    "it": "Parla con Lisa per vedere se può aiutarci a entrare a Bai Hu City."
+    "it": "Parla con Lisa per vedere se può aiutarci a entrare a Bai Hu City.",
+    "pt": "Fale com Lisa para ver se ela pode nos ajudar. ter acesso à cidade de Bai Hu",
+    "zh": "找Lisa看看她能不能帮我们 进入白虎城"
   },
   "372c-36dc": {
     "title": "Master Room",
@@ -197,7 +245,9 @@
     "es": "La entrada a Ciudad Bai Hu está bloqueada. Regresa a la Master Room de Ciudad Asuka.",
     "fr": "L'entrée de Bai Hu City est bloquée. Retourne à la Master Room d'Asuka City.",
     "de": "Der Eingang zu Bai Hu City ist versperrt. Kehre zum Master Room in Asuka City zurück.",
-    "it": "L'ingresso di Bai Hu City è bloccato. Torna alla Master Room di Asuka City."
+    "it": "L'ingresso di Bai Hu City è bloccato. Torna alla Master Room di Asuka City.",
+    "pt": "A entrada para Bai Hu City está bloqueada! Volte para o quarto principal em Asuka City.",
+    "zh": "白虎城的入口被封锁! 回到阿苏卡城的主人房"
   },
   "37f4-3794": {
     "title": "Bai Hu City",
@@ -205,7 +255,9 @@
     "es": "Sal de la torre y ve al norte por Noise Desert hacia Ciudad Bai Hu (Ciudad Byakko).",
     "fr": "Sors de la tour et va au nord par Noise Desert vers Bai Hu City (Byakko City).",
     "de": "Verlasse den Turm und geh nach Norden durch die Noise Desert zu Bai Hu City (Byakko City).",
-    "it": "Esci dalla torre e vai a nord attraverso Noise Desert verso Bai Hu City (Byakko City)."
+    "it": "Esci dalla torre e vai a nord attraverso Noise Desert verso Bai Hu City (Byakko City).",
+    "pt": "Saia da Torre e siga para o norte. Deserto do Ruído, rumo a Bai Hu (Byakko).",
+    "zh": "离开塔楼,向北走 穿过噪音沙漠，前往白虎城"
   },
   "385c-3858": {
     "title": "Mirage Tower AM",
@@ -213,7 +265,9 @@
     "es": "Entra en Mirage Hall y habla con el Líder Chuck.",
     "fr": "Entre dans Mirage Hall et parle au chef Chuck.",
     "de": "Betritt die Mirage Hall und sprich mit Anführer Chuck.",
-    "it": "Entra nella Mirage Hall e parla con il capo Chuck."
+    "it": "Entra nella Mirage Hall e parla con il capo Chuck.",
+    "pt": "Entre no Mirage Hall e fale com o Líder Chuck.",
+    "zh": "进入幻影厅,跟查克队长谈谈"
   },
   "3920-38d4": {
     "title": "Mirage Tower AM",
@@ -221,7 +275,9 @@
     "es": "Desde la primera pantalla, toma dos veces la salida inferior izquierda y luego tres veces la superior izquierda.",
     "fr": "Depuis le premier écran, prends deux fois la sortie en bas à gauche, puis trois fois celle en haut à gauche.",
     "de": "Nimm vom ersten Bildschirm aus zweimal den Ausgang unten links, dann dreimal den oben links.",
-    "it": "Dalla prima schermata, prendi due volte l'uscita in basso a sinistra e poi tre volte quella in alto a sinistra."
+    "it": "Dalla prima schermata, prendi due volte l'uscita in basso a sinistra e poi tre volte quella in alto a sinistra.",
+    "pt": "Na primeira tela, use a saída inferior esquerda 2x. Então pegue a saída superior esquerda três vezes.",
+    "zh": "从第一张地图连续两次走左下出口 然后左上方离开三次"
   },
   "39a8-39a4": {
     "title": "Mirage Tower AM",
@@ -229,7 +285,9 @@
     "es": "Ve al oeste y al sur para llegar a Mobius Desert.",
     "fr": "Va à l'ouest puis au sud pour atteindre Mobius Desert.",
     "de": "Geh nach Westen und Süden zur Mobius Desert.",
-    "it": "Vai a ovest e a sud per raggiungere Mobius Desert."
+    "it": "Vai a ovest e a sud per raggiungere Mobius Desert.",
+    "pt": "Vá a oeste e depois ao sul até o Deserto de Mobius.",
+    "zh": "先向西，再向南到莫比乌斯沙漠"
   },
   "3a34-3a1c": {
     "title": "Mirage Tower AM",
@@ -237,7 +295,9 @@
     "es": "Desde el muelle, atraviesa el fondo marino hacia el Sector Oeste.",
     "fr": "Depuis le quai, traverse les fonds marins vers le secteur ouest.",
     "de": "Geh vom Anleger durch den Meeresgrund zum Westsektor.",
-    "it": "Dal molo, attraversa il fondale marino verso il settore ovest."
+    "it": "Dal molo, attraversa il fondale marino verso il settore ovest.",
+    "pt": "Vá pelo fundo do mar na doca para Setor Oeste",
+    "zh": "穿过码头的海床 西区"
   },
   "3af4-3aa0": {
     "title": "Mirage Tower AM",
@@ -245,7 +305,9 @@
     "es": "Ve al oeste a South Cape por Phoenix Bay y Ether Jungle; luego al Sector Oeste.",
     "fr": "Va à l'ouest vers South Cape par Phoenix Bay et Ether Jungle, puis au secteur ouest.",
     "de": "Geh nach Westen über Phoenix Bay und Ether Jungle zu South Cape, dann zum Westsektor.",
-    "it": "Vai a ovest verso South Cape passando per Phoenix Bay ed Ether Jungle, poi al settore ovest."
+    "it": "Vai a ovest verso South Cape passando per Phoenix Bay ed Ether Jungle, poi al settore ovest.",
+    "pt": "Vão para o Cabo Sul pela Baía de Phoenix. e Ether Jungle, então vá para o Setor Oeste.",
+    "zh": "向西经凤凰湾到南开普 以太丛林,然后去西区"
   },
   "3b70-3b6c": {
     "title": "Mirage Tower AM",
@@ -253,7 +315,9 @@
     "es": "Regresa a Ciudad Zhu Que en el servidor Amaterasu.",
     "fr": "Retourne à Zhu Que City sur le serveur Amaterasu.",
     "de": "Kehre zu Zhu Que City auf dem Amaterasu-Server zurück.",
-    "it": "Torna a Zhu Que City nel server Amaterasu."
+    "it": "Torna a Zhu Que City nel server Amaterasu.",
+    "pt": "Volte para Zhu Que City no servidor Amaterasu",
+    "zh": "返回 Amaterasu 服务器中的 Zhu Que 城"
   },
   "3bf4-3bf0": {
     "title": "Master Room",
@@ -261,7 +325,9 @@
     "es": "Regresa a la Master Room de Ciudad Asuka.",
     "fr": "Retourne à la Master Room d'Asuka City.",
     "de": "Kehre zum Master Room in Asuka City zurück.",
-    "it": "Torna alla Master Room di Asuka City."
+    "it": "Torna alla Master Room di Asuka City.",
+    "pt": "Volte para o quarto principal na cidade de Asuka.",
+    "zh": "回到阿苏卡市的主人房去"
   },
   "3cb4-3c64": {
     "title": "Magasta Base",
@@ -269,7 +335,9 @@
     "es": "Puedes explorar y recoger objetos; si no, espera a que termine el tiempo.",
     "fr": "Tu peux explorer et ramasser des objets, sinon attends la fin du compte à rebours.",
     "de": "Du kannst herumlaufen und Gegenstände sammeln oder warten, bis die Zeit abläuft.",
-    "it": "Puoi esplorare e raccogliere oggetti, altrimenti aspetta che il tempo scada."
+    "it": "Puoi esplorare e raccogliere oggetti, altrimenti aspetta che il tempo scada.",
+    "pt": "Sinta-se livre para correr por aí e pegar itens, Caso contrário, espere o temporizador acabar.",
+    "zh": "随便跑来跑去拿东西吧 否则等定时器用完"
   },
   "3d2c-3d28": {
     "title": "Chamber Room",
@@ -277,7 +345,9 @@
     "es": "Sube y habla dos veces con Chamber Clark.",
     "fr": "Monte et parle deux fois à Chamber Clark.",
     "de": "Geh nach oben und sprich zweimal mit Chamber Clark.",
-    "it": "Sali e parla due volte con Chamber Clark."
+    "it": "Sali e parla due volte con Chamber Clark.",
+    "pt": "Suba e fale com Chamber Clark duas vezes.",
+    "zh": "上楼去跟Clark谈两次"
   },
   "3dfc-3da0": {
     "title": "Dark Dungeon",
@@ -285,7 +355,9 @@
     "es": "Recorre el laberinto hacia el norte y el oeste hasta encontrar la escalera.",
     "fr": "Traverse le labyrinthe vers le nord et l'ouest jusqu'à trouver l'escalier.",
     "de": "Geh durch das Labyrinth ungefähr nach Norden und Westen, bis du die Treppe findest.",
-    "it": "Attraversa il labirinto dirigendoti circa a nord e a ovest finché trovi le scale."
+    "it": "Attraversa il labirinto dirigendoti circa a nord e a ovest finché trovi le scale.",
+    "pt": "Atravesse o labirinto, seguindo mais ou menos Norte e Oeste, até encontrar a escadaria.",
+    "zh": "穿过迷宫，大致朝 北边和西边,直到找到楼梯"
   },
   "3ec4-3e78": {
     "title": "Fire Dungeon",
@@ -293,7 +365,9 @@
     "es": "Ve abajo a la derecha hasta encontrar una escalera. El Fire Knight está arriba.",
     "fr": "Va en bas à droite jusqu'à trouver un escalier. Le Fire Knight est en haut.",
     "de": "Geh nach unten rechts, bis du eine Treppe findest. Der Fire Knight steht oben.",
-    "it": "Vai in basso a destra finché trovi le scale. Il Fire Knight è in cima."
+    "it": "Vai in basso a destra finché trovi le scale. Il Fire Knight è in cima.",
+    "pt": "Vá para o fundo, até encontrar uma escada. O Cavaleiro do Fogo está no topo deles.",
+    "zh": "向右下,直到你找到楼梯, 火骑士在他们的顶端"
   },
   "3fb8-3f4c": {
     "title": "Ice Dungeon",
@@ -301,7 +375,9 @@
     "es": "Toma el deslizador central, sube y ve a la izquierda; salta del borde. Usa el teletransportador derecho y derrota a la bruja.",
     "fr": "Prends le toboggan central, puis monte et va à gauche ; saute du rebord. Prends le téléporteur de droite et bats la sorcière.",
     "de": "Nimm die mittlere Rutsche, geh hoch und links und spring vom Vorsprung. Nimm den rechten Teleporter und besiege die Hexe.",
-    "it": "Prendi lo scivolo centrale, poi vai in alto e a sinistra e salta dalla sporgenza. Usa il teletrasporto destro e sconfiggi la strega."
+    "it": "Prendi lo scivolo centrale, poi vai in alto e a sinistra e salta dalla sporgenza. Usa il teletrasporto destro e sconfiggi la strega.",
+    "pt": "Pegue o trilho do meio, suba à esquerda e salte. Use o teletransportador certo e derrote a bruxa.",
+    "zh": "走中间滑轨，向左上方走，再跳下去 使用右传手击败巫师"
   },
   "4064-4034": {
     "title": "Kulon Pit",
@@ -309,7 +385,9 @@
     "es": "Continúa bajando y hacia el oeste para encontrar la Ice Dungeon.",
     "fr": "Continue vers le bas et l'ouest pour trouver l'Ice Dungeon.",
     "de": "Geh weiter nach unten und Westen, um den Ice Dungeon zu finden.",
-    "it": "Continua verso il basso e a ovest per trovare l'Ice Dungeon."
+    "it": "Continua verso il basso e a ovest per trovare l'Ice Dungeon.",
+    "pt": "Continue mais para baixo e para o oeste. para encontrar o Dungeon de Gelo",
+    "zh": "继续往下往西走 寻找冰的敦煌"
   },
   "4134-40c4": {
     "title": "Kulon Pit",
@@ -317,7 +395,9 @@
     "es": "Si quieres entrenar, el Legendary Gym está al oeste, pasando Lake of Ice. Si no, baja al Pit.",
     "fr": "Pour t'entraîner, le Legendary Gym est à l'ouest, après Lake of Ice. Sinon, descends dans le Pit.",
     "de": "Zum Trainieren liegt das Legendary Gym im Westen hinter dem Lake of Ice. Ansonsten steig in den Pit hinab.",
-    "it": "Per allenarti, il Legendary Gym è a ovest, oltre Lake of Ice. Altrimenti scendi nel Pit."
+    "it": "Per allenarti, il Legendary Gym è a ovest, oltre Lake of Ice. Altrimenti scendi nel Pit.",
+    "pt": "O Ginásio Lendário é a oeste pelo Lago do Gelo. Se quiser treinar, vá para o poço.",
+    "zh": "传说中的金刚经冰湖向西 你要是想训练的话,就往坑里去"
   },
   "41dc-41b4": {
     "title": "Kulon Mine",
@@ -325,7 +405,9 @@
     "es": "Regresa a Boot Mountain y luego ve al oeste para encontrar Kulon Mine.",
     "fr": "Retourne à Boot Mountain, puis va à l'ouest pour trouver Kulon Mine.",
     "de": "Kehre zum Boot Mountain zurück und geh nach Westen zur Kulon Mine.",
-    "it": "Torna a Boot Mountain, poi vai a ovest per trovare Kulon Mine."
+    "it": "Torna a Boot Mountain, poi vai a ovest per trovare Kulon Mine.",
+    "pt": "Volte para Boot Mountain e depois vá para o oeste. para encontrar Kulon Mine",
+    "zh": "回到靴子山,然后往西走 寻找库伦矿井"
   },
   "4294-424c": {
     "title": "Genbu City",
@@ -333,7 +415,9 @@
     "es": "Entra en Ciudad Genbu y sube hasta lo más alto para encontrar y derrotar al Líder Genbu.",
     "fr": "Entre dans Genbu City et monte au sommet pour trouver et battre le chef Genbu.",
     "de": "Betritt Genbu City und steige ganz hinauf, um Anführer Genbu zu finden und zu besiegen.",
-    "it": "Entra a Genbu City e sali fino in cima per trovare e sconfiggere il capo Genbu."
+    "it": "Entra a Genbu City e sali fino in cima per trovare e sconfiggere il capo Genbu.",
+    "pt": "Entre na cidade de Genbu e suba ao topo. Encontrar e derrotar o Líder Genbu.",
+    "zh": "进入源布城,爬到最顶端 找到并打败源布领袖"
   },
   "4308-4304": {
     "title": "Freeze Mountain",
@@ -341,7 +425,9 @@
     "es": "Desde aquí, ve al norte hasta encontrar Freeze Mountain.",
     "fr": "D'ici, va au nord jusqu'à Freeze Mountain.",
     "de": "Geh von hier nach Norden bis zum Freeze Mountain.",
-    "it": "Da qui, vai a nord fino a Freeze Mountain."
+    "it": "Da qui, vai a nord fino a Freeze Mountain.",
+    "pt": "Vá para o norte até a Montanha Gelada.",
+    "zh": "向北走到冰冻山"
   },
   "4398-4394": {
     "title": "Snow Mountain",
@@ -349,7 +435,9 @@
     "es": "Desde aquí, ve al norte hasta encontrar Freeze Mountain.",
     "fr": "D'ici, va au nord jusqu'à Freeze Mountain.",
     "de": "Geh von hier nach Norden bis zum Freeze Mountain.",
-    "it": "Da qui, vai a nord fino a Freeze Mountain."
+    "it": "Da qui, vai a nord fino a Freeze Mountain.",
+    "pt": "Vá para o norte até a Montanha Gelada.",
+    "zh": "向北走到冰冻山"
   },
   "4424-4420": {
     "title": "Boot Mountain",
@@ -357,7 +445,9 @@
     "es": "Ve al este para encontrar Snow Mountain.",
     "fr": "Va à l'est pour trouver Snow Mountain.",
     "de": "Geh nach Osten zum Snow Mountain.",
-    "it": "Vai a est per trovare Snow Mountain."
+    "it": "Vai a est per trovare Snow Mountain.",
+    "pt": "Vá para o leste para encontrar a Montanha da Neve.",
+    "zh": "向东寻找雪山"
   },
   "4484-4480": {
     "title": "To North Sector",
@@ -365,7 +455,9 @@
     "es": "Sigue subiendo hasta la salida.",
     "fr": "Continue à monter jusqu'à la sortie.",
     "de": "Geh weiter nach oben bis zum Ausgang.",
-    "it": "Continua a salire fino all'uscita."
+    "it": "Continua a salire fino all'uscita.",
+    "pt": "Continue até a saída.",
+    "zh": "继续到出口"
   },
   "4508-44d4": {
     "title": "To North Sector",
@@ -373,7 +465,9 @@
     "es": "Toma el camino derecho y rompe el bloque; luego gira a la izquierda en la siguiente bifurcación.",
     "fr": "Prends le chemin de droite et casse le bloc, puis va à gauche à la prochaine bifurcation.",
     "de": "Nimm den rechten Weg und zerstöre den Block; geh an der nächsten Gabelung links.",
-    "it": "Prendi il sentiero destro e rompi il blocco, poi vai a sinistra al prossimo bivio."
+    "it": "Prendi il sentiero destro e rompi il blocco, poi vai a sinistra al prossimo bivio.",
+    "pt": "Pegue o caminho certo (quebre o bloco) então Vire à esquerda no próximo garfo.",
+    "zh": "然后走正路(打破障碍), 在下一个岔路口左转"
   },
   "4584-4580": {
     "title": "To North Sector",
@@ -381,7 +475,9 @@
     "es": "Toma dos veces el camino izquierdo y pasa junto a Agumon.",
     "fr": "Prends deux fois le chemin de gauche et passe devant Agumon.",
     "de": "Nimm zweimal den linken Weg und geh an Agumon vorbei.",
-    "it": "Prendi due volte il sentiero sinistro e supera Agumon."
+    "it": "Prendi due volte il sentiero sinistro e supera Agumon.",
+    "pt": "Vire à esquerda 2x e passe por Agumon.",
+    "zh": "连续两次走左边，再经过Agumon"
   },
   "4630-45fc": {
     "title": "To North Sector",
@@ -389,7 +485,9 @@
     "es": "Sigue subiendo y toma el camino derecho en la bifurcación; pasarás junto a Renamon.",
     "fr": "Continue à monter et prends à droite à la bifurcation ; tu passeras devant Renamon.",
     "de": "Geh weiter hoch und an der Gabelung rechts; du kommst an Renamon vorbei.",
-    "it": "Continua a salire e prendi a destra al bivio; passerai accanto a Renamon."
+    "it": "Continua a salire e prendi a destra al bivio; passerai accanto a Renamon.",
+    "pt": "Siga para cima e vire à direita na bifurcação, Você passará por Renamon.",
+    "zh": "继续往上，在岔路口走右边， 你将经过雷纳蒙"
   },
   "46b8-46b4": {
     "title": "To North Sector",
@@ -397,7 +495,9 @@
     "es": "Ve al norte hasta la siguiente pantalla.",
     "fr": "Va au nord jusqu'à l'écran suivant.",
     "de": "Geh nach Norden zum nächsten Bildschirm.",
-    "it": "Vai a nord fino alla schermata successiva."
+    "it": "Vai a nord fino alla schermata successiva.",
+    "pt": "Vá para o norte para a próxima tela.",
+    "zh": "往北走到下一个屏幕"
   },
   "4750-4714": {
     "title": "To North Sector",
@@ -405,7 +505,9 @@
     "es": "Te has equivocado de camino. Regresa o empieza de nuevo desde Plug Cape.",
     "fr": "Tu as pris le mauvais chemin. Reviens ou repars de Plug Cape.",
     "de": "Du bist falsch gegangen. Geh zurück oder beginne erneut bei Plug Cape.",
-    "it": "Hai sbagliato strada. Torna indietro o ricomincia da Plug Cape."
+    "it": "Hai sbagliato strada. Torna indietro o ricomincia da Plug Cape.",
+    "pt": "Você foi para o lado errado, ou voltar. Ou começar de novo de Plug Cape.",
+    "zh": "你走错路了,要么回头 或从插头角重新开始"
   },
   "4820-47cc": {
     "title": "To North Sector",
@@ -413,7 +515,9 @@
     "es": "En Plug Cape, ve al norte y sube la escalera grande. Cruza el puente y entra en el agujero.",
     "fr": "À Plug Cape, va au nord et monte la grande échelle. Traverse le pont et entre dans le trou.",
     "de": "Geh in Plug Cape nach Norden und die große Leiter hinauf. Überquere die Brücke und betritt das Loch.",
-    "it": "A Plug Cape, vai a nord e sali la grande scala. Attraversa il ponte ed entra nel buco."
+    "it": "A Plug Cape, vai a nord e sali la grande scala. Attraversa il ponte ed entra nel buco.",
+    "pt": "Em Plug Cape, vá para o norte e suba a escada grande. Então atravesse a ponte e entre no buraco.",
+    "zh": "在插头角,向北走,爬上大梯子 然后穿过桥,进入洞里"
   },
   "48a8-48a4": {
     "title": "To North Sector",
@@ -421,7 +525,9 @@
     "es": "Regresa a Plug Cape en el servidor Asuka.",
     "fr": "Retourne à Plug Cape sur le serveur Asuka.",
     "de": "Kehre zu Plug Cape auf dem Asuka-Server zurück.",
-    "it": "Torna a Plug Cape nel server Asuka."
+    "it": "Torna a Plug Cape nel server Asuka.",
+    "pt": "Volte ao plugue do servidor Asuka.",
+    "zh": "返回 Asuka 服务器中的插头角"
   },
   "4958-4910": {
     "title": "DigiEgg of Knowledge",
@@ -429,7 +535,9 @@
     "es": "Sube al tercer nivel y luego por la escalera izquierda para encontrar el huevo.",
     "fr": "Monte au troisième niveau, puis prends l'escalier de gauche pour trouver l'œuf.",
     "de": "Steige zur dritten Ebene und dann die linke Treppe hinauf, um das Ei zu finden.",
-    "it": "Sali al terzo livello, poi prendi le scale a sinistra per trovare l'uovo."
+    "it": "Sali al terzo livello, poi prendi le scale a sinistra per trovare l'uovo.",
+    "pt": "Suba até o terceiro nível e depois suba pela A escada esquerda para encontrar o Ovo",
+    "zh": "上到第三层，再爬上 找到卵子的左楼梯"
   },
   "4a28-49d0": {
     "title": "DigiEgg of Knowledge",
@@ -437,7 +545,9 @@
     "es": "Regresa por Zhu Que Hall, toma la salida derecha y atraviesa el fondo marino hasta Zhu Que UG Lake.",
     "fr": "Reviens par Zhu Que Hall, prends la sortie de droite, puis traverse les fonds marins jusqu'à Zhu Que UG Lake.",
     "de": "Geh durch die Zhu Que Hall zurück, nimm den rechten Ausgang und den Meeresgrund bis zum Zhu Que UG Lake.",
-    "it": "Torna attraverso Zhu Que Hall, prendi l'uscita destra e attraversa il fondale fino a Zhu Que UG Lake."
+    "it": "Torna attraverso Zhu Que Hall, prendi l'uscita destra e attraversa il fondale fino a Zhu Que UG Lake.",
+    "pt": "Volte por Zhu Que Hall, saída direita, Então, através do fundo do mar para Zhu Que UG Lake",
+    "zh": "穿过朱贵堂,右出口 然后穿过海底到朱奎湖"
   },
   "4ad4-4aa8": {
     "title": "Zhu Que Chief",
@@ -445,7 +555,9 @@
     "es": "Entra en Ciudad Zhu Que (Ciudad Suzaku) y derrota al jefe.",
     "fr": "Entre dans Zhu Que City (Suzaku City) et bats le chef.",
     "de": "Betritt Zhu Que City (Suzaku City) und besiege den Chef.",
-    "it": "Entra a Zhu Que City (Suzaku City) e sconfiggi il capo."
+    "it": "Entra a Zhu Que City (Suzaku City) e sconfiggi il capo.",
+    "pt": "Siga para Zhu Que City (Cidade de Suzuaku) e derrotar o Chefe.",
+    "zh": "头入朱 ⁇ 城(苏 ⁇ 古城). 打败酋长"
   },
   "4b8c-4b3c": {
     "title": "Zhu Que Chief",
@@ -453,7 +565,9 @@
     "es": "Ve a Shell Beach, al sur de Central Park, y atraviesa el fondo marino hasta Phoenix Bay.",
     "fr": "Va à Shell Beach, au sud de Central Park, puis traverse les fonds marins jusqu'à Phoenix Bay.",
     "de": "Geh zu Shell Beach südlich des Central Park, dann durch den Meeresgrund zur Phoenix Bay.",
-    "it": "Vai a Shell Beach, a sud di Central Park, poi attraversa il fondale fino a Phoenix Bay."
+    "it": "Vai a Shell Beach, a sud di Central Park, poi attraversa il fondale fino a Phoenix Bay.",
+    "pt": "Vá para Shell Beach, ao sul do Central Park, Então, através do fundo do mar para Phoenix Bay",
+    "zh": "去中央公园南面的贝壳海滩 然后穿过海底到凤凰湾"
   },
   "4c5c-4bfc": {
     "title": "Qing Long Chief",
@@ -461,7 +575,9 @@
     "es": "Sal de AM Forest Inn y ve a Ciudad Qing Long (Ciudad Seiryu). Derrota al jefe.",
     "fr": "Sors de l'AM Forest Inn et va à Qing Long City (Seiryu City). Bats le chef.",
     "de": "Verlasse das AM Forest Inn und geh zu Qing Long City (Seiryu City). Besiege den Chef.",
-    "it": "Esci dall'AM Forest Inn e vai a Qing Long City (Seiryu City). Sconfiggi il capo."
+    "it": "Esci dall'AM Forest Inn e vai a Qing Long City (Seiryu City). Sconfiggi il capo.",
+    "pt": "Saia da Pousada Florestal AM e vá para Qing Long City (Cidade de Seiryu).",
+    "zh": "离开AM森林客栈,前往 青龙城 (峨眉山市),击败宰相."
   },
   "4cc8-4cc4": {
     "title": "Bug Maze Pit",
@@ -469,7 +585,9 @@
     "es": "Adéntrate más para encontrar a Bulbmon.",
     "fr": "Avance plus loin pour trouver Bulbmon.",
     "de": "Geh weiter hinein, um Bulbmon zu finden.",
-    "it": "Prosegui per trovare Bulbmon."
+    "it": "Prosegui per trovare Bulbmon.",
+    "pt": "Vá em frente para encontrar Bulbmon.",
+    "zh": "继续去寻找布布蒙"
   },
   "4d8c-4d24": {
     "title": "Bug Maze",
@@ -477,7 +595,9 @@
     "es": "Tras la primera rampa, sube la escalera invisible al fondo del hueco. Toma la bifurcación superior hacia el Pit.",
     "fr": "Après la première rampe, monte l'échelle invisible au fond de l'alcôve. Prends la branche du haut vers le Pit.",
     "de": "Steige nach der ersten Rampe die unsichtbare Leiter oben in der Nische hinauf. Nimm die obere Abzweigung zum Pit.",
-    "it": "Dopo la prima rampa, sali la scala invisibile in cima alla nicchia. Prendi il bivio superiore verso il Pit."
+    "it": "Dopo la prima rampa, sali la scala invisibile in cima alla nicchia. Prendi il bivio superiore verso il Pit.",
+    "pt": "Depois da primeira rampa, suba a escada invisível. no alto do nicho. Vá pela bifurcação acima até o poço.",
+    "zh": "在第一个坡道之后,爬上隐形梯子 在凹室上方。走上方岔路到深坑。"
   },
   "4e28-4e04": {
     "title": "Catacomb",
@@ -485,7 +605,9 @@
     "es": "Encuentra al Líder Suzaku y luego continúa hacia el Bug Maze.",
     "fr": "Trouve le chef Suzaku, puis continue dans le Bug Maze.",
     "de": "Finde Anführer Suzaku und geh dann in das Bug Maze.",
-    "it": "Trova il capo Suzaku, poi prosegui nel Bug Maze."
+    "it": "Trova il capo Suzaku, poi prosegui nel Bug Maze.",
+    "pt": "Encontre o líder Suzaku, então continue. no Labirinto de Insetos.",
+    "zh": "找到铃木领袖,然后继续 输入臭虫迷宫"
   },
   "4e8c-4e88": {
     "title": "Jungle Shrine",
@@ -493,7 +615,9 @@
     "es": "Adéntrate en el santuario para encontrar la Catacomb.",
     "fr": "Entre plus loin dans le sanctuaire pour trouver la Catacomb.",
     "de": "Geh weiter in den Schrein, um die Catacomb zu finden.",
-    "it": "Prosegui nel santuario per trovare la Catacomb."
+    "it": "Prosegui nel santuario per trovare la Catacomb.",
+    "pt": "Continue até o santuário para encontrar a Catacumba.",
+    "zh": "继续进入神社寻找Catacomb"
   },
   "4f60-4f04": {
     "title": "To The Jungle",
@@ -501,7 +625,9 @@
     "es": "Investiga Ether Jungle. Toma el tercer desvío para encontrar Jungle Shrine.",
     "fr": "Explore Ether Jungle. Prends le troisième embranchement pour trouver Jungle Shrine.",
     "de": "Erkunde Ether Jungle. Nimm die dritte Abzweigung zum Jungle Shrine.",
-    "it": "Esplora Ether Jungle. Prendi la terza svolta per trovare Jungle Shrine."
+    "it": "Esplora Ether Jungle. Prendi la terza svolta per trovare Jungle Shrine.",
+    "pt": "Investigue a Selva Ether! Vire na terceira entrada até o Santuário da Selva.",
+    "zh": "调查以太丛林! 在第三个路口转弯，找到丛林神殿"
   },
   "4fe0-4fb8": {
     "title": "Suzaku Hall",
@@ -509,7 +635,9 @@
     "es": "Ve a Suzaku Hall en Ciudad Suzaku y habla con Patamon.",
     "fr": "Va à Suzaku Hall dans Suzaku City et parle à Patamon.",
     "de": "Geh zur Suzaku Hall in Suzaku City und sprich mit Patamon.",
-    "it": "Vai alla Suzaku Hall di Suzaku City e parla con Patamon."
+    "it": "Vai alla Suzaku Hall di Suzaku City e parla con Patamon.",
+    "pt": "Vá para Suzaku Hall dentro da cidade de Suzaku. e falar com Patamon.",
+    "zh": "去铃木市内的铃木厅 和Patamon谈谈"
   },
   "5048-5044": {
     "title": "Underground Cave",
@@ -517,7 +645,9 @@
     "es": "Habla con el general de la AOA.",
     "fr": "Parle au général de l'AOA.",
     "de": "Sprich mit dem AOA-General.",
-    "it": "Parla con il generale AOA."
+    "it": "Parla con il generale AOA.",
+    "pt": "Fale com o General da A.O.A.",
+    "zh": "和A. O. A. 将军谈谈"
   },
   "50dc-50a0": {
     "title": "Byakko Dome",
@@ -525,7 +655,9 @@
     "es": "Gira a la derecha, pasa junto a Divermon y entra en la Underground Cave.",
     "fr": "Tourne à droite, passe devant Divermon et entre dans l'Underground Cave.",
     "de": "Geh rechts an Divermon vorbei in die Underground Cave.",
-    "it": "Gira a destra, supera Divermon ed entra nell'Underground Cave."
+    "it": "Gira a destra, supera Divermon ed entra nell'Underground Cave.",
+    "pt": "Vire à direita, passe por Divermon. e para a caverna subterrânea",
+    "zh": "右转,走过Divemon 进入地下洞穴"
   },
   "5134-5130": {
     "title": "Byakko Dome",
@@ -533,7 +665,9 @@
     "es": "Regresa al Byakko Dome en Ciudad Byakko.",
     "fr": "Retourne au Byakko Dome dans Byakko City.",
     "de": "Kehre zum Byakko Dome in Byakko City zurück.",
-    "it": "Torna al Byakko Dome di Byakko City."
+    "it": "Torna al Byakko Dome di Byakko City.",
+    "pt": "Volte para Byakko Dome dentro da cidade de Byakko",
+    "zh": "回到比亚科城内的比亚科穹顶"
   },
   "51c8-51a0": {
     "title": "Master Room",
@@ -541,7 +675,9 @@
     "es": "Examina los cuadros en el orden M O N S T E R.",
     "fr": "Examine les tableaux dans l'ordre M O N S T E R.",
     "de": "Untersuche die Bilder in der Reihenfolge M O N S T E R.",
-    "it": "Esamina i dipinti nell'ordine M O N S T E R."
+    "it": "Esamina i dipinti nell'ordine M O N S T E R.",
+    "pt": "Examine as pinturas na ordem de M, O, N, S, T, E, R",
+    "zh": "检查画作的顺序 M、O、N、S、T、E、R"
   },
   "5230-522c": {
     "title": "Admin Center 2F",
@@ -549,7 +685,9 @@
     "es": "Lucha hasta llegar a la Master Room.",
     "fr": "Combats jusqu'à la Master Room.",
     "de": "Kämpfe dich bis zum Master Room durch.",
-    "it": "Combatti fino alla Master Room."
+    "it": "Combatti fino alla Master Room.",
+    "pt": "Lute até a Sala Mestre.",
+    "zh": "战斗通过主室"
   },
   "5298-5294": {
     "title": "Admin Center 1F",
@@ -557,7 +695,9 @@
     "es": "Sube al Admin Center 2F.",
     "fr": "Monte à l'Admin Center 2F.",
     "de": "Geh hinauf zum Admin Center 2F.",
-    "it": "Sali all'Admin Center 2F."
+    "it": "Sali all'Admin Center 2F.",
+    "pt": "Suba para o Centro de Administração 2F.",
+    "zh": "上楼去行政中心2F"
   },
   "5300-52fc": {
     "title": "Basement Stairs",
@@ -565,7 +705,9 @@
     "es": "Sigue subiendo al siguiente nivel.",
     "fr": "Continue à monter au niveau suivant.",
     "de": "Geh weiter zur nächsten Ebene hinauf.",
-    "it": "Continua a salire al livello successivo."
+    "it": "Continua a salire al livello successivo.",
+    "pt": "Continue até o próximo nível.",
+    "zh": "继续到下一级别"
   },
   "5360-535c": {
     "title": "Admin Center B1F",
@@ -573,7 +715,9 @@
     "es": "Lucha hasta llegar al siguiente nivel.",
     "fr": "Combats pour atteindre le niveau suivant.",
     "de": "Kämpfe dich bis zur nächsten Ebene durch.",
-    "it": "Combatti fino al livello successivo."
+    "it": "Combatti fino al livello successivo.",
+    "pt": "Lute até o próximo nível.",
+    "zh": "战斗到下一个关卡"
   },
   "53fc-53d8": {
     "title": "Backdoor",
@@ -581,7 +725,9 @@
     "es": "Entra por la puerta grande al norte de la Control Room.",
     "fr": "Passe la grande porte au nord de la Control Room.",
     "de": "Geh durch die große Tür nördlich des Control Room.",
-    "it": "Attraversa la grande porta a nord della Control Room."
+    "it": "Attraversa la grande porta a nord della Control Room.",
+    "pt": "Entre na grande porta para o Norte de A sala de controle.",
+    "zh": "输入北边的大门 控制室"
   },
   "545c-5458": {
     "title": "Backdoor",
@@ -589,7 +735,9 @@
     "es": "Regresa a la Control Room y habla con Datamon.",
     "fr": "Retourne à la Control Room et parle à Datamon.",
     "de": "Kehre zum Control Room zurück und sprich mit Datamon.",
-    "it": "Torna alla Control Room e parla con Datamon."
+    "it": "Torna alla Control Room e parla con Datamon.",
+    "pt": "Volte para a sala de controle e fale com Datamon.",
+    "zh": "回控制室跟Datamon谈谈"
   },
   "5500-54d0": {
     "title": "Staff Pass Hunt",
@@ -597,7 +745,9 @@
     "es": "Sube al segundo nivel y ve hasta el extremo izquierdo para encontrar a Nick y Keith.",
     "fr": "Monte au deuxième niveau et va tout à gauche pour trouver Nick et Keith.",
     "de": "Steige zur zweiten Ebene und geh ganz nach links, um Nick und Keith zu finden.",
-    "it": "Sali al secondo livello e vai all'estrema sinistra per trovare Nick e Keith."
+    "it": "Sali al secondo livello e vai all'estrema sinistra per trovare Nick e Keith.",
+    "pt": "Suba ao segundo nível e vá até a extrema esquerda. Encontrar Nick e Keith.",
+    "zh": "上到第二层，走到最左边 寻找尼克和基思"
   },
   "5588-5584": {
     "title": "Staff Pass Hunt",
@@ -605,7 +755,9 @@
     "es": "Continúa a la derecha para encontrar UG Lake.",
     "fr": "Continue à droite pour trouver UG Lake.",
     "de": "Geh weiter nach rechts zum UG Lake.",
-    "it": "Continua a destra per trovare UG Lake."
+    "it": "Continua a destra per trovare UG Lake.",
+    "pt": "Continue à direita para encontrar o lago UG",
+    "zh": "继续右转找到UG湖"
   },
   "564c-55f0": {
     "title": "Staff Pass Hunt",
@@ -613,7 +765,9 @@
     "es": "Ve a Suzaku Hall y pasa junto a Renamon. Sal del edificio y sumérgete desde el muelle.",
     "fr": "Va à Suzaku Hall et passe devant Renamon. Sors du bâtiment et plonge depuis le quai.",
     "de": "Geh zur Suzaku Hall und an Renamon vorbei. Verlasse die Halle und tauche am Anleger ab.",
-    "it": "Vai alla Suzaku Hall e supera Renamon. Esci dall'edificio e immergiti dal molo."
+    "it": "Vai alla Suzaku Hall e supera Renamon. Esci dall'edificio e immergiti dal molo.",
+    "pt": "Vá para Suzaku Hall, passe por Renamon então. Saia do Hall e vá para debaixo d'água na doca.",
+    "zh": "去铃木厅,经过雷纳蒙 离开大厅,到码头去"
   },
   "56f0-56c0": {
     "title": "Staff Pass Hunt",
@@ -621,7 +775,9 @@
     "es": "Regresa a la Secret Room de las alcantarillas de Dum Dum Factory.",
     "fr": "Retourne à la Secret Room dans les égouts de Dum Dum Factory.",
     "de": "Kehre zum Secret Room in der Kanalisation der Dum Dum Factory zurück.",
-    "it": "Torna alla Secret Room nelle fogne della Dum Dum Factory."
+    "it": "Torna alla Secret Room nelle fogne della Dum Dum Factory.",
+    "pt": "Volte para o quarto secreto dentro do Esgotos da Fábrica Dum Dum",
+    "zh": "回到里面的密室里去 咚咚工厂下水道"
   },
   "5760-575c": {
     "title": "Control Room",
@@ -629,7 +785,9 @@
     "es": "Vuelve a hablar con Datamon.",
     "fr": "Parle encore à Datamon.",
     "de": "Sprich erneut mit Datamon.",
-    "it": "Parla di nuovo con Datamon."
+    "it": "Parla di nuovo con Datamon.",
+    "pt": "Fale com Datamon novamente.",
+    "zh": "再和Datamon谈谈"
   },
   "57ac-57a8": {
     "title": "Control Room",
@@ -637,7 +795,9 @@
     "es": "Habla con Datamon.",
     "fr": "Parle à Datamon.",
     "de": "Sprich mit Datamon.",
-    "it": "Parla con Datamon."
+    "it": "Parla con Datamon.",
+    "pt": "Fale com Datamon.",
+    "zh": "与 Datamon 交谈"
   },
   "57ec-57e8": {
     "title": "Asuka Sewers",
@@ -645,7 +805,9 @@
     "es": "Ve al oeste hasta encontrar la Control Room.",
     "fr": "Va à l'ouest jusqu'à la Control Room.",
     "de": "Geh nach Westen, bis du den Control Room findest.",
-    "it": "Vai a ovest fino alla Control Room."
+    "it": "Vai a ovest fino alla Control Room.",
+    "pt": "Dirija-se para oeste até encontrar a sala de controle.",
+    "zh": "向西走直到找到控制室"
   },
   "5860-585c": {
     "title": "Underwater",
@@ -653,7 +815,9 @@
     "es": "Dirígete a la salida de la derecha.",
     "fr": "Va à la sortie de droite.",
     "de": "Geh zum Ausgang rechts.",
-    "it": "Dirigiti all'uscita a destra."
+    "it": "Dirigiti all'uscita a destra.",
+    "pt": "Viaje para a saída à direita.",
+    "zh": "前往右边的出口"
   },
   "58bc-58b8": {
     "title": "Asuka Dock",
@@ -661,7 +825,9 @@
     "es": "Ve al muelle de la derecha y sumérgete.",
     "fr": "Va au quai de droite et plonge.",
     "de": "Geh zum Anleger rechts und tauche ab.",
-    "it": "Vai al molo a destra e immergiti."
+    "it": "Vai al molo a destra e immergiti.",
+    "pt": "Vá para a doca à direita e vá para debaixo d'água.",
+    "zh": "往右边的码头去,到水下去"
   },
   "5938-5934": {
     "title": "Asuka Bridge",
@@ -669,7 +835,9 @@
     "es": "Ve al Puente Asuka.",
     "fr": "Va à Asuka Bridge.",
     "de": "Geh zur Asuka Bridge.",
-    "it": "Vai ad Asuka Bridge."
+    "it": "Vai ad Asuka Bridge.",
+    "pt": "Vá para a Ponte Asuka.",
+    "zh": "去阿苏卡桥"
   },
   "59c0-597c": {
     "title": "Secrets",
@@ -677,7 +845,9 @@
     "es": "Baja por el camino izquierdo de Secret Stairs y adéntrate más en las alcantarillas.",
     "fr": "Descends par le chemin de gauche de Secret Stairs et avance dans les égouts.",
     "de": "Geh den linken Weg der Secret Stairs hinunter und weiter in die Kanalisation.",
-    "it": "Scendi dal sentiero sinistro delle Secret Stairs e prosegui nelle fogne."
+    "it": "Scendi dal sentiero sinistro delle Secret Stairs e prosegui nelle fogne.",
+    "pt": "Siga pelo caminho esquerdo das Escadas Secretas. Continue nos esgotos.",
+    "zh": "沿着秘密楼梯的左路走 继续走进下水道"
   },
   "5a30-5a2c": {
     "title": "Numemon Hunt",
@@ -685,7 +855,9 @@
     "es": "Sigue a Numemon escaleras arriba y habla con HiAndromon.",
     "fr": "Suis Numemon à l'étage et parle à HiAndromon.",
     "de": "Folge Numemon nach oben und sprich mit HiAndromon.",
-    "it": "Segui Numemon al piano di sopra e parla con HiAndromon."
+    "it": "Segui Numemon al piano di sopra e parla con HiAndromon.",
+    "pt": "Siga Numemon lá em cima e fale com HiAndromon.",
+    "zh": "跟着Numemon上楼跟HiAndromon谈谈"
   },
   "5b00-5aac": {
     "title": "Numemon Hunt",
@@ -693,7 +865,9 @@
     "es": "Ve a la izquierda de Duct Room 03, hasta la intersección a la izquierda de la caja.",
     "fr": "Va à gauche de Duct Room 03, jusqu'au croisement à gauche de la caisse.",
     "de": "Geh links von Duct Room 03 zur Kreuzung links neben der Kiste.",
-    "it": "Vai a sinistra di Duct Room 03, fino all'incrocio a sinistra della cassa."
+    "it": "Vai a sinistra di Duct Room 03, fino all'incrocio a sinistra della cassa.",
+    "pt": "Vire à esquerda do Duct Room 03 e vá para o Intersecção no lado esquerdo da caixa",
+    "zh": "03号DUCT室左头,然后去 框左侧的交叉点"
   },
   "5b70-5b6c": {
     "title": "Numemon Hunt",
@@ -701,7 +875,9 @@
     "es": "Entra en Duct Room 03 y recoge el objeto.",
     "fr": "Entre dans Duct Room 03 et prends l'objet.",
     "de": "Betritt Duct Room 03 und nimm den Gegenstand.",
-    "it": "Entra in Duct Room 03 e prendi l'oggetto."
+    "it": "Entra in Duct Room 03 e prendi l'oggetto.",
+    "pt": "Entre na sala 03 e pegue o item.",
+    "zh": "输入 Duct 房间 03 并拿走项目"
   },
   "5c20-5bd8": {
     "title": "Numemon Hunt",
@@ -709,7 +885,9 @@
     "es": "Sube la escalera frente a Duct Room 02 y avanza hacia las franjas amarillas.",
     "fr": "Monte l'échelle devant Duct Room 02 et avance vers les bandes jaunes.",
     "de": "Steige die Leiter vor Duct Room 02 hinauf und geh nach oben zu den gelben Streifen.",
-    "it": "Sali la scala davanti a Duct Room 02 e prosegui verso le strisce gialle."
+    "it": "Sali la scala davanti a Duct Room 02 e prosegui verso le strisce gialle.",
+    "pt": "Suba a escada em frente à Sala dos Dutos 02 e Vá para as listras amarelas.",
+    "zh": "爬上管道室02前的梯子，然后 向着黄色条纹走去"
   },
   "5c9c-5c98": {
     "title": "Numemon Hunt",
@@ -717,7 +895,9 @@
     "es": "Entra en Duct Room 02 y recoge el objeto.",
     "fr": "Entre dans Duct Room 02 et prends l'objet.",
     "de": "Betritt Duct Room 02 und nimm den Gegenstand.",
-    "it": "Entra in Duct Room 02 e prendi l'oggetto."
+    "it": "Entra in Duct Room 02 e prendi l'oggetto.",
+    "pt": "Entre no Duct Room 02 e pegue o item.",
+    "zh": "输入 Duct 02 房间并带走项目"
   },
   "5d68-5d04": {
     "title": "Numemon Hunt",
@@ -725,7 +905,9 @@
     "es": "Regresa a la escalera derecha. Ve a la derecha y arriba hasta la intersección a la derecha de la caja.",
     "fr": "Retourne à l'échelle de droite. Va à droite puis en haut jusqu'au croisement à droite de la caisse.",
     "de": "Kehre zur rechten Leiter zurück. Geh rechts und hoch zur Kreuzung rechts neben der Kiste.",
-    "it": "Torna alla scala destra. Vai a destra e in alto fino all'incrocio a destra della cassa."
+    "it": "Torna alla scala destra. Vai a destra e in alto fino all'incrocio a destra della cassa.",
+    "pt": "Volte à escada direita. Vá à direita e suba. Para o cruzamento do lado direito da caixa.",
+    "zh": "回到右侧梯子，再往右上方走 到盒子右侧的交叉点"
   },
   "5df0-5dec": {
     "title": "Numemon Hunt",
@@ -733,7 +915,9 @@
     "es": "Entra en Duct Room 04 y recoge el objeto.",
     "fr": "Entre dans Duct Room 04 et prends l'objet.",
     "de": "Betritt Duct Room 04 und nimm den Gegenstand.",
-    "it": "Entra in Duct Room 04 e prendi l'oggetto."
+    "it": "Entra in Duct Room 04 e prendi l'oggetto.",
+    "pt": "Entre no quarto 04 e pegue o item.",
+    "zh": "输入 Duct 房间 04 并拿走项目"
   },
   "5ea4-5e58": {
     "title": "Numemon Hunt",
@@ -741,7 +925,9 @@
     "es": "Sube la escalera derecha y luego ve a la izquierda y arriba. Encuentra a Numemon frente a Duct Room 04.",
     "fr": "Monte l'échelle de droite, puis va à gauche et en haut. Trouve Numemon devant Duct Room 04.",
     "de": "Steige die rechte Leiter hinauf, dann geh links und hoch. Finde Numemon vor Duct Room 04.",
-    "it": "Sali la scala destra, poi vai a sinistra e in alto. Trova Numemon davanti a Duct Room 04."
+    "it": "Sali la scala destra, poi vai a sinistra e in alto. Trova Numemon davanti a Duct Room 04.",
+    "pt": "Suba a escada à direita, depois vá à esquerda e suba. Encontre Numemon na frente da Sala de Duct 04.",
+    "zh": "爬右边的梯子，再向左向上走 在 Duct 房间 04 前面找到 Numemon"
   },
   "5f28-5f24": {
     "title": "Numemon Hunt",
@@ -749,7 +935,9 @@
     "es": "Entra en Duct Room 01 y recoge el objeto.",
     "fr": "Entre dans Duct Room 01 et prends l'objet.",
     "de": "Betritt Duct Room 01 und nimm den Gegenstand.",
-    "it": "Entra in Duct Room 01 e prendi l'oggetto."
+    "it": "Entra in Duct Room 01 e prendi l'oggetto.",
+    "pt": "Entre na sala 01 e pegue o item.",
+    "zh": "输入 Duct 01 房间并拿走项目"
   },
   "5f94-5f90": {
     "title": "Numemon Hunt",
@@ -757,7 +945,9 @@
     "es": "Adéntrate más para perseguir a Numemon.",
     "fr": "Avance plus loin pour poursuivre Numemon.",
     "de": "Geh weiter hinein und verfolge Numemon.",
-    "it": "Prosegui per inseguire Numemon."
+    "it": "Prosegui per inseguire Numemon.",
+    "pt": "Vá em frente para perseguir Numemon!",
+    "zh": "继续追杀努美蒙!"
   },
   "6030-6000": {
     "title": "Dum Dum Factory",
@@ -765,7 +955,9 @@
     "es": "Regresa a Bullet Valley y luego ve al norte para encontrar Dum Dum Factory.",
     "fr": "Retourne à Bullet Valley, puis va au nord pour trouver Dum Dum Factory.",
     "de": "Kehre zum Bullet Valley zurück und geh nach Norden zur Dum Dum Factory.",
-    "it": "Torna a Bullet Valley, poi vai a nord per trovare Dum Dum Factory."
+    "it": "Torna a Bullet Valley, poi vai a nord per trovare Dum Dum Factory.",
+    "pt": "Volte para Bullet Valley e depois para o norte. Para encontrar a fábrica Dum Dum",
+    "zh": "回到子弹谷然后北上 找到 Dum Dum 工厂"
   },
   "60a8-60a4": {
     "title": "Mirage Tower",
@@ -773,7 +965,9 @@
     "es": "Entra en la torre y encuentra al verdadero Líder Byakko.",
     "fr": "Entre dans la tour et trouve le vrai chef Byakko.",
     "de": "Betritt den Turm und finde den echten Anführer Byakko.",
-    "it": "Entra nella torre e trova il vero capo Byakko."
+    "it": "Entra nella torre e trova il vero capo Byakko.",
+    "pt": "Entre na torre e encontre o verdadeiro Líder Byakko.",
+    "zh": "进入塔楼,找到真正的比亚克领队"
   },
   "6170-6124": {
     "title": "The Mirage",
@@ -781,7 +975,9 @@
     "es": "Desde la primera pantalla, toma dos veces la salida inferior izquierda y luego tres veces la superior izquierda.",
     "fr": "Depuis le premier écran, prends deux fois la sortie en bas à gauche, puis trois fois celle en haut à gauche.",
     "de": "Nimm vom ersten Bildschirm aus zweimal den Ausgang unten links, dann dreimal den oben links.",
-    "it": "Dalla prima schermata, prendi due volte l'uscita in basso a sinistra e poi tre volte quella in alto a sinistra."
+    "it": "Dalla prima schermata, prendi due volte l'uscita in basso a sinistra e poi tre volte quella in alto a sinistra.",
+    "pt": "Na primeira tela, use a saída inferior esquerda 2x. Então pegue a saída superior esquerda três vezes.",
+    "zh": "从第一张地图连续两次走左下出口 然后左上方离开三次"
   },
   "6250-61ec": {
     "title": "Mobius Desert",
@@ -789,7 +985,9 @@
     "es": "Ve al oeste para regresar a Noise Desert; después cruza el desierto hacia el sur hasta Mobius Desert.",
     "fr": "Va à l'ouest pour revenir à Noise Desert, puis traverse-le vers le sud jusqu'à Mobius Desert.",
     "de": "Geh nach Westen zurück zur Noise Desert, dann durch sie nach Süden zur Mobius Desert.",
-    "it": "Vai a ovest per tornare a Noise Desert, poi attraversalo verso sud fino a Mobius Desert."
+    "it": "Vai a ovest per tornare a Noise Desert, poi attraversalo verso sud fino a Mobius Desert.",
+    "pt": "Volte a oeste ao Deserto do Ruído e siga Cruze o Deserto do Ruído ao sul até Mobius.",
+    "zh": "向西返回噪音沙漠，然后 向南穿过噪音沙漠，到莫比乌斯沙漠"
   },
   "62cc-62c8": {
     "title": "Underground Cave",
@@ -797,7 +995,9 @@
     "es": "Busca el agujero de la pared donde está Numemon.",
     "fr": "Trouve le trou dans le mur où se trouve Numemon.",
     "de": "Finde das Loch in der Wand, in dem Numemon steckt.",
-    "it": "Trova il buco nel muro in cui si trova Numemon."
+    "it": "Trova il buco nel muro in cui si trova Numemon.",
+    "pt": "Encontre o buraco na parede com Numemon nele.",
+    "zh": "在墙上找到有Numemon的洞"
   },
   "6350-634c": {
     "title": "Underground Cave",
@@ -805,7 +1005,9 @@
     "es": "Comprueba si los guardias te dejan salir.",
     "fr": "Vérifie si les gardes te laissent sortir.",
     "de": "Sieh nach, ob die Wachen dich hinauslassen.",
-    "it": "Vedi se le guardie ti lasciano uscire."
+    "it": "Vedi se le guardie ti lasciano uscire.",
+    "pt": "Veja se os guardas deixam você sair.",
+    "zh": "看卫兵会不会放你出来"
   },
   "63d4-63bc": {
     "title": "Byakko Leader",
@@ -813,7 +1015,9 @@
     "es": "Encuentra al Líder Byakko en Byakko Dome y derrótalo.",
     "fr": "Trouve le chef Byakko dans Byakko Dome et bats-le.",
     "de": "Finde Anführer Byakko im Byakko Dome und besiege ihn.",
-    "it": "Trova il capo Byakko nel Byakko Dome e sconfiggilo."
+    "it": "Trova il capo Byakko nel Byakko Dome e sconfiggilo.",
+    "pt": "Encontre o Líder Byakko em Byakko Dome e Derrote-o.",
+    "zh": "在比亚科穹顶找到比亚科领队 打败他"
   },
   "6474-643c": {
     "title": "Byakko City",
@@ -821,7 +1025,9 @@
     "es": "Ve al norte a Noise Desert y continúa al norte hasta Ciudad Byakko.",
     "fr": "Va au nord vers Noise Desert et continue au nord jusqu'à Byakko City.",
     "de": "Geh nach Norden zur Noise Desert und weiter nach Norden bis Byakko City.",
-    "it": "Vai a nord verso Noise Desert e continua a nord fino a Byakko City."
+    "it": "Vai a nord verso Noise Desert e continua a nord fino a Byakko City.",
+    "pt": "Vá ao norte até o Deserto do Ruído e continue Norte para chegar à cidade de Byakko",
+    "zh": "向北到噪音沙漠，然后继续 北到比亚科市"
   },
   "64ec-64e8": {
     "title": "Underwater",
@@ -829,7 +1035,9 @@
     "es": "Ve al oeste hasta llegar a la salida.",
     "fr": "Va à l'ouest jusqu'à la sortie.",
     "de": "Geh nach Westen bis zum Ausgang.",
-    "it": "Vai a ovest fino all'uscita."
+    "it": "Vai a ovest fino all'uscita.",
+    "pt": "Vá para o oeste até chegar à saída.",
+    "zh": "向西走直到你到达出口"
   },
   "6564-654c": {
     "title": "West Sector",
@@ -837,7 +1045,9 @@
     "es": "Ve al norte al muelle con nenúfares y llama a Submarimon.",
     "fr": "Va au nord au quai aux nénuphars et appelle Submarimon.",
     "de": "Geh nach Norden zum Seerosen-Anleger und rufe Submarimon.",
-    "it": "Vai a nord al molo con le ninfee e chiama Submarimon."
+    "it": "Vai a nord al molo con le ninfee e chiama Submarimon.",
+    "pt": "Vá para o norte para a doca de lírios e chame Submarimon",
+    "zh": "北上百合板码头打电话 Submarimon"
   },
   "6620-65d0": {
     "title": "South Cape",
@@ -845,7 +1055,9 @@
     "es": "Atraviesa Ether Jungle, al oeste de Phoenix Bay, hasta llegar a South Cape.",
     "fr": "Traverse Ether Jungle, à l'ouest de Phoenix Bay, jusqu'à South Cape.",
     "de": "Geh durch Ether Jungle westlich der Phoenix Bay bis South Cape.",
-    "it": "Attraversa Ether Jungle, a ovest di Phoenix Bay, fino a South Cape."
+    "it": "Attraversa Ether Jungle, a ovest di Phoenix Bay, fino a South Cape.",
+    "pt": "Dirija-se para a Selva Ether (a oeste de Phoenix Bay) até chegar ao Cabo Sul.",
+    "zh": "穿过以太丛林(西部) 凤凰湾),直到你到达南开普"
   },
   "66bc-6690": {
     "title": "Reliability Spot",
@@ -853,7 +1065,9 @@
     "es": "Baja la escalera y recoge el DigiEgg de la Sinceridad.",
     "fr": "Descends l'échelle et prends le DigiEgg de la Sincérité.",
     "de": "Steige die Leiter hinab und hole das DigiEgg der Aufrichtigkeit.",
-    "it": "Scendi la scala e prendi il DigiEgg della Sincerità."
+    "it": "Scendi la scala e prendi il DigiEgg della Sincerità.",
+    "pt": "Desça pela escada e pegue o Digi-Ovo da Sinceridade",
+    "zh": "沿梯子下去取得 纯真数码装甲"
   },
   "6764-6724": {
     "title": "Bios Swamp",
@@ -861,7 +1075,9 @@
     "es": "Regresa al santuario de Bios Swamp y abre un agujero en la parte trasera con los explosivos.",
     "fr": "Retourne au sanctuaire de Bios Swamp et fais exploser un passage à l'arrière.",
     "de": "Kehre zum Schrein im Bios Swamp zurück und sprenge ein Loch in die Rückwand.",
-    "it": "Torna al santuario di Bios Swamp e apri un buco sul retro con gli esplosivi."
+    "it": "Torna al santuario di Bios Swamp e apri un buco sul retro con gli esplosivi.",
+    "pt": "Volte para o santuário em Bios Swamp e Faça um buraco na parte de trás!",
+    "zh": "回到Bios沼泽的神社 炸一个洞在它的后面!"
   },
   "6814-67cc": {
     "title": "TNT Ball",
@@ -869,7 +1085,9 @@
     "es": "Derrota a varios Triceramon hasta conseguir una TNT Ball. Puedes encontrarlos en Tyranno Valley.",
     "fr": "Bats des Triceramon jusqu'à obtenir une TNT Ball. Tu en trouveras dans Tyranno Valley.",
     "de": "Besiege Triceramon, bis du einen TNT Ball erhältst. Du findest sie im Tyranno Valley.",
-    "it": "Sconfiggi alcuni Triceramon finché ottieni una TNT Ball. Li trovi a Tyranno Valley."
+    "it": "Sconfiggi alcuni Triceramon finché ottieni una TNT Ball. Li trovi a Tyranno Valley.",
+    "pt": "Derrote alguns Triceramons até ter uma bola TNT. Você pode encontrá-los no Vale Tyranno.",
+    "zh": "击败几支Triceramon,直到你得到TNT球 你可以在暴风谷找到他们"
   },
   "6890-688c": {
     "title": "Baronmon",
@@ -877,7 +1095,9 @@
     "es": "Vuelve a hablar con Baronmon para recibir el TNT Chip.",
     "fr": "Parle encore à Baronmon pour recevoir le TNT Chip.",
     "de": "Sprich erneut mit Baronmon, um den TNT Chip zu erhalten.",
-    "it": "Parla di nuovo con Baronmon per ricevere il TNT Chip."
+    "it": "Parla di nuovo con Baronmon per ricevere il TNT Chip.",
+    "pt": "Fale com Baronmon novamente para receber o chip TNT.",
+    "zh": "和Baronmon再谈谈 接受TNT芯片"
   },
   "6908-6904": {
     "title": "Baronmon",
@@ -885,7 +1105,9 @@
     "es": "Ve a las Ruinas Protocolo y habla con Baronmon.",
     "fr": "Va aux Protocol Ruins et parle à Baronmon.",
     "de": "Geh zu den Protocol Ruins und sprich mit Baronmon.",
-    "it": "Vai alle Protocol Ruins e parla con Baronmon."
+    "it": "Vai alle Protocol Ruins e parla con Baronmon.",
+    "pt": "Vá às Ruínas do Protocolo e fale com Baronmon.",
+    "zh": "去协议遗迹找Baronmon交谈"
   },
   "6978-6974": {
     "title": "Sepikmon",
@@ -893,7 +1115,9 @@
     "es": "Regresa a Shaman House y habla con Sepikmon.",
     "fr": "Retourne à Shaman House et parle à Sepikmon.",
     "de": "Kehre zum Shaman House zurück und sprich mit Sepikmon.",
-    "it": "Torna alla Shaman House e parla con Sepikmon."
+    "it": "Torna alla Shaman House e parla con Sepikmon.",
+    "pt": "Volte para a Casa Xamã e fale com Sepikmon.",
+    "zh": "回到沙曼家,和塞皮克蒙谈谈"
   },
   "6a34-69ec": {
     "title": "Bios Shrine",
@@ -901,7 +1125,9 @@
     "es": "Busca el santuario al este. Camina detrás y pulsa ×.",
     "fr": "Trouve le sanctuaire à l'est. Passe derrière et appuie sur ×.",
     "de": "Finde den Schrein im Osten. Geh dahinter und drücke ×.",
-    "it": "Trova il santuario a est. Vai sul retro e premi ×."
+    "it": "Trova il santuario a est. Vai sul retro e premi ×.",
+    "pt": "Encontre o santuário para o leste Ande atrás do santuário e pressione X.",
+    "zh": "找到东方的神社 走在神殿后面 按X"
   },
   "6a88-6a84": {
     "title": "Bios Swamp",
@@ -909,7 +1135,9 @@
     "es": "Ve al sur desde Bulk Bridge para encontrar Bios Swamp.",
     "fr": "Va au sud depuis Bulk Bridge pour trouver Bios Swamp.",
     "de": "Geh von Bulk Bridge nach Süden zum Bios Swamp.",
-    "it": "Vai a sud da Bulk Bridge per trovare Bios Swamp."
+    "it": "Vai a sud da Bulk Bridge per trovare Bios Swamp.",
+    "pt": "Siga ao sul da Ponte Bulk até o Pântano de Bios.",
+    "zh": "从巴尔克桥向南走到比奥斯沼泽"
   },
   "6b4c-6afc": {
     "title": "Phoenix Bay",
@@ -917,7 +1145,9 @@
     "es": "Ve a Phoenix Bay y busca a Nami. Está en una islita en el centro.",
     "fr": "Va à Phoenix Bay et trouve Nami. Elle est sur une petite île au milieu.",
     "de": "Geh zur Phoenix Bay und suche Nami. Sie ist auf einer kleinen Insel in der Mitte.",
-    "it": "Vai a Phoenix Bay e cerca Nami. Si trova su un isolotto al centro."
+    "it": "Vai a Phoenix Bay e cerca Nami. Si trova su un isolotto al centro.",
+    "pt": "Vá à Baía da Fênix e procure Nami. Ela está em uma pequena ilha no meio.",
+    "zh": "去凤凰湾找Nami 她就在中间的小岛上"
   },
   "6c0c-6bc0": {
     "title": "Kail",
@@ -925,7 +1155,9 @@
     "es": "Ve al norte al Admin Center 2F. Habla con Kail arriba de la escalera.",
     "fr": "Va au nord à l'Admin Center 2F. Parle à Kail en haut de l'escalier.",
     "de": "Geh nach Norden zum Admin Center 2F. Sprich oben an der Treppe mit Kail.",
-    "it": "Vai a nord all'Admin Center 2F. Parla con Kail in cima alle scale."
+    "it": "Vai a nord all'Admin Center 2F. Parla con Kail in cima alle scale.",
+    "pt": "Vá para o norte para o Centro de Administração 2F. Fale com Kail no topo das escadas.",
+    "zh": "向北进入行政中心2F 和Kail在楼梯顶端说话"
   },
   "6c5c-6c58": {
     "title": "Admin Center",
@@ -933,7 +1165,9 @@
     "es": "Entra en el Admin Center.",
     "fr": "Entre dans l'Admin Center.",
     "de": "Betritt das Admin Center.",
-    "it": "Entra nell'Admin Center."
+    "it": "Entra nell'Admin Center.",
+    "pt": "Entre no Centro de Administração.",
+    "zh": "输入管理员中心"
   },
   "6cac-6ca8": {
     "title": "Kail",
@@ -941,7 +1175,9 @@
     "es": "Sube la escalera y habla con Kail.",
     "fr": "Monte l'échelle et parle à Kail.",
     "de": "Steige die Leiter hinauf und sprich mit Kail.",
-    "it": "Sali la scala e parla con Kail."
+    "it": "Sali la scala e parla con Kail.",
+    "pt": "Suba a escada e fale com Kail.",
+    "zh": "爬上梯子和Kail谈谈"
   },
   "6d00-6cfc": {
     "title": "Mischievious Matt",
@@ -949,7 +1185,9 @@
     "es": "Regresa con Mischievous Matt en las alcantarillas.",
     "fr": "Retourne voir Mischievous Matt dans les égouts.",
     "de": "Kehre zu Mischievous Matt in der Kanalisation zurück.",
-    "it": "Torna da Mischievous Matt nelle fogne."
+    "it": "Torna da Mischievous Matt nelle fogne.",
+    "pt": "Volte para o Mischievious Matt nos esgotos.",
+    "zh": "回到下水道里的Michievious Matt"
   },
   "6d7c-6d78": {
     "title": "Kail",
@@ -957,7 +1195,9 @@
     "es": "Busca a Kail en el vestíbulo principal.",
     "fr": "Trouve Kail dans le hall principal.",
     "de": "Finde Kail in der Haupthalle.",
-    "it": "Trova Kail nell'atrio principale."
+    "it": "Trova Kail nell'atrio principale.",
+    "pt": "Encontre Kail na entrada principal.",
+    "zh": "在大堂找到凯儿"
   },
   "6dc4-6dc0": {
     "title": "Etemon",
@@ -965,7 +1205,9 @@
     "es": "Busca a «Etemon» en las alcantarillas.",
     "fr": "Trouve « Etemon » dans les égouts.",
     "de": "Finde „Etemon“ in der Kanalisation.",
-    "it": "Trova «Etemon» nelle fogne."
+    "it": "Trova «Etemon» nelle fogne.",
+    "pt": "Encontre 'Etemon' nos esgotos",
+    "zh": "在排污器中找到\" Etemon \""
   },
   "6e68-6e0c": {
     "title": "Old Couple",
@@ -973,7 +1215,9 @@
     "es": "Habla con Kail en Ciudad Asuka. Luego habla con la pareja de ancianos en Lower Asuka.",
     "fr": "Parle à Kail dans Asuka City, puis au vieux couple dans Lower Asuka.",
     "de": "Sprich mit Kail in Asuka City, dann mit dem alten Paar in Lower Asuka.",
-    "it": "Parla con Kail ad Asuka City, poi con la coppia di anziani a Lower Asuka."
+    "it": "Parla con Kail ad Asuka City, poi con la coppia di anziani a Lower Asuka.",
+    "pt": "Fale com Kail em Asuka City. Então fale com o velho casal em Lower Asuka.",
+    "zh": "和阿苏卡市的Kail谈谈 那跟下浅草的\"老夫妇\"谈谈吧"
   },
   "6ebc-6eb8": {
     "title": "Lamb Chop",
@@ -981,7 +1225,9 @@
     "es": "Habla con Master John en Lamb Chop.",
     "fr": "Parle à Master John au Lamb Chop.",
     "de": "Sprich im Lamb Chop mit Master John.",
-    "it": "Parla con Master John al Lamb Chop."
+    "it": "Parla con Master John al Lamb Chop.",
+    "pt": "Fale com o Mestre John no Lamb Chop.",
+    "zh": "和约翰师傅在羊排谈"
   },
   "6f38-6f1c": {
     "title": "Suzaku Leader",
@@ -989,7 +1235,9 @@
     "es": "Entra en Suzaku Hall y derrota al Líder Suzaku.",
     "fr": "Entre dans Suzaku Hall et bats le chef Suzaku.",
     "de": "Betritt die Suzaku Hall und besiege Anführer Suzaku.",
-    "it": "Entra nella Suzaku Hall e sconfiggi il capo Suzaku."
+    "it": "Entra nella Suzaku Hall e sconfiggi il capo Suzaku.",
+    "pt": "Entre em Suzaku Hall e derrote o Líder Suzaku.",
+    "zh": "进入铃木厅,打败他 铃木队长"
   },
   "6fe8-6f98": {
     "title": "Suzaku City",
@@ -997,7 +1245,9 @@
     "es": "Continúa por Jungle Grave hasta Phoenix Bay y luego ve al este a Ciudad Suzaku.",
     "fr": "Continue par Jungle Grave jusqu'à Phoenix Bay, puis va à l'est vers Suzaku City.",
     "de": "Geh durch Jungle Grave bis zur Phoenix Bay und dann nach Osten zu Suzaku City.",
-    "it": "Prosegui attraverso Jungle Grave fino a Phoenix Bay, poi vai a est verso Suzaku City."
+    "it": "Prosegui attraverso Jungle Grave fino a Phoenix Bay, poi vai a est verso Suzaku City.",
+    "pt": "Cruze a Tumba da Selva até a Baía da Fênix. e siga a leste até a Cidade de Suzaku.",
+    "zh": "穿过丛林墓地前往凤凰湾 然后向东走到朱雀城"
   },
   "7084-705c": {
     "title": "Jungle Grave",
@@ -1005,7 +1255,9 @@
     "es": "Regresa a Jungle Grave y ahuyenta a Zanbamon.",
     "fr": "Retourne à Jungle Grave et fais fuir Zanbamon.",
     "de": "Kehre zu Jungle Grave zurück und vertreibe Zanbamon.",
-    "it": "Torna a Jungle Grave e scaccia Zanbamon."
+    "it": "Torna a Jungle Grave e scaccia Zanbamon.",
+    "pt": "Volte para o túmulo da selva e Afugentar Zanbamon",
+    "zh": "回到丛林坟墓 吓走赞巴蒙"
   },
   "7110-70e4": {
     "title": "Shaman House",
@@ -1013,7 +1265,9 @@
     "es": "Regresa al Sector Sur y entrega la máscara a Sepikmon.",
     "fr": "Retourne au secteur sud et donne le masque à Sepikmon.",
     "de": "Kehre zum Südsektor zurück und gib Sepikmon die Maske.",
-    "it": "Torna al settore sud e consegna la maschera a Sepikmon."
+    "it": "Torna al settore sud e consegna la maschera a Sepikmon.",
+    "pt": "Volte para o Setor Sul e dê A máscara para Sepikmon.",
+    "zh": "回到南区并给予 给 Sepikmon 的面具"
   },
   "71a4-7174": {
     "title": "Asuka Sewers",
@@ -1021,7 +1275,9 @@
     "es": "Persigue a Etemon por las alcantarillas y recupera la máscara.",
     "fr": "Poursuis Etemon dans les égouts et récupère le masque.",
     "de": "Verfolge Etemon in die Kanalisation und hole die Maske zurück.",
-    "it": "Insegui Etemon nelle fogne e recupera la maschera."
+    "it": "Insegui Etemon nelle fogne e recupera la maschera.",
+    "pt": "Persiga Etemon pelos esgotos. E pegue a máscara de volta!",
+    "zh": "追着Etemon进入下水道 把面具拿回来!"
   },
   "7230-71fc": {
     "title": "Asuka City",
@@ -1029,7 +1285,9 @@
     "es": "Regresa a la parte baja de Ciudad Asuka y vuelve a enfrentarte a Etemon.",
     "fr": "Retourne dans la partie basse d'Asuka City et confronte encore Etemon.",
     "de": "Kehre in den unteren Teil von Asuka City zurück und stelle Etemon erneut zur Rede.",
-    "it": "Torna nella parte bassa di Asuka City e affronta di nuovo Etemon."
+    "it": "Torna nella parte bassa di Asuka City e affronta di nuovo Etemon.",
+    "pt": "Retorne à cidade de Asuka. e confrontar Etemon novamente.",
+    "zh": "回到浅草市下层 并再次对抗 Etemon"
   },
   "72e0-7280": {
     "title": "Divermon's Lake",
@@ -1037,7 +1295,9 @@
     "es": "Busca a Nick en el Lago de Divermon: al sur del puente, luego al oeste detrás de unos árboles.",
     "fr": "Trouve Nick à Divermon's Lake : au sud du pont, puis à l'ouest derrière des arbres.",
     "de": "Finde Nick am Divermon's Lake: südlich der Brücke, dann westlich hinter einigen Bäumen.",
-    "it": "Trova Nick a Divermon's Lake: a sud del ponte, poi a ovest dietro alcuni alberi."
+    "it": "Trova Nick a Divermon's Lake: a sud del ponte, poi a ovest dietro alcuni alberi.",
+    "pt": "Procure Nick no sul do Lago de Divermon. da ponte e do oeste, atrás de algumas árvores.",
+    "zh": "在潜沙兽湖的南岸寻找Nick 桥后面,然后是西边,在树后面"
   },
   "7388-7360": {
     "title": "Asuka City",
@@ -1045,7 +1305,9 @@
     "es": "Busca a Etemon en la parte baja de Ciudad Asuka, junto al árbol grande.",
     "fr": "Cherche Etemon dans la partie basse d'Asuka City, à côté du grand arbre.",
     "de": "Suche Etemon im unteren Teil von Asuka City neben dem großen Baum.",
-    "it": "Cerca Etemon nella parte bassa di Asuka City, accanto al grande albero."
+    "it": "Cerca Etemon nella parte bassa di Asuka City, accanto al grande albero.",
+    "pt": "Procure Etemon no nível mais baixo da cidade de Asuka. ao lado da árvore grande",
+    "zh": "在浅草市的下层寻找Etemon 在大树旁边"
   },
   "7408-7404": {
     "title": "Asuka Bridge",
@@ -1053,7 +1315,9 @@
     "es": "Busca a Sepikmon en el Puente Asuka.",
     "fr": "Cherche Sepikmon à Asuka Bridge.",
     "de": "Suche Sepikmon auf der Asuka Bridge.",
-    "it": "Cerca Sepikmon ad Asuka Bridge."
+    "it": "Cerca Sepikmon ad Asuka Bridge.",
+    "pt": "Procure Sepikmon na Ponte Asuka.",
+    "zh": "找阿苏卡桥的赛皮克蒙"
   },
   "74a8-7468": {
     "title": "Protocol Ruins",
@@ -1061,7 +1325,9 @@
     "es": "Ve a las Ruinas Protocolo del Sector Este, gira a la izquierda y habla con Baronmon.",
     "fr": "Va aux Protocol Ruins du secteur est, prends à gauche et parle à Baronmon.",
     "de": "Geh zu den Protocol Ruins im Ostsektor, dann nach links und sprich mit Baronmon.",
-    "it": "Vai alle Protocol Ruins nel settore est, gira a sinistra e parla con Baronmon."
+    "it": "Vai alle Protocol Ruins nel settore est, gira a sinistra e parla con Baronmon.",
+    "pt": "Vá para as Ruínas do Protocolo no Setor Leste, Vire à esquerda e fale com Baronmon.",
+    "zh": "去东区的礼宾处 向左走,跟巴伦门谈谈"
   },
   "7518-7514": {
     "title": "Shaman House",
@@ -1069,7 +1335,9 @@
     "es": "Regresa a Shaman House para encontrar a Sepikmon.",
     "fr": "Retourne à Shaman House pour trouver Sepikmon.",
     "de": "Kehre zum Shaman House zurück, um Sepikmon zu finden.",
-    "it": "Torna alla Shaman House per trovare Sepikmon."
+    "it": "Torna alla Shaman House per trovare Sepikmon.",
+    "pt": "Volte para a Casa Xamã para encontrar Sepikmon.",
+    "zh": "回到沙门家去找塞皮克蒙"
   },
   "75e4-7590": {
     "title": "Swamp Inn",
@@ -1077,7 +1345,9 @@
     "es": "Ve a la posada de Tranquil Swamp y habla con el Gatomon a la izquierda del mostrador.",
     "fr": "Va à l'auberge de Tranquil Swamp et parle au Gatomon à gauche du comptoir.",
     "de": "Geh zum Gasthaus im Tranquil Swamp und sprich mit dem Gatomon links vom Tresen.",
-    "it": "Vai alla locanda di Tranquil Swamp e parla con il Gatomon a sinistra del bancone."
+    "it": "Vai alla locanda di Tranquil Swamp e parla con il Gatomon a sinistra del bancone.",
+    "pt": "Vá para a pousada dentro do Pântano Tranquilo. e falar com o Gatomon saiu da mesa.",
+    "zh": "去Tranquil沼泽内的客栈 跟桌子左边的加托门说话"
   },
   "7688-7644": {
     "title": "Jungle Grave",
@@ -1085,7 +1355,9 @@
     "es": "Adéntrate en Jungle Grave, al oeste de Bulk Bridge, y habla con Zanbamon.",
     "fr": "Avance dans Jungle Grave, à l'ouest de Bulk Bridge, et parle à Zanbamon.",
     "de": "Geh tief in Jungle Grave westlich von Bulk Bridge und sprich mit Zanbamon.",
-    "it": "Addentrati in Jungle Grave, a ovest di Bulk Bridge, e parla con Zanbamon."
+    "it": "Addentrati in Jungle Grave, a ovest di Bulk Bridge, e parla con Zanbamon.",
+    "pt": "Dirija-se para o túmulo da selva, a oeste de Bulk Bridge, e fale com Zanbamon.",
+    "zh": "深入丛林坟墓,西边 大桥,跟赞巴蒙谈谈"
   },
   "7724-76f8": {
     "title": "Shaman House",
@@ -1093,7 +1365,9 @@
     "es": "Ve a Shaman House en Tranquil Swamp, al norte de Bulk Bridge.",
     "fr": "Va à Shaman House dans Tranquil Swamp, au nord de Bulk Bridge.",
     "de": "Geh zum Shaman House im Tranquil Swamp nördlich von Bulk Bridge.",
-    "it": "Vai alla Shaman House a Tranquil Swamp, a nord di Bulk Bridge."
+    "it": "Vai alla Shaman House a Tranquil Swamp, a nord di Bulk Bridge.",
+    "pt": "Vá para a Casa Xamã no Pântano Tranquilo. Ao norte da Ponte Bulk.",
+    "zh": "前往Tranquil沼泽的沙曼之家 布克桥以北"
   },
   "779c-7798": {
     "title": "Forest Inn BF",
@@ -1101,7 +1375,9 @@
     "es": "Busca a Guilmon en el sótano de Forest Inn.",
     "fr": "Trouve Guilmon au sous-sol de Forest Inn.",
     "de": "Finde Guilmon im Keller des Forest Inn.",
-    "it": "Trova Guilmon nel seminterrato del Forest Inn."
+    "it": "Trova Guilmon nel seminterrato del Forest Inn.",
+    "pt": "Encontre Guilmon no porão do Forest Inn.",
+    "zh": "在森林客栈地下室找到吉蒙"
   },
   "7848-7810": {
     "title": "East Station",
@@ -1109,7 +1385,9 @@
     "es": "Regresa a East Station y activa la góndola. Puede que el viaje sea accidentado.",
     "fr": "Retourne à East Station et active la télécabine. Le trajet risque d'être mouvementé.",
     "de": "Kehre zur East Station zurück und aktiviere die Gondel. Es könnte eine holprige Fahrt werden.",
-    "it": "Torna a East Station e attiva la cabinovia. Il viaggio potrebbe essere movimentato."
+    "it": "Torna a East Station e attiva la cabinovia. Il viaggio potrebbe essere movimentato.",
+    "pt": "Volte para a Estação Leste e ative a gôndola. Pode ser uma viagem turbulenta...",
+    "zh": "回到东站 启动Gondola 这可能是一个颠簸的旅程..."
   },
   "78c8-78c4": {
     "title": "Seiryu City",
@@ -1117,7 +1395,9 @@
     "es": "Habla con Guilmon en Ciudad Seiryu, junto a la Torre Seiryu.",
     "fr": "Parle à Guilmon dans Seiryu City, à côté de Seiryu Tower.",
     "de": "Sprich mit Guilmon in Seiryu City neben dem Seiryu Tower.",
-    "it": "Parla con Guilmon a Seiryu City, accanto alla Seiryu Tower."
+    "it": "Parla con Guilmon a Seiryu City, accanto alla Seiryu Tower.",
+    "pt": "Fale com Guilmon ao lado da Torre Seiryu.",
+    "zh": "去青龙塔旁和Guilmon交谈"
   },
   "7998-7948": {
     "title": "Zephyr Tower",
@@ -1125,7 +1405,9 @@
     "es": "Regresa a Ciudad Seiryu y habla con Guilmon en Zephyr Tower, junto a la posada.",
     "fr": "Retourne à Seiryu City et parle à Guilmon dans Zephyr Tower, à côté de l'auberge.",
     "de": "Kehre zu Seiryu City zurück und sprich mit Guilmon im Zephyr Tower neben dem Gasthaus.",
-    "it": "Torna a Seiryu City e parla con Guilmon nella Zephyr Tower, accanto alla locanda."
+    "it": "Torna a Seiryu City e parla con Guilmon nella Zephyr Tower, accanto alla locanda.",
+    "pt": "Volte para Seiryu e fale com ele. Guilmon na torre Zephyr ao lado da pousada.",
+    "zh": "回清流城去,跟他们谈谈 客栈旁边的齐佛塔里盖尔蒙"
   },
   "7a04-7a00": {
     "title": "East Station",
@@ -1133,7 +1415,9 @@
     "es": "Regresa a East Station y activa la góndola.",
     "fr": "Retourne à East Station et active la télécabine.",
     "de": "Kehre zur East Station zurück und aktiviere die Gondel.",
-    "it": "Torna a East Station e attiva la cabinovia."
+    "it": "Torna a East Station e attiva la cabinovia.",
+    "pt": "Volte para a Estação Leste e ative a gôndola.",
+    "zh": "回到东站 启动Gondola"
   },
   "7a84-7a80": {
     "title": "Forest Inn",
@@ -1141,7 +1425,9 @@
     "es": "Habla con Guilmon en Forest Inn.",
     "fr": "Parle à Guilmon dans Forest Inn.",
     "de": "Sprich mit Guilmon im Forest Inn.",
-    "it": "Parla con Guilmon nel Forest Inn."
+    "it": "Parla con Guilmon nel Forest Inn.",
+    "pt": "Fale com Guilmon em Forest Inn.",
+    "zh": "和Guilmon在森林客栈谈话"
   },
   "7b00-7ad8": {
     "title": "Forest Inn",
@@ -1149,7 +1435,9 @@
     "es": "Ve al sur desde el Bosque Alambre Este para encontrar Forest Inn.",
     "fr": "Va au sud depuis East Wire Forest pour trouver Forest Inn.",
     "de": "Geh vom East Wire Forest nach Süden zum Forest Inn.",
-    "it": "Vai a sud da East Wire Forest per trovare Forest Inn."
+    "it": "Vai a sud da East Wire Forest per trovare Forest Inn.",
+    "pt": "Vá para o sul na Floresta de Fios Orientais. para encontrar Forest Inn",
+    "zh": "在\"东线森林\"中向南飞去 寻找森林客栈"
   },
   "7b64-7b60": {
     "title": "Asuka Inn 2F",
@@ -1157,7 +1445,9 @@
     "es": "Habla con Guilmon en Asuka Inn 2F.",
     "fr": "Parle à Guilmon dans Asuka Inn 2F.",
     "de": "Sprich mit Guilmon im Asuka Inn 2F.",
-    "it": "Parla con Guilmon nell'Asuka Inn 2F."
+    "it": "Parla con Guilmon nell'Asuka Inn 2F.",
+    "pt": "Fale com Guilmon no Asuka Inn 2F.",
+    "zh": "和阿苏卡客栈2F的Guilmon谈谈"
   },
   "7bc4-7bc0": {
     "title": "Asuka City",
@@ -1165,7 +1455,9 @@
     "es": "Ve a Ciudad Asuka y derrota al jugador misterioso.",
     "fr": "Va à Asuka City et bats le joueur mystérieux.",
     "de": "Geh zu Asuka City und besiege den geheimnisvollen Spieler.",
-    "it": "Vai ad Asuka City e sconfiggi il giocatore misterioso."
+    "it": "Vai ad Asuka City e sconfiggi il giocatore misterioso.",
+    "pt": "Vá para Asuka City e derrote o Jogador Misterioso.",
+    "zh": "头到浅草城,打败神秘玩家"
   },
   "7c3c-7c38": {
     "title": "Gondola",
@@ -1173,7 +1465,9 @@
     "es": "Intenta activar la góndola.",
     "fr": "Essaie d'activer la télécabine.",
     "de": "Versuche, die Gondel zu aktivieren.",
-    "it": "Prova ad attivare la cabinovia."
+    "it": "Prova ad attivare la cabinovia.",
+    "pt": "Tentativa de ativar a gôndola",
+    "zh": "试图激活贡多拉"
   },
   "7cb8-7c8c": {
     "title": "East Station",
@@ -1181,7 +1475,9 @@
     "es": "Ve al sur de Kicking Forest para encontrar East Station.",
     "fr": "Va au sud de Kicking Forest pour trouver East Station.",
     "de": "Geh südlich von Kicking Forest zur East Station.",
-    "it": "Vai a sud di Kicking Forest per trovare East Station."
+    "it": "Vai a sud di Kicking Forest per trovare East Station.",
+    "pt": "Para o sul da Floresta Kicking Para encontrar a Estação Leste",
+    "zh": "踢林南头 寻找东站"
   },
   "7d14-7d10": {
     "title": "Wind Prairie",
@@ -1189,7 +1485,9 @@
     "es": "Sal de la ciudad hacia la Pradera del Viento.",
     "fr": "Sors de la ville vers Wind Prairie.",
     "de": "Verlasse die Stadt in Richtung Wind Prairie.",
-    "it": "Esci dalla città verso Wind Prairie."
+    "it": "Esci dalla città verso Wind Prairie.",
+    "pt": "Saia da cidade para a Pradaria do Vento.",
+    "zh": "出城去温德普拉里"
   },
   "7d80-7d7c": {
     "title": "Seiryu Leader",
@@ -1197,7 +1495,9 @@
     "es": "Regresa a la Torre Seiryu y derrota al Líder Seiryu.",
     "fr": "Retourne à Seiryu Tower et bats le chef Seiryu.",
     "de": "Kehre zum Seiryu Tower zurück und besiege Anführer Seiryu.",
-    "it": "Torna alla Seiryu Tower e sconfiggi il capo Seiryu."
+    "it": "Torna alla Seiryu Tower e sconfiggi il capo Seiryu.",
+    "pt": "Retorne à Torre Seiryu e derrote o Líder Seiryu.",
+    "zh": "回到Seiryu塔,打败Seiryu领袖"
   },
   "7e00-7dfc": {
     "title": "Master Tyranno",
@@ -1205,7 +1505,9 @@
     "es": "Sube por el valle y derrota a MasterTyranno.",
     "fr": "Remonte la vallée et bats MasterTyranno.",
     "de": "Steige das Tal hinauf und besiege MasterTyranno.",
-    "it": "Risali la valle e sconfiggi MasterTyranno."
+    "it": "Risali la valle e sconfiggi MasterTyranno.",
+    "pt": "Suba o vale e derrote MasterTyranno.",
+    "zh": "沿山谷向上，击败MasterTyranno"
   },
   "7ec8-7e74": {
     "title": "Tyranno Valley",
@@ -1213,7 +1515,9 @@
     "es": "Ve al noreste de Ciudad Seiryu, atravesando Kicking Forest hasta Tyranno Valley.",
     "fr": "Va au nord-est de Seiryu City, à travers Kicking Forest jusqu'à Tyranno Valley.",
     "de": "Geh nordöstlich von Seiryu City durch Kicking Forest zum Tyranno Valley.",
-    "it": "Vai a nord-est di Seiryu City, attraversando Kicking Forest fino a Tyranno Valley."
+    "it": "Vai a nord-est di Seiryu City, attraversando Kicking Forest fino a Tyranno Valley.",
+    "pt": "No norte da cidade de Seiryu. Pela Floresta Chutando para o Vale de Tyranno",
+    "zh": "塞留市东北区长 穿过踢森林到暴风谷"
   },
   "7f80-7f28": {
     "title": "Pharaohmon",
@@ -1221,7 +1525,9 @@
     "es": "Toma el camino derecho y derrota a Pharaohmon. Salta del borde y busca al Líder Seiryu.",
     "fr": "Prends le chemin de droite et bats Pharaohmon. Saute du rebord et trouve le chef Seiryu.",
     "de": "Nimm den rechten Weg und besiege Pharaohmon. Spring vom Vorsprung und finde Anführer Seiryu.",
-    "it": "Prendi il sentiero destro e sconfiggi Pharaohmon. Salta dalla sporgenza e trova il capo Seiryu."
+    "it": "Prendi il sentiero destro e sconfiggi Pharaohmon. Salta dalla sporgenza e trova il capo Seiryu.",
+    "pt": "Pegue o caminho certo e derrote Faraómon. Pule na borda e encontre o Líder Seiryu",
+    "zh": "走上正路,打败法老门 跳下窗台,找到Searyu领队"
   },
   "801c-7fec": {
     "title": "Protocol Ruins",
@@ -1229,7 +1535,9 @@
     "es": "Ve al norte del Bosque Alambre Este para llegar a las Ruinas Protocolo.",
     "fr": "Va au nord d'East Wire Forest pour atteindre les Protocol Ruins.",
     "de": "Geh nördlich vom East Wire Forest zu den Protocol Ruins.",
-    "it": "Vai a nord di East Wire Forest per raggiungere le Protocol Ruins."
+    "it": "Vai a nord di East Wire Forest per raggiungere le Protocol Ruins.",
+    "pt": "Chefe Norte da 'Floresta de Fio Leste' Para chegar às Ruínas do Protocolo.",
+    "zh": "东线森林的北头 到达协议废墟"
   },
   "8084-8080": {
     "title": "Repeating Tom",
@@ -1237,7 +1545,9 @@
     "es": "Habla con Repeating Tom en la Torre Seiryu.",
     "fr": "Parle à Repeating Tom dans Seiryu Tower.",
     "de": "Sprich mit Repeating Tom im Seiryu Tower.",
-    "it": "Parla con Repeating Tom nella Seiryu Tower."
+    "it": "Parla con Repeating Tom nella Seiryu Tower.",
+    "pt": "Fale com Tom Repetindo na Torre Seiryu.",
+    "zh": "和在Seiryu塔里重复的汤姆说话"
   },
   "8118-80ec": {
     "title": "Seiryu City",
@@ -1245,7 +1555,9 @@
     "es": "Ve al este por el Bosque Alambre para llegar a Ciudad Seiryu.",
     "fr": "Va à l'est à travers Wire Forest pour atteindre Seiryu City.",
     "de": "Geh nach Osten durch Wire Forest bis Seiryu City.",
-    "it": "Vai a est attraverso Wire Forest per raggiungere Seiryu City."
+    "it": "Vai a est attraverso Wire Forest per raggiungere Seiryu City.",
+    "pt": "Siga a leste pela Floresta de Arame. para chegar à cidade de Seiryu.",
+    "zh": "向东穿过有线森林 到达塞琉球城"
   },
   "8170-816c": {
     "title": "",

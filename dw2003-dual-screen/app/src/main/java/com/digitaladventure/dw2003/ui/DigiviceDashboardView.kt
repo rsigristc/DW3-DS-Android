@@ -36,7 +36,6 @@ import com.digitaladventure.dw2003.model.GameMode
 import com.digitaladventure.dw2003.model.GameSnapshot
 import com.digitaladventure.dw2003.model.OverlayScene
 import java.text.NumberFormat
-import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -207,7 +206,7 @@ class DigiviceDashboardView(
 
     private val numberFormat: NumberFormat
         get() = NumberFormat.getIntegerInstance(
-            if (language == CompanionLanguage.ENGLISH) Locale.US else Locale("es", "MX")
+            language.locale
         )
 
     fun submitSnapshot(value: GameSnapshot) {
@@ -2193,7 +2192,7 @@ class DigiviceDashboardView(
     }
 
     private fun displayCase(text: String): String =
-        text.uppercase(if (language == CompanionLanguage.ENGLISH) Locale.ENGLISH else Locale("es", "ES"))
+        text.uppercase(language.locale)
 
     private fun prepareTextPaint(size: Float, color: Int, bold: Boolean, align: Paint.Align) {
         paint.style = Paint.Style.FILL
@@ -2203,7 +2202,7 @@ class DigiviceDashboardView(
         paint.color = color
         paint.textSize = size
         paint.textAlign = align
-        paint.textLocale = if (language == CompanionLanguage.ENGLISH) Locale.ENGLISH else Locale("es", "ES")
+        paint.textLocale = language.locale
         paint.typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
     }
 
@@ -2239,6 +2238,27 @@ class DigiviceDashboardView(
     }
 
     private fun wrappedLines(text: String, maxWidth: Float, size: Float): List<String> {
+        if (language == CompanionLanguage.CHINESE) {
+            prepareTextPaint(size, Color.WHITE, false, Paint.Align.LEFT)
+            val iterator = java.text.BreakIterator.getLineInstance(language.locale)
+            val lines = mutableListOf<String>()
+            for (paragraph in text.lineSequence()) {
+                iterator.setText(paragraph)
+                var start = iterator.first()
+                var end = start
+                var next = iterator.next()
+                while (next != java.text.BreakIterator.DONE) {
+                    if (end > start && paint.measureText(paragraph, start, next) > maxWidth) {
+                        lines += paragraph.substring(start, end).trim()
+                        start = end
+                    }
+                    end = next
+                    next = iterator.next()
+                }
+                if (end > start) lines += paragraph.substring(start, end).trim()
+            }
+            return lines
+        }
         val words = text.replace('\n', ' ').split(Regex("\\s+")).filter(String::isNotBlank)
         val lines = mutableListOf<String>()
         var current = ""

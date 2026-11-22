@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.7
+
+### Español
+
+Cambios desde la versión 1.6.1.
+
+- **Avisos de Harmony.** Al iniciar, la app consulta GitHub y avisa cuando hay un parche más reciente. El diálogo muestra ambas versiones y el changelog, con opciones para instalar o dejarlo para después. Reconoce los BIN públicos importados de las betas 1.5, 2.0 y 2.1. La consulta manual sigue en **APP → Instalar o actualizar Harmony**.
+- **Siete idiomas de Harmony.** Detección automática de inglés, español, francés, alemán, italiano, portugués de Brasil y chino simplificado. Se incorporan portugués de Brasil y chino simplificado al panel y a la guía. Se mantiene la compatibilidad con las ediciones PAL y USA.
+- **Acelerar Memory Card.** Nueva opción en **APP → App**, apagada por defecto. Acelera temporalmente el emulador mientras el juego usa la tarjeta para guardar o cargar. En una prueba con Harmony v50 en AYN Thor, guardar pasó de 8,16 a 5,62 s y cargar de 6,83 a 4,44 s. La RAM emulada sigue en 2 MiB.
+
+### English
+
+Changes since version 1.6.1.
+
+- **Harmony update alerts.** On startup, the app checks GitHub and alerts you when a newer patch is available. The dialog shows both versions and the release notes, with options to install or defer. It recognizes imported public BINs for betas 1.5, 2.0, and 2.1. You can also check under **APP → Install or update Harmony**.
+- **Seven Harmony languages.** Automatically detects English, Spanish, French, German, Italian, Brazilian Portuguese, and Simplified Chinese. Brazilian Portuguese and Simplified Chinese are now available in the panel and walkthrough. PAL and USA edition compatibility is preserved.
+- **Accelerate Memory Card.** New option under **APP → App**, off by default. Temporarily speeds up emulation while the game accesses the card to save or load. In one test with Harmony v50 on AYN Thor, saving went from 8.16 to 5.62 s and loading from 6.83 to 4.44 s. Emulated RAM remains at 2 MiB.
+
 ## 1.6.1
 
 Cambios desde la versión 1.6.0.

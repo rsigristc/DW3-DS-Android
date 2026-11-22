@@ -44,6 +44,7 @@ void sioWriteCtrl16(unsigned short value);
 
 unsigned char sioRead8();
 unsigned short sioReadStat16(); // debug
+unsigned sioTakeMemoryCardActivity(void);
 
 void sioReset();
 void sioInterrupt();

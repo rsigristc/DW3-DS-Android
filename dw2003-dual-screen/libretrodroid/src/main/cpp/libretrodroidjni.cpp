@@ -82,7 +82,7 @@ JNIEXPORT void JNICALL Java_com_swordfish_libretrodroid_LibretroDroid_updateVari
     jobject variable
 ) {
     Variable v = JavaUtils::variableFromJava(env, variable);
-    Environment::getInstance().updateVariable(v.key, v.value);
+    LibretroDroid::getInstance().updateVariable(v);
 }
 
 JNIEXPORT jobjectArray JNICALL Java_com_swordfish_libretrodroid_LibretroDroid_getVariables(

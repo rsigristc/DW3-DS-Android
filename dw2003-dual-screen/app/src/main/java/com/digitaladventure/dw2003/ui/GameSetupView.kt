@@ -13,7 +13,6 @@ import android.widget.Space
 import android.widget.TextView
 import com.digitaladventure.dw2003.R
 import com.digitaladventure.dw2003.data.CompanionLanguage
-import java.util.Locale
 
 @SuppressLint("ViewConstructor")
 class GameSetupView(
@@ -34,6 +33,8 @@ class GameSetupView(
     onLanguage: (() -> Unit)? = null,
     gameHudLabel: String? = null,
     onGameHud: (() -> Unit)? = null,
+    accelerateMemoryCard: Boolean = false,
+    onAccelerateMemoryCard: ((Boolean) -> Unit)? = null,
     imageOptionsLabel: String? = null,
     onImageOptions: (() -> Unit)? = null,
     performanceLabel: String? = null,
@@ -109,7 +110,8 @@ class GameSetupView(
             } else {
                 fillAppTab(
                     versionName, modsEnabled, onModsChanged, paneArrangementLabel, onPaneArrangement,
-                    languageLabel, onLanguage, gameHudLabel, onGameHud, imageOptionsLabel, onImageOptions,
+                    languageLabel, onLanguage, gameHudLabel, onGameHud, accelerateMemoryCard,
+                    onAccelerateMemoryCard, imageOptionsLabel, onImageOptions,
                     performanceLabel, onPerformance, idleModeLabel, onIdleMode, idleDelayLabel, onIdleDelay,
                     remoteCompanionLabel, onRemoteCompanion, ramProbeEnabled, onRamProbeChanged
                 )
@@ -250,6 +252,8 @@ class GameSetupView(
         onLanguage: (() -> Unit)?,
         gameHudLabel: String?,
         onGameHud: (() -> Unit)?,
+        accelerateMemoryCard: Boolean,
+        onAccelerateMemoryCard: ((Boolean) -> Unit)?,
         imageOptionsLabel: String?,
         onImageOptions: (() -> Unit)?,
         performanceLabel: String?,
@@ -270,6 +274,14 @@ class GameSetupView(
             MUTED,
             true
         ).apply { setPadding(0, dp(7), 0, dp(4)) })
+        if (onAccelerateMemoryCard != null) {
+            page.addView(android.widget.Switch(context).apply {
+                text = pick(language, "Acelerar Memory Card", "Fast Forward Memory Card Access")
+                setTextColor(Color.WHITE)
+                isChecked = accelerateMemoryCard
+                setOnCheckedChangeListener { _, enabled -> onAccelerateMemoryCard(enabled) }
+            }, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+        }
         var modsOn = modsEnabled
         fun modsLabel(enabled: Boolean) = if (enabled) {
             pick(language, "Pestaña de mods: activa", "Mods tab: on")
@@ -314,8 +326,8 @@ class GameSetupView(
             page.addView(hint(
                 pick(
                     language,
-                    "Automático copia el texto de la guía de Flawe en START. Si no hay texto en vivo, pide abrir START; no inventa objetivos por mapa.",
-                    "Automatic copies Flawe's START walkthrough. If that text is missing, it asks you to open START and does not invent map objectives."
+                    "El modo automático sigue el idioma del juego cuando está disponible.",
+                    "Automatic follows the game's language when available."
                 )
             ))
         }
@@ -459,7 +471,7 @@ class GameSetupView(
         textSize = sp
         setTextColor(color)
         gravity = Gravity.CENTER
-        textLocale = if (language == CompanionLanguage.ENGLISH) Locale.ENGLISH else Locale("es", "ES")
+        textLocale = language.locale
         setTypeface(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
     }
 
@@ -469,7 +481,7 @@ class GameSetupView(
         isEnabled = enabled
         alpha = if (enabled) 1f else .45f
         setTextColor(if (outlined) CYAN else Color.rgb(2, 16, 22))
-        textLocale = if (language == CompanionLanguage.ENGLISH) Locale.ENGLISH else Locale("es", "ES")
+        textLocale = language.locale
         setTypeface(Typeface.DEFAULT, Typeface.BOLD)
         minWidth = dp(250)
         background = GradientDrawable().apply {

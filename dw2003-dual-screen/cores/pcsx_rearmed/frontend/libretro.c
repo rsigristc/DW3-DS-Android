@@ -2259,6 +2259,11 @@ RETRO_API void retro_notify_memory_write(unsigned id, size_t offset, size_t leng
    psxCpu->Clear(0x80000000u | (u32)first, (u32)((end - first) / 4));
 }
 
+RETRO_API unsigned retro_take_memory_card_activity(void)
+{
+   return sioTakeMemoryCardActivity();
+}
+
 void retro_reset(void)
 {
    //hack to prevent retroarch freezing when reseting in the menu but not while running with the hot key

@@ -1,5 +1,7 @@
 package com.digitaladventure.dw2003.emulation
 
+import com.digitaladventure.dw2003.data.AppVersion
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
@@ -13,22 +15,55 @@ class HarmonyInstaller(private val directory: File) {
     data class Installed(val file: File, val sha1: String)
 
     fun latest(spanish: Boolean): Release {
-        val root = JSONObject(readText("https://api.github.com/repos/rsigristc/dw2003-qol-patch/releases/latest"))
-        val tag = root.getString("tag_name")
-        require(tag.startsWith("harmony-"))
-        val assets = root.getJSONArray("assets")
-        val urls = (0 until assets.length()).associate { index ->
-            val asset = assets.getJSONObject(index)
-            asset.getString("name") to asset.getString("browser_download_url")
-        }
-        val patch = urls.keys.single { it.startsWith("dw2003-harmony-") && it.endsWith(".bps") }
-        return Release(tag, root.optString("body"), urls.getValue(patch),
-            urls.getValue(patch.removeSuffix(".bps") + ".json"),
-            urls[if (spanish) "CHANGELOG.es.md" else "CHANGELOG.en.md"])
+        val releases = JSONArray(readText("https://api.github.com/repos/rsigristc/dw2003-qol-patch/releases"))
+        return latestInstallable(releases, spanish)
+            ?: throw IOException("GitHub no tiene un parche instalable / GitHub has no installable patch")
     }
 
     fun notes(release: Release): String =
         release.localizedNotes?.let { runCatching { readText(it) }.getOrNull() } ?: release.notes
+
+    companion object {
+        private const val ORIGINAL_SHA256 = "fb70dc9a995aed628cf515cabc87c7b14e5142559076ec394dfe793ec3e26a04"
+        private val versionTag = Regex("""harmony-(?:beta)?v?\d{1,6}(?:\.\d{1,6})*""")
+
+        internal fun isNewer(remote: String, installed: String): Boolean {
+            if (!versionTag.matches(remote) || !versionTag.matches(installed)) return false
+            if (AppVersion.isNewer(remote, installed)) return true
+            if (AppVersion.isNewer(installed, remote)) return false
+            return !remote.startsWith("harmony-beta") && installed.startsWith("harmony-beta")
+        }
+
+        internal fun latestInstallable(releases: JSONArray, spanish: Boolean): Release? {
+            var latest: Release? = null
+            for (index in 0 until releases.length()) {
+                val release = parseRelease(releases.optJSONObject(index) ?: continue, spanish) ?: continue
+                if (latest == null || isNewer(release.tag, latest.tag)) latest = release
+            }
+            return latest
+        }
+
+        private fun parseRelease(root: JSONObject, spanish: Boolean): Release? {
+            val tag = root.optString("tag_name")
+            if (root.optBoolean("draft") || !versionTag.matches(tag)) return null
+            val assets = root.optJSONArray("assets") ?: return null
+            val urls = (0 until assets.length()).mapNotNull { index ->
+                val asset = assets.optJSONObject(index) ?: return@mapNotNull null
+                val name = asset.optString("name")
+                val url = asset.optString("browser_download_url")
+                val expectedUrl = "https://github.com/rsigristc/dw2003-qol-patch/releases/download/$tag/$name"
+                if (url == expectedUrl) name to url else null
+            }.toMap()
+            val patch = urls.keys.singleOrNull {
+                it.startsWith("dw2003-harmony-") && it.endsWith(".bps") && it.removeSuffix(".bps") + ".json" in urls
+            } ?: return null
+            return Release(
+                tag, if (root.isNull("body")) "" else root.optString("body"), urls.getValue(patch),
+                urls.getValue(patch.removeSuffix(".bps") + ".json"),
+                urls[if (spanish) "CHANGELOG.es.md" else "CHANGELOG.en.md"]
+            )
+        }
+    }
 
     fun install(release: Release, openSource: () -> InputStream, progress: (Int, Int) -> Unit): Installed {
         val manifest = JSONObject(readText(release.manifest))
@@ -148,7 +183,4 @@ class HarmonyInstaller(private val directory: File) {
 
     private fun hex(bytes: ByteArray): String = bytes.joinToString("") { "%02x".format(it) }
 
-    companion object {
-        private const val ORIGINAL_SHA256 = "fb70dc9a995aed628cf515cabc87c7b14e5142559076ec394dfe793ec3e26a04"
-    }
 }

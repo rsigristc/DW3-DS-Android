@@ -29,21 +29,23 @@ class FlaweGuideSelectorTest {
         val main = fixture()
         val unchanged = main.copyOf()
         assertEquals("8084-8080", catalog.currentKey(main))
-        assertEquals("Habla con Repeating Tom en la Torre Seiryu.", catalog.objective(main, 6))
-        assertEquals("Talk to Repeating Tom in Seiryu Tower", catalog.objective(main, 2))
-        assertTrue(catalog.objective(main, 3)!!.startsWith("Parle"))
-        assertTrue(catalog.objective(main, 4)!!.startsWith("Parla"))
-        assertTrue(catalog.objective(main, 5)!!.startsWith("Sprich"))
+        assertEquals("Habla con Repeating Tom en la Torre Seiryu.", catalog.objective(main, CompanionLanguage.SPANISH))
+        assertEquals("Talk to Repeating Tom in Seiryu Tower", catalog.objective(main, CompanionLanguage.ENGLISH))
+        assertTrue(catalog.objective(main, CompanionLanguage.FRENCH)!!.startsWith("Parle"))
+        assertTrue(catalog.objective(main, CompanionLanguage.ITALIAN)!!.startsWith("Parla"))
+        assertTrue(catalog.objective(main, CompanionLanguage.GERMAN)!!.startsWith("Sprich"))
+        assertEquals("Fale com Tom Repetindo na Torre Seiryu.", catalog.objective(main, CompanionLanguage.PORTUGUESE))
+        assertEquals("和在Seiryu塔里重复的汤姆说话", catalog.objective(main, CompanionLanguage.CHINESE))
         assertArrayEquals(unchanged, main)
     }
 
-    @Test fun everyNonEmptyObjectiveHasAllFourTranslations() {
+    @Test fun everyNonEmptyObjectiveHasAllSixTranslations() {
         val entries = JSONObject(json)
         assertEquals(157, entries.length())
         entries.keys().forEach { key ->
             val entry = entries.getJSONObject(key)
             if (entry.getString("en").isNotBlank()) {
-                listOf("es", "fr", "de", "it").forEach {
+                listOf("es", "fr", "de", "it", "pt", "zh").forEach {
                     assertTrue("$key/$it", entry.getString(it).isNotBlank())
                 }
             }

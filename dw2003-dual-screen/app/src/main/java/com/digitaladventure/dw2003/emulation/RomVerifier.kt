@@ -13,6 +13,15 @@ object RomVerifier {
 
     const val HARMONY_PUBLIC_SHA1 = "297a02a7e594e1995a755f1de45c1633c28a2ea0"
     const val HARMONY_TERRIERMON_SHA1 = "229fd42f63c1173dd497b02fc5e1419b2c44615b"
+    const val HARMONY_SEVEN_LANGUAGES_SHA1 = "1e6863b5b2ca4ca247d999a8ed58a95e892f879c"
+    const val HARMONY_BETA_2_1_SHA1 = "2f65262417fafde25d775119ce46c995fde7c9dd"
+
+    fun harmonyReleaseTag(sha1: String?): String? = when (sha1) {
+        HARMONY_PUBLIC_SHA1 -> "harmony-beta1.5"
+        HARMONY_SEVEN_LANGUAGES_SHA1 -> "harmony-beta2.0"
+        HARMONY_BETA_2_1_SHA1 -> "harmony-beta2.1"
+        else -> null
+    }
 
     const val SERIAL_PAL = "SLES_039.36"
     const val SERIAL_USA = "SLUS_014.36"
@@ -76,7 +85,7 @@ object RomVerifier {
     fun identify(sha1: String, serial: String? = null): Variant {
         val normalized = normalizeSerial(serial)
         return when {
-            sha1 == HARMONY_PUBLIC_SHA1 || sha1 == HARMONY_TERRIERMON_SHA1 -> Variant.HARMONY
+            harmonyReleaseTag(sha1) != null || sha1 == HARMONY_TERRIERMON_SHA1 -> Variant.HARMONY
             sha1 == ORIGINAL_SHA1 -> Variant.ORIGINAL
             sha1 == FLAWES_MOD_2_SHA1 -> Variant.FLAWES_MOD_2
             sha1 == USA_SHA1 || normalized == SERIAL_USA -> Variant.USA

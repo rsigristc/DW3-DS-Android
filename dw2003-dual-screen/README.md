@@ -6,7 +6,13 @@ Prueba de concepto Android para ejecutar **Digimon World 2003 (Europa)** y aprov
 - Samsung Galaxy Z Fold y otros plegables compatibles con Jetpack WindowManager.
 - Tablets o pantallas grandes, con división lógica adaptable.
 
-La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.6.1** es la release actual. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+La aplicación incluye el núcleo PCSX-ReARMed, una capa Android basada en LibretroDroid y un panel complementario que lee el estado del juego desde la RAM emulada. **No incluye ROM, BIOS ni parches.** La versión **1.7** es la release actual. El anuncio público, la licencia y cómo compilar están en el [README raíz](../README.md).
+
+## Estado 1.7
+
+- Al iniciar, la app avisa si hay un parche de Harmony más reciente y muestra sus notas. También puedes consultarlo en **APP → Instalar o actualizar Harmony**.
+- La guía cubre los siete idiomas de Harmony. El panel incorpora texto en portugués de Brasil y chino simplificado.
+- **APP → App → Acelerar Memory Card** activa la aceleración durante el acceso a la tarjeta del juego. La opción viene apagada.
 
 ## Estado 1.6.1
 
@@ -119,7 +125,7 @@ La USA `SLUS-01436` se reconoce por SHA-1 o por el serial del disco y arranca en
 
 ## Uso
 
-1. Instala `DW2003-Dual-Screen-v1.6.1.apk` en un dispositivo Android ARM64. Si ya tienes una versión oficial firmada, usa el actualizador de la app.
+1. Instala `DW2003-Dual-Screen-v1.7.apk` en un dispositivo Android ARM64. Si ya tienes una versión oficial firmada, usa el actualizador de la app.
 2. Abre la aplicación y pulsa **Seleccionar BIN**.
 3. Elige tu copia personal ya parcheada, la imagen original europea o Digimon World 3 USA (`SLUS-01436`). En USA no hay viaje rápido ni guía de Flawe.
 4. En AYN Thor, la aplicación moverá automáticamente el panel complementario a la segunda pantalla disponible.

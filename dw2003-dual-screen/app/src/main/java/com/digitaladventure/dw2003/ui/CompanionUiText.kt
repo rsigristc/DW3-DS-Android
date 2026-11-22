@@ -4,6 +4,7 @@ import com.digitaladventure.dw2003.data.AreaCatalog
 import com.digitaladventure.dw2003.data.CheatSpec
 import com.digitaladventure.dw2003.data.CompanionLanguage
 import com.digitaladventure.dw2003.data.CompanionLanguageSetting
+import com.digitaladventure.dw2003.data.CompanionTranslations
 import com.digitaladventure.dw2003.data.LocationResolver
 import com.digitaladventure.dw2003.data.MapRegionCatalog
 import com.digitaladventure.dw2003.data.SectorRegion
@@ -13,7 +14,7 @@ import com.digitaladventure.dw2003.model.OverlayScene
 
 object CompanionUiText {
     fun pick(language: CompanionLanguage, spanish: String, english: String): String =
-        if (language == CompanionLanguage.ENGLISH) english else spanish
+        CompanionTranslations.pick(language, spanish, english)
 
     fun mode(language: CompanionLanguage, mode: GameMode): String = when (mode) {
         GameMode.EXPLORATION -> pick(language, "Exploración", "Exploration")
@@ -56,7 +57,7 @@ object CompanionUiText {
             0x02D6 -> "Xuan Wu City"
             else -> null
         }
-        if (amaterasuCity != null) return amaterasuCity
+        if (amaterasuCity != null) return pick(language, amaterasuCity, amaterasuCity)
         com.digitaladventure.dw2003.data.FlaweFastTravelTable.asukaCounterpart[areaId]?.let {
             return "${area(language, it)} · Amaterasu"
         }
@@ -65,7 +66,7 @@ object CompanionUiText {
                 return "${area(language, it)} · 0x${AreaCatalog.hex(areaId)}"
             }
         }
-        return englishAreas[areaId]
+        return englishAreas[areaId]?.let { pick(language, it, it) }
             ?: AreaCatalog.knownName(areaId)
             ?: "Area 0x${AreaCatalog.hex(areaId)}"
     }
@@ -92,11 +93,7 @@ object CompanionUiText {
     }
 
     fun languageSetting(language: CompanionLanguage, setting: CompanionLanguageSetting): String =
-        when (setting) {
-            CompanionLanguageSetting.AUTO -> pick(language, "Automático", "Automatic")
-            CompanionLanguageSetting.SPANISH -> "Español"
-            CompanionLanguageSetting.ENGLISH -> "English"
-        }
+        setting.language?.label ?: pick(language, "Automático", "Automatic")
 
     fun quickAction(language: CompanionLanguage, action: QuickAction, stateAvailable: Boolean, fastForward: Boolean, muted: Boolean): String =
         when (action) {

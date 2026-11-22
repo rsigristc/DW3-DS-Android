@@ -43,6 +43,7 @@ public:
     void* (*retro_get_memory_data)(unsigned id);
     // Optional extension provided by our PCSX core. Other cores may omit it.
     void (*retro_notify_memory_write)(unsigned id, size_t offset, size_t length) = nullptr;
+    unsigned (*retro_take_memory_card_activity)(void) = nullptr;
     bool (*retro_load_game)(const struct retro_game_info *game);
     void (*retro_unload_game)(void);
     void (*retro_set_video_refresh)(retro_video_refresh_t);

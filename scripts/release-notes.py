@@ -18,6 +18,6 @@ if match is None or not match.group(1).strip():
 print(f"## Novedades / What's new — {version}\n")
 print(match.group(1).strip())
 print("\n---\nOfficial signed APKs:")
-print("- Dual Screen: `com.digitaladventure.dw2003` (`DW2003-Dual-Screen-vX.Y.Z.apk`)")
-print("- Pocket Companion: `com.digitaladventure.dw2003.remote` (`DW2003-Pocket-Companion-vX.Y.Z.apk`)")
+print(f"- Dual Screen: `com.digitaladventure.dw2003` (`DW2003-Dual-Screen-v{version}.apk`)")
+print(f"- Pocket Companion: `com.digitaladventure.dw2003.remote` (`DW2003-Pocket-Companion-v{version}.apk`)")
 print("Updates preserve the app's existing data. ROM and BIOS are not included.")

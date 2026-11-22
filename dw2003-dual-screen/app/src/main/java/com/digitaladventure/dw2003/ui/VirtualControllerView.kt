@@ -12,7 +12,6 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import com.digitaladventure.dw2003.data.CompanionLanguage
-import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -262,7 +261,7 @@ class VirtualControllerView(
         paint.color = color
         paint.textSize = size
         paint.textAlign = Paint.Align.CENTER
-        paint.textLocale = if (language == CompanionLanguage.ENGLISH) Locale.ENGLISH else Locale("es", "ES")
+        paint.textLocale = language.locale
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         canvas.drawText(text, x, y, paint)
     }

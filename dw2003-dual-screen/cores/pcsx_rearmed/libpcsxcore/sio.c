@@ -98,6 +98,23 @@ unsigned char McdFlag[2];
 // TODO: add SioModePrescaler and BaudReg
 #define SIO_CYCLES		535
 
+/* Host pacing can observe card reads (bit 0) and writes (bit 1).
+ * This is frontend telemetry and isn't part of the emulated state. */
+static unsigned mcdActivity;
+static unsigned mcdTransferActivity;
+static int mcdLastReadSector[2] = { -1, -1 };
+
+static void sioResetMemoryCardActivity(void) {
+	mcdActivity = mcdTransferActivity = 0;
+	mcdLastReadSector[0] = mcdLastReadSector[1] = -1;
+}
+
+unsigned sioTakeMemoryCardActivity(void) {
+	unsigned activity = mcdActivity;
+	mcdActivity = 0;
+	return activity;
+}
+
 void sioWrite8(unsigned char value) {
 	u16 ctrl = SWAPu16(CtrlReg);
 	int port = (ctrl >> 13) & 1, more_data = 0;
@@ -170,7 +187,15 @@ void sioWrite8(unsigned char value) {
 			bufcount = 1;
 			mcdst = 4;
 			return;
-		case 4:
+		case 4: {
+			int sector = adrL | (adrH << 8);
+			/* The BIOS can poll the same sector while an interactive
+			 * screen is waiting. A repeated probe must not sustain turbo. */
+			mcdTransferActivity = rdwr;
+			if (rdwr == 1 && sector == mcdLastReadSector[port])
+				mcdTransferActivity = 0;
+			mcdLastReadSector[port] = rdwr == 1 ? sector : -1;
+			mcdActivity |= mcdTransferActivity;
 			set_event(PSXINT_SIO, SIO_CYCLES);
 			parp = 0;
 			switch (rdwr) {
@@ -208,7 +233,9 @@ void sioWrite8(unsigned char value) {
 			}
 			mcdst = 5;
 			return;
+		}
 		case 5:
+			mcdActivity |= mcdTransferActivity;
 			parp++;
 			if (//(rdwr == 1 && parp == 132) ||
 			    (rdwr == 2 && parp == 129)) {
@@ -764,6 +791,7 @@ void GetMcdBlockInfo(int mcd, int block, McdBlock *Info) {
 void sioReset() {
 	StatReg = SWAPu16(TX_RDY | TX_EMPTY);
 	McdFlag[0] = McdFlag[1] = 8;
+	sioResetMemoryCardActivity();
 }
 
 int sioFreeze(void *f, int Mode) {
@@ -784,6 +812,7 @@ int sioFreeze(void *f, int Mode) {
 	gzfreeze(&adrL, sizeof(adrL));
 	gzfreeze(&padst, sizeof(padst));
 	if (Mode == 0) {
+		sioResetMemoryCardActivity();
 		StatReg = SWAPu16(StatReg_);
 		ModeReg = SWAPu16(ModeReg_);
 		CtrlReg = SWAPu16(CtrlReg_);

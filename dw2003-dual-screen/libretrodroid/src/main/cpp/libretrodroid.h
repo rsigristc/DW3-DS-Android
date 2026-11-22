@@ -18,6 +18,8 @@
 #ifndef LIBRETRODROID_LIBRETRODROID_H
 #define LIBRETRODROID_LIBRETRODROID_H
 
+#include <chrono>
+
 #include <jni.h>
 
 #include <EGL/egl.h>
@@ -146,6 +148,9 @@ public:
 
 private:
     void updateAudioSampleRateMultiplier();
+    unsigned int effectiveFrameSpeed() const;
+    void resetMemoryCardActivity();
+    void observeMemoryCardActivity();
     float findDefaultAspectRatio(const retro_system_av_info &system_av_info);
     void afterGameLoad();
 
@@ -159,6 +164,12 @@ protected:
 
 private:
     unsigned int frameSpeed = 1;
+    bool accelerateMemoryCard = false;
+    unsigned int memoryCardActivity = 0;
+    unsigned int memoryCardIdleFrames = 0;
+    unsigned int memoryCardBurstFrames = 0;
+    std::chrono::steady_clock::time_point memoryCardStart;
+    std::chrono::steady_clock::time_point memoryCardLastAccess;
     bool audioEnabled = true;
     bool preferLowLatencyAudio = false;
     bool rumbleEnabled = false;

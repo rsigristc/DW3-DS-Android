@@ -39,7 +39,7 @@ class MemoryPoller(
     private val scope: CoroutineScope,
     private val features: CompanionRomFeatures = CompanionRomFeatures.PAL,
     private val onLanguageDetected: (CompanionLanguage) -> Unit = {},
-    private val objectiveLanguageOverride: () -> Int? = { null },
+    private val objectiveLanguageOverride: () -> CompanionLanguage? = { null },
     private val ramCaptures: RamCaptureStore? = null
 ) {
     private val guide by lazy {
@@ -53,6 +53,8 @@ class MemoryPoller(
     }
     private val reader = GameStateReader()
     private var detectedHarmony: HarmonyCatalog? = null
+    private var harmonyLanguageBanks = false
+    private var cachedObjectiveLanguage: CompanionLanguage? = null
     private var job: Job? = null
     private var cachedObjective: String? = null
     private var cachedStoryStage = -1
@@ -105,11 +107,20 @@ class MemoryPoller(
         val languageCode = if (features.detectPalLanguage) GameStateReader.u32(
             read(GameStateReader.PAL_LANGUAGE and RAM_MASK, 4), 0
         ).toInt() else PalLanguage.US_ENGLISH
-        val palLanguage = PalLanguage.companionLanguage(languageCode)
-        palLanguage?.let(onLanguageDetected)
+        if (features.detectPalLanguage && !harmonyLanguageBanks) {
+            harmonyLanguageBanks = PalLanguage.hasHarmonyLanguageBanks(::read)
+        }
+        val discLanguage = PalLanguage.companionLanguage(languageCode, harmonyLanguageBanks)
+        val detectedLanguage = discLanguage?.takeIf {
+            harmonyLanguageBanks || it == CompanionLanguage.SPANISH || it == CompanionLanguage.ENGLISH
+        }
+        detectedLanguage?.let(onLanguageDetected)
+        val override = objectiveLanguageOverride()
+        val objectiveLanguage = override ?: discLanguage ?: CompanionLanguage.ENGLISH
         val locationKey = (areaId shl 16) or (mapId and 0xFFFF)
-        if (storyStage != cachedStoryStage) {
+        if (storyStage != cachedStoryStage || objectiveLanguage != cachedObjectiveLanguage) {
             cachedStoryStage = storyStage
+            cachedObjectiveLanguage = objectiveLanguage
             cachedObjective = null
         }
         val fieldMenuVisible = runCatching { FlaweMenuStateReader.isFieldMenuVisible(::read) }.getOrNull()
@@ -138,10 +149,12 @@ class MemoryPoller(
 
         val objective = if (features.supportsWalkthrough) {
             try {
-                // The same quest flags select the English guide in every PAL
-                // language. Reuse this poll's small snapshot, with no RAM scan.
-                guide.objective(main, objectiveLanguageOverride() ?: languageCode)
-                    ?: readObjective(signature, palLanguage)
+                guide.objective(main, objectiveLanguage)
+                    ?: if (objectiveLanguage == CompanionLanguage.CHINESE || objectiveLanguage == CompanionLanguage.PORTUGUESE) {
+                        null
+                    } else {
+                        readObjective(signature, detectedLanguage)
+                    }
             } catch (error: Exception) {
                 Log.d(TAG, "Objective RAM not ready", error)
                 cachedObjective
@@ -166,8 +179,7 @@ class MemoryPoller(
         } else {
             null
         }
-        val spanishNames = (objectiveLanguageOverride() ?: languageCode) == PalLanguage.SPANISH ||
-            palLanguage == CompanionLanguage.SPANISH
+        val spanishNames = (override ?: discLanguage) == CompanionLanguage.SPANISH
         val travel = if (ramCaptures != null) {
             runCatching { FlaweOverlayWatch.collect(::read) }.getOrNull()
         } else {

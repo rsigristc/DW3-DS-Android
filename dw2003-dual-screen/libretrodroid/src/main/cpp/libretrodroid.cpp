@@ -85,7 +85,7 @@ int16_t LibretroDroid::callback_set_input_state(
 
 void LibretroDroid::updateAudioSampleRateMultiplier() {
     if (audio) {
-        audio->setPlaybackSpeed(frameSpeed);
+        audio->setPlaybackSpeed(effectiveFrameSpeed());
     }
 }
 
@@ -130,6 +130,12 @@ void LibretroDroid::changeDisk(unsigned int index) {
 }
 
 void LibretroDroid::updateVariable(const Variable& variable) {
+    if (variable.key == "dw2003_accelerate_memory_card") {
+        std::lock_guard<std::mutex> lock(coreLock);
+        accelerateMemoryCard = variable.value == "enabled";
+        resetMemoryCardActivity();
+        return;
+    }
     Environment::getInstance().updateVariable(variable.key, variable.value);
 }
 
@@ -148,6 +154,7 @@ void LibretroDroid::setControllerType(unsigned int port, unsigned int type) {
 bool LibretroDroid::unserializeState(int8_t *data, size_t size) {
     std::lock_guard<std::mutex> lock(coreLock);
 
+    resetMemoryCardActivity();
     return core->retro_unserialize(data, size);
 }
 
@@ -341,6 +348,8 @@ void LibretroDroid::create(
     this->immersiveModeConfig = immersiveModeConfig.value_or(ImmersiveMode::Config{});
     audioEnabled = true;
     frameSpeed = 1;
+    accelerateMemoryCard = false;
+    resetMemoryCardActivity();
 
     core = std::make_unique<Core>(soFilePath);
 
@@ -504,8 +513,10 @@ void LibretroDroid::resume() {
 }
 
 void LibretroDroid::pause() {
+    std::lock_guard<std::mutex> lock(coreLock);
     LOGD("Performing libretrodroid pause");
     audio->stop();
+    resetMemoryCardActivity();
 
     input = nullptr;
 }
@@ -527,8 +538,14 @@ void LibretroDroid::step() {
         return;
     }
 
-    for (size_t i = 0; i < frames * frameSpeed; i++)
+    const unsigned int speed = effectiveFrameSpeed();
+    for (size_t i = 0; i < frames * speed; i++) {
         core->retro_run();
+        observeMemoryCardActivity();
+    }
+    if (effectiveFrameSpeed() != speed) {
+        updateAudioSampleRateMultiplier();
+    }
 
     if (video && !video->rendersInVideoCallback()) {
         video->renderFrame();
@@ -586,6 +603,43 @@ void LibretroDroid::setFrameSpeed(unsigned int speed) {
     updateAudioSampleRateMultiplier();
 }
 
+unsigned int LibretroDroid::effectiveFrameSpeed() const {
+    return accelerateMemoryCard && memoryCardActivity != 0 ? std::max(frameSpeed, 2u) : frameSpeed;
+}
+
+void LibretroDroid::resetMemoryCardActivity() {
+    memoryCardActivity = 0;
+    memoryCardIdleFrames = 0;
+    memoryCardBurstFrames = 0;
+    updateAudioSampleRateMultiplier();
+}
+
+void LibretroDroid::observeMemoryCardActivity() {
+    if (!core->retro_take_memory_card_activity) return;
+    const unsigned int activity = core->retro_take_memory_card_activity();
+    if (activity == 0 && memoryCardActivity == 0) return;
+    ++memoryCardBurstFrames;
+    if (activity != 0) {
+        const auto now = std::chrono::steady_clock::now();
+        if (memoryCardActivity == 0) memoryCardStart = now;
+        memoryCardLastAccess = now;
+        memoryCardActivity |= activity;
+        memoryCardIdleFrames = 0;
+        return;
+    }
+    // Keep consecutive sector transfers together without accelerating the menu.
+    constexpr unsigned int idleFrameLimit = 8;
+    if (++memoryCardIdleFrames == idleFrameLimit) {
+        const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+            memoryCardLastAccess - memoryCardStart).count();
+        LOGI("Memory Card: operation=%s acceleration=%s base_speed=%u elapsed_ms=%lld frames=%u",
+             memoryCardActivity == 1 ? "read" : memoryCardActivity == 2 ? "write" : "read/write",
+             accelerateMemoryCard ? "on" : "off", frameSpeed,
+             static_cast<long long>(elapsedMs), memoryCardBurstFrames - memoryCardIdleFrames);
+        resetMemoryCardActivity();
+    }
+}
+
 void LibretroDroid::setAudioEnabled(bool enabled) {
     audioEnabled = enabled;
 }
@@ -641,6 +695,7 @@ uintptr_t LibretroDroid::handleGetCurrentFrameBuffer() {
 void LibretroDroid::reset() {
     std::lock_guard<std::mutex> lock(coreLock);
 
+    resetMemoryCardActivity();
     core->retro_reset();
 }
 
